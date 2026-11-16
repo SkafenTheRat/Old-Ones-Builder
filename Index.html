@@ -1,0 +1,1108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warhammer: The Old World — Army Builder</title>
+<style>
+:root {
+--bg:#11100f; --panel:#1d1a18; --panel2:#29231e;
+--gold:#c6a15b; --text:#eee5d5; --muted:#a99c89;
+--line:#493b2d; --red:#a64c40;
+}
+* { box-sizing:border-box; }
+body {
+margin:0; background:var(--bg); color:var(--text);
+font-family:Georgia,serif;
+background-image:radial-gradient(ellipse at top,#30251d,#11100f 70%);
+}
+header {
+text-align:center; padding:25px 15px; background:#171310;
+border-bottom:1px solid var(--line);
+}
+header h1 { color:var(--gold); letter-spacing:3px; margin:0; font-size:32px; }
+header p { color:var(--muted); margin:8px 0 0; }
+main { max-width:1500px; margin:auto; padding:20px; }
+button,input,select,textarea {
+font:inherit; color:var(--text); background:var(--panel2);
+border:1px solid var(--line); border-radius:5px; padding:10px;
+}
+button { cursor:pointer; }
+button:hover { border-color:var(--gold); color:var(--gold); }
+input,select,textarea { width:100%; }
+textarea { min-height:80px; resize:vertical; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.tabs button { padding:12px 17px; }
+.tabs button.active { background:var(--gold); color:#17120d; }
+.panel {
+background:var(--panel); border:1px solid var(--line);
+border-radius:8px; padding:18px; margin-bottom:18px; min-width:0;
+}
+h2 {
+color:var(--gold); font-size:21px; margin:0 0 16px;
+border-bottom:1px solid var(--line); padding-bottom:10px;
+}
+h3 { color:var(--gold); margin:18px 0 10px; font-size:17px; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.field label { display:block; color:var(--muted); font-size:13px; margin-bottom:5px; }
+.field { min-width:0; }
+.actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.primary { background:#72552c; border-color:var(--gold); }
+.danger { border-color:var(--red); color:#e18b7d; }
+.muted { color:var(--muted); font-size:13px; }
+.hidden { display:none!important; }
+.item {
+background:#25201c; border:1px solid #403329;
+padding:13px; border-radius:6px; margin-bottom:9px;
+}
+.item-head { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.item-head strong { color:var(--text); }
+.item small { color:var(--muted); }
+.stat-grid {
+display:grid; grid-template-columns:repeat(9,minmax(0,1fr));
+gap:7px; margin:12px 0;
+}
+.stat-grid label { font-size:12px; color:var(--gold); text-align:center; }
+.stat-grid input { text-align:center; padding:9px 2px; }
+.tag {
+display:inline-block; padding:4px 8px; margin:3px;
+border:1px solid var(--line); border-radius:4px;
+color:var(--gold); font-size:12px;
+}
+.rule-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.rule-option {
+background:#25201c; padding:10px; border-radius:5px;
+border:1px solid #403329; font-size:13px; min-width:0;
+}
+.rule-option label { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.rule-option input[type=checkbox] { width:auto; }
+.rule-value { margin-top:9px; padding:8px; font-size:13px; }
+.equipment-cost { margin-top:9px; }
+.equipment-cost label { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
+.equipment-cost input { width:100%; }
+.list-scroll { max-height:580px; overflow-y:auto; padding-right:5px; }
+.list-scroll::-webkit-scrollbar { width:9px; }
+.list-scroll::-webkit-scrollbar-thumb { background:var(--gold); border-radius:8px; }
+.statline { display:flex; gap:8px; flex-wrap:wrap; color:var(--gold); font-size:13px; margin-top:8px; }
+.empty { text-align:center; color:var(--muted); padding:30px; }
+.notice { background:#30271e; padding:12px; border-radius:5px; color:var(--muted); font-size:13px; margin-top:12px; }
+@media(max-width:850px) {
+.grid { grid-template-columns:1fr; }
+.stat-grid { grid-template-columns:repeat(5,1fr); }
+.rule-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>WARHAMMER: THE OLD WORLD</h1>
+<p>Custom Army Builder · Create Your Own Armies</p>
+</header>
+
+<main>
+
+<div class="tabs">
+<button class="active" onclick="showTab('factions',this)">Factions</button>
+<button onclick="showTab('units',this)">Units</button>
+<button onclick="showTab('equipment',this)">Equipment Library</button>
+<button onclick="showTab('rules',this)">Special Rules Library</button>
+<button onclick="showTab('data',this)">Data Management</button>
+</div>
+
+<section id="factions" class="tab">
+<div class="panel">
+<h2>Create a Faction</h2>
+<div class="grid">
+<div class="field">
+<label>Faction Name</label>
+<input id="fName" placeholder="Faction name">
+</div>
+<div class="field">
+<label>Faction Description</label>
+<input id="fDesc" placeholder="Short description">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="addFaction()">Add Faction</button>
+</div>
+</div>
+
+<div class="panel">
+<h2>Your Factions</h2>
+<div id="factionList" class="list-scroll"></div>
+</div>
+</section>
+
+<section id="units" class="tab hidden">
+<div class="panel">
+<h2>Unit Creator</h2>
+
+<div class="grid">
+<div class="field">
+<label>Unit Name</label>
+<input id="uName" placeholder="Unit name">
+</div>
+<div class="field">
+<label>Faction</label>
+<select id="uFaction"></select>
+</div>
+<div class="field">
+<label>Category</label>
+<select id="uCategory">
+<option>Hero</option>
+<option>Core</option>
+<option>Special</option>
+<option>Rare</option>
+<option>Mercenary</option>
+</select>
+</div>
+<div class="field">
+<label>Points Cost</label>
+<input id="uPoints" type="number" min="0" step="1" placeholder="0" oninput="renderUnitCostSummary()">
+</div>
+</div>
+<div id="unitCostSummary" class="notice">Base cost: 0 pts · Optional equipment: 0 pts · Total: 0 pts</div>
+
+<h3>Stat Profile</h3>
+<p class="muted">M, WS, BS, S, T, W, I, A, Ld</p>
+<div class="stat-grid">
+<label>M<input id="sM" placeholder="-"></label>
+<label>WS<input id="sWS" placeholder="-"></label>
+<label>BS<input id="sBS" placeholder="-"></label>
+<label>S<input id="sS" placeholder="-"></label>
+<label>T<input id="sT" placeholder="-"></label>
+<label>W<input id="sW" placeholder="-"></label>
+<label>I<input id="sI" placeholder="-"></label>
+<label>A<input id="sA" placeholder="-"></label>
+<label>Ld<input id="sLd" placeholder="-"></label>
+</div>
+
+<h3>Equipment</h3>
+<p class="muted">Choose equipment from the shared library. Add custom items in the Equipment Library tab.</p>
+<div id="unitEquipmentPicker" class="rule-grid"></div>
+<h3>Special Rules</h3>
+<p class="muted">
+Select the rules you want to assign. If a rule requires a value in brackets, enter it below its name, e.g. 2, D3, 10 or 2D6.
+</p>
+<div id="unitRulePicker" class="rule-grid"></div>
+
+<h3>Custom Unit Rules</h3>
+<div class="grid">
+<div class="field">
+<label>Custom Rule Name</label>
+<input id="customRuleName" placeholder="Rule name">
+</div>
+<div class="field">
+<label>Rule Description</label>
+<input id="customRuleDesc" placeholder="Rule description">
+</div>
+</div>
+<div class="actions">
+<button onclick="addCustomRuleToUnit()">Add Custom Rule</button>
+</div>
+<div id="pendingCustomRules"></div>
+
+<h3>Unit Description</h3>
+<textarea id="uDesc" placeholder="Description, equipment, weapons and additional information..."></textarea>
+
+<div class="actions">
+<button class="primary" onclick="saveUnit()">Save Unit</button>
+<button onclick="resetUnitForm()">Clear Form</button>
+</div>
+<input type="hidden" id="editUnitId">
+</div>
+
+<div class="panel">
+<h2>Unit Catalogue</h2>
+<div class="grid">
+<div class="field">
+<label>Faction Filter</label>
+<select id="filterFaction" onchange="renderUnits()"></select>
+</div>
+<div class="field">
+<label>Search Units</label>
+<input id="unitSearch" oninput="renderUnits()" placeholder="Enter unit name...">
+</div>
+</div>
+<div id="unitList" class="list-scroll" style="margin-top:15px"></div>
+</div>
+</section>
+
+<section id="equipment" class="tab hidden"><div class="panel">
+<h2>Equipment Library</h2><p class="muted">Common Old World equipment entries. Check your army book for faction-specific options and exact rules.</p>
+<div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
+<div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
+<h3>Add Custom Equipment</h3><div class="grid">
+<div class="field"><label>Equipment Name</label><input id="newEquipmentName" placeholder="Equipment name"></div>
+<div class="field"><label>Category</label><select id="newEquipmentCategory"><option>Melee Weapon</option><option>Ranged Weapon</option><option>Armour</option><option>Shield</option><option>Other Equipment</option></select></div>
+<div class="field" style="grid-column:1/-1"><label>Description</label><input id="newEquipmentDesc" placeholder="Description"></div></div>
+<div class="actions"><button class="primary" onclick="addLibraryEquipment()">Add to Library</button></div></div></section>
+<section id="rules" class="tab hidden">
+<div class="panel">
+<h2>Special Rules Library</h2>
+<p class="muted">
+Select rules from the library to assign them to units. Bracket values can be configured separately for each unit.
+</p>
+<div class="field">
+<label>Search Rules</label>
+<input id="ruleSearch" oninput="renderRules()" placeholder="Search rules...">
+</div>
+<div id="ruleLibrary" class="list-scroll" style="margin-top:14px"></div>
+
+<h3>Add a Custom Rule to the Library</h3>
+<div class="grid">
+<div class="field">
+<label>Rule Name</label>
+<input id="newRuleName" placeholder="Rule name">
+</div>
+<div class="field">
+<label>Description</label>
+<input id="newRuleDesc" placeholder="Description">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="addLibraryRule()">Add to Library</button>
+</div>
+</div>
+</section>
+
+<section id="data" class="tab hidden">
+<div class="panel">
+<h2>Data Management</h2>
+<p>Your factions, units and rules are automatically saved in your browser.</p>
+<div class="actions">
+<button class="primary" onclick="exportData()">Export All Data (JSON)</button>
+<button onclick="document.getElementById('importFile').click()">Import Data (JSON)</button>
+<input id="importFile" type="file" accept=".json,application/json" class="hidden" onchange="importData(event)">
+</div>
+<div class="notice">
+Regularly export a backup. Clearing your browser data may delete your saved armies.
+</div>
+</div>
+
+<div class="panel">
+<h2>About</h2>
+<p class="muted">
+This tool is designed for creating custom faction and unit catalogues.
+It does not contain official army data or full rulebook text.
+Always check official rules and descriptions in your own rulebooks.
+</p>
+</div>
+</section>
+
+</main>
+
+<script>
+const defaultRules = [
+"Armour Bane",
+"Close Order",
+"Counter Charge",
+"Drilled",
+"Fast Cavalry",
+"First Charge",
+"Fly",
+"Frenzy",
+"Hatred",
+"Immune to Psychology",
+"Impact Hits",
+"Killing Blow",
+"Large Target",
+"Magical Attacks",
+"Magic Resistance",
+"Multiple Shots",
+"Poisoned Attacks",
+"Regeneration",
+"Stomp Attacks",
+"Stubborn",
+"Swiftstride",
+"Terror",
+"Vanguard",
+"Veteran",
+"Warband",
+"Ambushers",
+"Chariot",
+"Ethereal",
+"Fear",
+"Flammable",
+"Move through Cover",
+"Multiple Wounds",
+"Open Order",
+"Ponderous",
+"Random Movement",
+"Scouts",
+"Skirmishers",
+"Strike First",
+"Strike Last",
+"Stupidity",
+"Unbreakable",
+"Unstable",
+"Undead",
+"Breath Weapon",
+"Ward Save"
+];
+
+const parameterRules = [
+"Armour Bane",
+"Magic Resistance",
+"Fly",
+"Impact Hits",
+"Multiple Wounds",
+"Stomp Attacks",
+"Multiple Shots",
+"Poisoned Attacks",
+"Regeneration",
+"Ward Save",
+"Breath Weapon"
+];
+
+let factions = [];
+let units = [];
+let rules = defaultRules.map((name,i)=>({
+id:"base"+i,
+name,
+desc:"",
+hasParameter:parameterRules.includes(name)
+}));
+
+let pendingCustomRules = [];
+let editingRuleIds = [];
+let editingRuleValues = {};
+let editingRuleFactions = {};
+let equipment = [];
+let editingEquipmentIds = [];
+let editingEquipmentCosts = {};
+const defaultEquipment = [
+["Hand Weapon","Melee Weapon"],["Additional Hand Weapon","Melee Weapon"],["Great Weapon","Melee Weapon"],["Halberd","Melee Weapon"],["Spear","Melee Weapon"],["Lance","Melee Weapon"],["Cavalry Spear","Melee Weapon"],["Flail","Melee Weapon"],["Morning Star","Melee Weapon"],
+["Longbow","Ranged Weapon"],["Shortbow","Ranged Weapon"],["Crossbow","Ranged Weapon"],["Handgun","Ranged Weapon"],["Pistol","Ranged Weapon"],["Throwing Weapons","Ranged Weapon"],
+["Light Armour","Armour"],["Heavy Armour","Armour"],["Full Plate Armour","Armour"],["Shield","Shield"],["Barding","Other Equipment"]
+].map((x,i)=>({id:"eqbase"+i,name:x[0],category:x[1],desc:"",custom:false}));
+
+function uid() {
+return Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+}
+
+function esc(s) {
+return String(s??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+}
+
+function save() {
+try {
+localStorage.setItem("ow_factions",JSON.stringify(factions));
+localStorage.setItem("ow_units",JSON.stringify(units));
+localStorage.setItem("ow_rules",JSON.stringify(rules));
+localStorage.setItem("ow_equipment",JSON.stringify(equipment));
+} catch(e) {
+alert("Unable to save data in the browser.");
+}
+}
+
+function load() {
+try {
+factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
+units=JSON.parse(localStorage.getItem("ow_units"))||[];
+let saved=JSON.parse(localStorage.getItem("ow_rules"));
+if(saved) rules=saved;
+let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
+equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
+} catch(e) {
+factions=[];
+units=[];
+}
+refreshAll();
+}
+
+function showTab(id,btn) {
+document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+btn.classList.add("active");
+if(id==="units") refreshUnitSelectors();
+if(id==="equipment") renderEquipment();
+}
+
+function addFaction() {
+let name=document.getElementById("fName").value.trim();
+let desc=document.getElementById("fDesc").value.trim();
+
+if(!name) {
+alert("Enter a faction name.");
+return;
+}
+if(factions.some(f=>f.name.toLowerCase()===name.toLowerCase())) {
+alert("This faction already exists.");
+return;
+}
+
+factions.push({id:uid(),name,desc});
+document.getElementById("fName").value="";
+document.getElementById("fDesc").value="";
+save();
+refreshAll();
+}
+
+function deleteFaction(id) {
+if(units.some(u=>u.factionId===id)) {
+if(!confirm("This faction contains units. Delete the faction and all its units?")) return;
+units=units.filter(u=>u.factionId!==id);
+} else if(!confirm("Delete this faction?")) return;
+
+factions=factions.filter(f=>f.id!==id);
+save();
+refreshAll();
+}
+
+function editFaction(id) {
+let f=factions.find(x=>x.id===id);
+let name=prompt("New faction name:",f.name);
+if(name===null) return;
+name=name.trim();
+if(!name) return;
+
+f.name=name;
+f.desc=prompt("Faction description:",f.desc)||"";
+save();
+refreshAll();
+}
+
+function renderFactions() {
+let el=document.getElementById("factionList");
+el.innerHTML=factions.map(f=>`
+<div class="item">
+<div class="item-head">
+<div>
+<strong>${esc(f.name)}</strong><br>
+<small>${esc(f.desc||"No description")} · ${units.filter(u=>u.factionId===f.id).length} units</small>
+</div>
+<div class="actions">
+<button onclick="editFaction('${f.id}')">Edit</button>
+<button class="danger" onclick="deleteFaction('${f.id}')">Delete</button>
+</div>
+</div>
+</div>
+`).join("")||'<div class="empty">No factions have been created yet.</div>';
+}
+
+function refreshUnitSelectors() {
+let options='<option value="">Select faction</option>'+
+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+
+document.getElementById("uFaction").innerHTML=options;
+
+document.getElementById("filterFaction").innerHTML=
+'<option value="all">All Factions</option>'+
+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+}
+
+function addCustomRuleToUnit() {
+let name=document.getElementById("customRuleName").value.trim();
+let desc=document.getElementById("customRuleDesc").value.trim();
+
+if(!name) {
+alert("Enter a rule name.");
+return;
+}
+
+pendingCustomRules.push({id:uid(),name,desc});
+document.getElementById("customRuleName").value="";
+document.getElementById("customRuleDesc").value="";
+renderPendingCustomRules();
+}
+
+function renderPendingCustomRules() {
+document.getElementById("pendingCustomRules").innerHTML=
+pendingCustomRules.filter(r=>!r.libraryId).map(r=>`
+<div class="item">
+<strong>${esc(r.name)}</strong>
+<small> — ${esc(r.desc)}</small>
+<button class="danger" onclick="removePendingRule('${r.id}')">Remove</button>
+</div>
+`).join("");
+}
+
+function removePendingRule(id) {
+pendingCustomRules=pendingCustomRules.filter(r=>r.id!==id);
+renderPendingCustomRules();
+}
+
+function toggleRuleValue(id,checked) {
+if(checked) {
+if(!editingRuleIds.includes(id)) editingRuleIds.push(id);
+} else {
+editingRuleIds=editingRuleIds.filter(x=>x!==id);
+}
+}
+
+function updateRuleValue(id,value) { editingRuleValues[id]=value; }
+function updateRuleFaction(id,value) { editingRuleFactions[id]=value; }
+
+function renderUnitRulePicker() {
+document.getElementById("unitRulePicker").innerHTML=rules.map(r=>{
+let selected=editingRuleIds.includes(r.id);
+let value=editingRuleValues[r.id]||"";
+let needsValue=r.hasParameter||parameterRules.includes(r.name);
+
+return `
+<div class="rule-option">
+<label>
+<input type="checkbox"
+value="${esc(r.id)}"
+${selected?"checked":""}
+onchange="toggleRuleValue('${r.id}',this.checked)">
+<strong>${esc(r.name)}</strong>
+</label>
+${r.name==="Hatred"?`
+<select class="rule-value" onchange="updateRuleFaction('${r.id}',this.value)">
+<option value="">Select hated faction</option>
+${factions.map(f=>`<option value="${esc(f.id)}" ${editingRuleFactions[r.id]===f.id?"selected":""}>${esc(f.name)}</option>`).join("")}
+</select>`:''}
+${needsValue?`<input type="text" class="rule-value" placeholder="Value, e.g. 2, D3, 10..." value="${esc(value)}" oninput="updateRuleValue('${r.id}',this.value)">`:''}
+${r.desc?`<small>${esc(r.desc)}</small>`:''}
+</div>
+`;
+}).join("")||'<p class="muted">The library is empty.</p>';
+}
+
+function parsePointCost(value) {
+const n=Number(value);
+return Number.isFinite(n)&&n>0?n:0;
+}
+
+function getSelectedEquipmentCost(ids=editingEquipmentIds,costs=editingEquipmentCosts) {
+return ids.reduce((sum,id)=>sum+parsePointCost(costs?.[id]),0);
+}
+
+function renderUnitCostSummary() {
+const base=parsePointCost(document.getElementById("uPoints")?.value);
+const equipmentCost=getSelectedEquipmentCost();
+const summary=document.getElementById("unitCostSummary");
+if(summary) summary.textContent=`Base cost: ${base} pts · Optional equipment: ${equipmentCost} pts · Total: ${base+equipmentCost} pts`;
+}
+
+function toggleEquipment(id,checked) {
+if(checked) {
+if(!editingEquipmentIds.includes(id)) editingEquipmentIds.push(id);
+if(editingEquipmentCosts[id]===undefined) editingEquipmentCosts[id]=0;
+} else {
+editingEquipmentIds=editingEquipmentIds.filter(x=>x!==id);
+}
+renderUnitEquipmentPicker();
+renderUnitCostSummary();
+}
+
+function updateEquipmentCost(id,value) {
+editingEquipmentCosts[id]=value;
+renderUnitCostSummary();
+}
+
+function renderUnitEquipmentPicker() {
+const groups=["Melee Weapon","Ranged Weapon","Armour","Shield","Other Equipment"];
+document.getElementById("unitEquipmentPicker").innerHTML=groups.map(group=>{
+const items=equipment.filter(e=>e.category===group);
+if(!items.length) return "";
+return `<div class="item" style="grid-column:1/-1"><strong>${esc(group)}</strong><div class="rule-grid" style="margin-top:8px">${
+items.map(e=>{
+const selected=editingEquipmentIds.includes(e.id);
+return `<div class="rule-option">
+<label><input type="checkbox" ${selected?"checked":""} onchange="toggleEquipment('${e.id}',this.checked)"><strong>${esc(e.name)}</strong></label>
+${selected?`<div class="equipment-cost"><label>Optional Cost (pts)</label><input type="number" min="0" step="1" value="${esc(editingEquipmentCosts[e.id]??0)}" oninput="updateEquipmentCost('${e.id}',this.value)" placeholder="0"></div>`:""}
+${e.desc?`<small>${esc(e.desc)}</small>`:""}
+</div>`;
+}).join("")
+}</div></div>`;
+}).join("")||'<p class="muted">No equipment in the library.</p>';
+renderUnitCostSummary();
+}
+function addLibraryEquipment() {
+const name=document.getElementById("newEquipmentName").value.trim(), category=document.getElementById("newEquipmentCategory").value, desc=document.getElementById("newEquipmentDesc").value.trim();
+if(!name) { alert("Enter an equipment name."); return; }
+if(equipment.some(e=>e.name.toLowerCase()===name.toLowerCase())) { alert("This equipment already exists."); return; }
+equipment.push({id:uid(),name,category,desc,custom:true});
+document.getElementById("newEquipmentName").value=""; document.getElementById("newEquipmentDesc").value="";
+save(); renderEquipment(); renderUnitEquipmentPicker();
+}
+function deleteLibraryEquipment(id) {
+if(!confirm("Delete this equipment from the library? It will also be removed from units.")) return;
+equipment=equipment.filter(e=>e.id!==id); editingEquipmentIds=editingEquipmentIds.filter(x=>x!==id);
+units=units.map(u=>{
+const costs={...(u.equipmentCosts||{})};
+delete costs[id];
+return {...u,equipmentIds:(u.equipmentIds||[]).filter(x=>x!==id),equipmentCosts:costs};
+});
+save(); renderEquipment(); renderUnitEquipmentPicker(); renderUnits();
+}
+function renderEquipment() {
+const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase();
+const list=equipment.filter(e=>(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
+document.getElementById("equipmentLibrary").innerHTML=list.map(e=>`<div class="item"><div class="item-head"><div><strong>${esc(e.name)}</strong><br><small>${esc(e.category)}</small></div>${e.custom?`<button class="danger" onclick="deleteLibraryEquipment('${e.id}')">Delete</button>`:'<span class="muted">Default Equipment</span>'}</div></div>`).join("")||'<div class="empty">No equipment found.</div>';
+}
+function saveUnit() {
+let name=document.getElementById("uName").value.trim();
+let factionId=document.getElementById("uFaction").value;
+
+if(!name) {
+alert("Enter a unit name.");
+return;
+}
+if(!factionId) {
+alert("Create and select a faction first.");
+return;
+}
+
+let stats={};
+["M","WS","BS","S","T","W","I","A","Ld"].forEach(k=>{
+stats[k]=document.getElementById("s"+k).value.trim();
+});
+
+let existing=units.find(u=>u.id===document.getElementById("editUnitId").value);
+
+let unit={
+id:existing?existing.id:uid(),
+name,
+factionId,
+category:document.getElementById("uCategory").value,
+points:document.getElementById("uPoints").value,
+stats,
+ruleIds:[...editingRuleIds],
+ruleValues:{...editingRuleValues},
+ruleFactions:{...editingRuleFactions},
+equipmentIds:[...editingEquipmentIds],
+equipmentCosts:{...editingEquipmentCosts},
+customRules:pendingCustomRules.filter(r=>!r.libraryId).map(r=>({...r})),
+desc:document.getElementById("uDesc").value
+};
+
+if(existing) {
+units=units.map(u=>u.id===existing.id?unit:u);
+} else {
+units.push(unit);
+}
+
+save();
+resetUnitForm();
+renderUnits();
+alert("Unit saved successfully.");
+}
+
+function resetUnitForm() {
+[
+"uName","uPoints","uDesc","editUnitId",
+"sM","sWS","sBS","sS","sT","sW","sI","sA","sLd",
+"customRuleName","customRuleDesc"
+].forEach(id=>document.getElementById(id).value="");
+
+document.getElementById("uCategory").value="Core";
+
+pendingCustomRules=[];
+editingRuleIds=[];
+editingRuleValues={};
+editingRuleFactions={};
+editingEquipmentIds=[];
+editingEquipmentCosts={};
+
+renderPendingCustomRules();
+renderUnitRulePicker();
+renderUnitEquipmentPicker();
+renderUnitCostSummary();
+}
+
+function editUnit(id) {
+let u=units.find(x=>x.id===id);
+
+document.getElementById("editUnitId").value=u.id;
+document.getElementById("uName").value=u.name;
+document.getElementById("uFaction").value=u.factionId;
+document.getElementById("uCategory").value=u.category;
+document.getElementById("uPoints").value=u.points||"";
+document.getElementById("uDesc").value=u.desc||"";
+
+["M","WS","BS","S","T","W","I","A","Ld"].forEach(k=>{
+document.getElementById("s"+k).value=u.stats?.[k]||"";
+});
+
+editingRuleIds=u.ruleIds||[];
+editingRuleValues=u.ruleValues||{};
+editingRuleFactions=u.ruleFactions||{};
+editingEquipmentIds=u.equipmentIds||[];
+editingEquipmentCosts=u.equipmentCosts||{};
+pendingCustomRules=(u.customRules||[]).map(r=>({...r}));
+
+renderPendingCustomRules();
+renderUnitRulePicker();
+renderUnitEquipmentPicker();
+
+document.querySelectorAll(".tabs button")[1].click();
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function deleteUnit(id) {
+if(!confirm("Delete this unit?")) return;
+units=units.filter(u=>u.id!==id);
+save();
+renderUnits();
+}
+
+function renderUnits() {
+let faction=document.getElementById("filterFaction").value;
+let q=document.getElementById("unitSearch").value.toLowerCase();
+
+let list=units.filter(u=>
+(faction==="all"||u.factionId===faction)&&
+u.name.toLowerCase().includes(q)
+);
+
+document.getElementById("unitList").innerHTML=list.map(u=>{
+let f=factions.find(x=>x.id===u.factionId);
+
+let profile=["M","WS","BS","S","T","W","I","A","Ld"]
+.map(k=>k+":"+((u.stats||{})[k]||"-")).join(" · ");
+let basePoints=parsePointCost(u.points);
+let equipmentPoints=getSelectedEquipmentCost(u.equipmentIds||[],u.equipmentCosts||{});
+let totalPoints=basePoints+equipmentPoints;
+
+let assigned=(u.ruleIds||[]).map(id=>{
+let rule=rules.find(r=>r.id===id);
+if(!rule) return null;
+let value=(u.ruleValues||{})[id];
+if(rule.name==="Hatred") { const target=factions.find(f=>f.id===(u.ruleFactions||{})[id]); return target?`Hatred (${target.name})`:"Hatred"; }
+return value?`${rule.name} (${value})`:rule.name;
+}).filter(Boolean);
+
+return `
+<div class="item">
+<div class="item-head">
+<div>
+<strong>${esc(u.name)}</strong><br>
+<small>${esc(f?.name||"No faction")} · ${esc(u.category)} · ${totalPoints} pts total (${basePoints} base + ${equipmentPoints} equipment)</small>
+</div>
+<div class="actions">
+<button onclick="editUnit('${u.id}')">Edit</button>
+<button class="danger" onclick="deleteUnit('${u.id}')">Delete</button>
+</div>
+</div>
+
+<div class="statline">${profile}</div>
+<div>${(u.equipmentIds||[]).map(id=>equipment.find(e=>e.id===id)).filter(Boolean).map(e=>{
+const cost=parsePointCost((u.equipmentCosts||{})[e.id]);
+return `<span class="tag">${esc(e.name)} (+${cost} pts)</span>`;
+}).join("")}</div>
+
+<div>
+${assigned.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}
+</div>
+
+${(u.customRules||[]).map(r=>`
+<div class="muted"><b>${esc(r.name)}:</b> ${esc(r.desc)}</div>
+`).join("")}
+
+${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
+</div>
+`;
+}).join("")||'<div class="empty">No units found. Create your first unit above.</div>';
+}
+
+function addLibraryRule() {
+let name=document.getElementById("newRuleName").value.trim();
+let desc=document.getElementById("newRuleDesc").value.trim();
+
+if(!name) {
+alert("Enter a rule name.");
+return;
+}
+if(rules.some(r=>r.name.toLowerCase()===name.toLowerCase())) {
+alert("This rule already exists.");
+return;
+}
+
+let needsValue=confirm("Does this rule require a value in brackets?");
+
+rules.push({
+id:uid(),
+name,
+desc,
+hasParameter:needsValue
+});
+
+document.getElementById("newRuleName").value="";
+document.getElementById("newRuleDesc").value="";
+
+save();
+renderRules();
+renderEquipment();
+renderUnitRulePicker();
+renderUnitEquipmentPicker();
+}
+
+function deleteLibraryRule(id) {
+if(!confirm("Delete this rule from the library?")) return;
+
+rules=rules.filter(r=>r.id!==id);
+save();
+renderRules();
+renderUnitRulePicker();
+renderUnits();
+}
+
+function renderRules() {
+let q=document.getElementById("ruleSearch").value.toLowerCase();
+let list=rules.filter(r=>r.name.toLowerCase().includes(q));
+
+document.getElementById("ruleLibrary").innerHTML=list.map(r=>`
+<div class="item">
+<div class="item-head">
+<div>
+<strong>${esc(r.name)}</strong><br>
+<small>${esc(r.desc||"No description provided.")}</small>
+${r.hasParameter?'<span class="tag">Bracket value</span>':''}
+</div>
+${r.id.startsWith("base")
+?'<span class="muted">Default Rule</span>'
+:`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}
+</div>
+</div>
+`).join("")||'<div class="empty">No rules found.</div>';
+}
+
+function exportData() {
+let data={version:4,factions,units,rules,equipment};
+
+let blob=new Blob([JSON.stringify(data,null,2)],{
+type:"application/json"
+});
+
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="old_world_army_data.json";
+a.click();
+URL.revokeObjectURL(a.href);
+}
+
+function importData(event) {
+let file=event.target.files[0];
+if(!file) return;
+
+let reader=new FileReader();
+
+reader.onload=()=>{
+try {
+let d=JSON.parse(reader.result);
+
+if(!Array.isArray(d.factions)||!Array.isArray(d.units)||!Array.isArray(d.rules)) {
+throw Error("Invalid format");
+}
+
+factions=d.factions;
+units=d.units;
+rules=d.rules;
+equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
+
+save();
+refreshAll();
+alert("Data imported successfully.");
+} catch(e) {
+alert("Unable to read the JSON file.");
+}
+
+event.target.value="";
+};
+
+reader.readAsText(file);
+}
+
+function refreshAll() {
+renderFactions();
+refreshUnitSelectors();
+renderUnits();
+renderRules();
+renderUnitRulePicker();
+renderUnitEquipmentPicker();
+renderPendingCustomRules();
+}
+
+load();
+</script>
+<!-- ===== WEAPON/ RULE POPUPS + GENERIC WEAPONS (data: tow.whfb.app) ===== -->
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+.modal-box{background:#1d1a18;border:1px solid #c6a15b;border-radius:8px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;color:#eee5d5}
+.modal-box h3{color:#c6a15b;margin-top:0;border-bottom:1px solid #493b2d;padding-bottom:8px}
+.modal-box h4{color:#c6a15b;margin:10px 0 4px}
+.wstats{width:100%;border-collapse:collapse;margin:10px 0}
+.wstats th,.wstats td{border:1px solid #493b2d;padding:6px 8px;text-align:center;font-size:13px}
+.wstats th{color:#c6a15b;background:#25201c}
+.wlink,.rlink{color:#c6a15b;cursor:pointer;text-decoration:underline dotted}
+.wlink:hover,.rlink:hover{color:#eee5d5}
+.wnote{color:#a99c89;font-size:13px;font-style:italic}
+</style>
+<script>
+// ---------- WEAPON DATA (source: tow.whfb.app / Rulebook) ----------
+// entries marked * : completed from the TOW rulebook, verify against the site
+const weaponDetails={
+"Hand Weapon":{cat:"Melee Weapon",desc:"Even the most poorly prepared warrior will arm themselves with a hand weapon, such as a simple sword or axe. It may even be that the model's natural weapons, such as teeth and claws, fulfil this role.",stats:[["Combat","S","-","-"]],notes:"Unless specified otherwise, all models are assumed to be equipped with a hand weapon."},
+"Additional Hand Weapon":{cat:"Melee Weapon",desc:"Not content with a single hand weapon, some warriors carry two - one in each hand - the better to rain blows down upon their foes.",stats:[["Combat","S","-","Extra Attacks (+1), Requires Two Hands"]]},
+"Flail":{cat:"Melee Weapon",desc:"A flail is a cumbersome, heavy weapon used with both hands. It consists of heavy weights, often spiked, attached to a pole or handle by heavy chains.",stats:[["Combat","S+2","-2","Armour Bane (1), Requires Two Hands"]],notes:"A flail's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn."},
+"Great Weapon":{cat:"Melee Weapon",desc:"Great weapons are especially large and heavy weapons wielded with both hands: great hammers, great axes, two-handed swords and so forth. A blow from a great weapon can cut a foe in half and shatter the thickest armour.",stats:[["Combat","S+2","-2","Armour Bane (1), Requires Two Hands, Strike Last"]]},
+"Halberd":{cat:"Melee Weapon",desc:"The halberd is a heavy bladed weapon mounted on a sturdy shaft, with a point like a spear and a heavy cutting edge like an axe. It is held in both hands and used to chop as well as thrust.",stats:[["Combat","S+1","-1 (-2)","Armour Bane (1), Requires Two Hands"]],notes:"A halberd has an AP of -2 against enemy models the wielder charged this turn."},
+"Morning Star":{cat:"Melee Weapon",desc:"A morning star is a single-handed weapon consisting of one or more spiked balls on a chain. Its advantage lies in the initial flurry of combat.",stats:[["Combat","S+1","-1","-"]],notes:"A morning star's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn."},
+"Whip":{cat:"Melee Weapon",desc:"One or more long lengths of braided leather fitted to a stout handle; when sharpened blades and hooked spikes are added, it can inflict devastating injuries.",stats:[["Combat","S","-","-"]]},
+"Spear":{cat:"Melee Weapon",desc:"Thrusting spear - the favoured weapon of massed infantry regiments. Their length enables their wielders to fight in multiple ranks.",stats:[["Combat","S","-","-"]],notes:"Infantry only. Cannot make supporting attacks on a turn it charged. When charged in its front arc, the wielder gains +1 Initiative against the charging unit."},
+"Lance":{cat:"Melee Weapon",desc:"A lance is a long, heavy spear, wielded to devastating effect by charging cavalry. Couched under the arm of its wielder, the point is driven into the foe with the full weight and momentum of the charge.",stats:[["Combat","S+2","-2","-"]],notes:"Cavalry or monsters only. A lance can only be used during a turn in which the wielder charged; its modifiers apply only against models it charged."},
+"Cavalry Spear":{cat:"Melee Weapon",desc:"Lighter than a lance, cavalry spears lack shuddering impact on the charge but more than make up for it in versatility.",stats:[["Combat","S+1","-1","-"]],notes:"Cavalry, monsters or chariots only. Modifiers apply only during a turn in which the wielder charged. Cannot make supporting attacks on a turn it charged."},
+"Throwing Spear":{cat:"Melee Weapon",desc:"Short, heavy throwing spears favoured by hunters, on foot or mounted.",stats:[["Combat","S","-","-"]],notes:"Can only be used during a turn in which the wielder charged; in other turns the model uses its hand weapon."},
+"Longbow":{cat:"Ranged Weapon",desc:"A longbow is capable of firing at an incredible range and with quite alarming power, only increasing in deadliness as the range shortens.",stats:[["30\"","3","-","-"]]},
+"Shortbow":{cat:"Ranged Weapon",desc:"Small, short-ranged bows favoured by light troops and cavalry. A skilled archer can load, draw and loose a shortbow without breaking stride.",stats:[["18\"","3","-","Quick Shot, Volley Fire"]]},
+"Warbow":{cat:"Ranged Weapon",desc:"Often made from composite materials and cunningly recurved, a warbow is designed to transfer the strength of the archer directly into every shot.",stats:[["24\"","S","-","-"]]},
+"Handgun":{cat:"Ranged Weapon",desc:"A simple firearm: a metal barrel mounted on a wooden stock. Handguns have a respectable range and hit very hard.",stats:[["24\"","4","-1","Armour Bane (1), Ponderous"]]},
+"Pistol":{cat:"Ranged Weapon",desc:"Smaller versions of handguns: reduced range, but wielded single-handed and effective as clubs at close quarters once their charge is spent.",stats:[["12\"","4","-1","-"]]},
+"Brace of Pistols":{cat:"Ranged Weapon",desc:"A matched pair of pistols, enabling the warrior to snap off multiple shots; in combat a duellist can shoot, club, parry and jab.",stats:[["Ranged: 12\"","4","-1","-"],["Combat","S","-","-"]],notes:"A brace of pistols has two profiles, representing how the weapons are used in combat."},
+"Repeater Handgun":{cat:"Ranged Weapon",desc:"A multi-barrelled gun: several barrels welded together. They look splendid, but are time consuming to load.",stats:[["24\"","4","-1","-"]]},
+"Repeater Pistol":{cat:"Ranged Weapon",desc:"A compact multi-barrelled black powder weapon.",stats:[["12\"","4","-1","-"]]},
+"Crossbow":{cat:"Ranged Weapon",desc:"Brutally powerful and relatively easy to use: quick and easy to manufacture and to learn - ideal for large regiments and conscripts.",stats:[["30\"","4","-","-"]]},
+"Repeater Crossbow":{cat:"Ranged Weapon",desc:"Sacrificing raw power for speed: the string can be levered back quickly, a fresh bolt dropping into place from a hopper mounted atop the weapon.",stats:[["24\"","3","-","Armour Bane (1), Multiple Shots (2)"]]},
+"Repeater Handbow":{cat:"Ranged Weapon",desc:"A small, rapid-firing weapon lacking strength and range, but versatile - favoured by assassins for its discreet size and almost silent operation.",stats:[["12\"","3","-","Multiple Shots (2), Quick Shot"]]},
+"Brace of Repeater Handbows":{cat:"Ranged Weapon",desc:"A brace of repeater handbows enables the delivery of a withering amount of fire.",stats:[["12\"","3","-","-"]]},
+"Throwing Weapons":{cat:"Ranged Weapon",desc:"Miscellaneous hurled missiles such as knives and javelins. *",stats:[["12\"","3","-","Quick Shot *"]]},
+"Javelin":{cat:"Ranged Weapon",desc:"A light spear hurled at the enemy. *",stats:[["12\"","3","-","Quick Shot *"]]},
+"Sling":{cat:"Ranged Weapon",desc:"Simple slings favoured by light troops. *",stats:[["18\"","3","-","Quick Shot *"]]},
+"Throwing Axe":{cat:"Ranged Weapon",desc:"Heavy axes hurled at short range. *",stats:[["8\"","4","-","- *"]]},
+"Light Armour":{cat:"Armour",desc:"Provides a 6+ armour save.",stats:[]},
+"Heavy Armour":{cat:"Armour",desc:"Provides a 5+ armour save.",stats:[]},
+"Full Plate Armour":{cat:"Armour",desc:"Provides a 4+ armour save.",stats:[]},
+"Shield":{cat:"Shield",desc:"Adds +1 to the model's armour save (in close combat, and against shooting from its front arc).",stats:[]},
+"Barding":{cat:"Other Equipment",desc:"Armour for a mount: +1 to the mount's armour save, but the mount suffers -1 to its Movement.",stats:[]}
+};
+
+// ---------- RULE EFFECTS (source: tow.whfb.app / Rulebook) ----------
+const ruleDescriptions={
+"Ambushers":"Instead of deploying normally, the unit is held in reserve and arrives later: at the start of one of your Movement phases (from turn 2 onwards) choose a table edge and place the unit within 8\" of it. It cannot charge in the turn it arrives.",
+"Armour Bane":"Wounds inflicted by this attack reduce the target's armour save by an additional X, on top of the weapon's Armour Piercing value.",
+"Breath Weapon":"Once per game, at the start of the Shooting phase or of a round of close combat, the model can unleash its breath: one enemy unit within 8\" (or in base contact, in combat) suffers 2D6 automatic hits at the model's own Strength.",
+"Close Order":"The unit fights shoulder to shoulder and can make supporting attacks from one additional rank than normal.",
+"Counter Charge":"When an enemy declares a charge against this unit, it may attempt a counter charge (usually a Leadership test): if successful it moves into contact with the charger and counts as having charged itself. Verify exact timing in the rulebook.",
+"Drilled":"Thanks to relentless training the unit can perform a swift reform: it reforms without the usual penalties and can still shoot (but not charge). Verify exact wording in the rulebook.",
+"Ethereal":"The model is a spirit: it can only be wounded by Magical Attacks, it ignores movement penalties for terrain and cannot benefit from armour saves.",
+"Fast Cavalry":"Light, mobile cavalry: may make a feigned flight (flee from a charge and rally automatically later), moves and shoots with great freedom and usually has the Vanguard rule. Check the full entry in the rulebook.",
+"Fear":"At the start of each round of close combat, enemies with a lower Leadership than this model must pass a Fear test or need 6s to hit it that round.",
+"First Charge":"On a turn in which the unit charges, its models gain +1 Strength (or as specified in its entry).",
+"Flammable":"If this model suffers an unsaved wound from a Flaming Attack, it suffers two wounds instead of one.",
+"Fly":"The model can fly: it moves over intervening models and terrain and ignores penalties for them; it must land at the end of its move. The value in brackets is its ground Movement.",
+"Frenzy":"Frenzied models have +1 Attack and are Immune to Psychology. If able to charge, they must, and must pursue and overrun. If the unit loses a round of combat it loses its Frenzy.",
+"Hatred":"The model re-rolls failed To Hit rolls in close combat against the hated foe (the foe is chosen from the dropdown).",
+"Immune to Psychology":"The unit automatically passes all Panic, Fear and Terror tests.",
+"Impact Hits":"At the start of close combat (before Initiative is worked out), the model inflicts X automatic hits with its own Strength on the unit it charged.",
+"Killing Blow":"An unmodified To Wound roll of 6 against a man-sized model is a Killing Blow: the model is slain outright with no saves of any kind allowed.",
+"Large Target":"The model towers over the battlefield: it can be seen and shot at over intervening models and it has a 360° vision arc.",
+"Magical Attacks":"The model's attacks count as magical: they can harm Ethereal creatures and other targets that can only be wounded by magic.",
+"Magic Resistance":"The unit resists magic, usually by improving its ward save against wounds caused by spells (or by making enemy spells harder to cast on it - verify the exact effect in the rulebook).",
+"Move Through Cover":"The unit ignores movement penalties for moving through cover and difficult terrain.",
+"Multiple Shots":"The weapon can fire X shots instead of a single one; firing more than one shot imposes a -1 To Hit penalty.",
+"Multiple Wounds":"Each unsaved wound inflicted by the attack is multiplied into X wounds.",
+"Open Order":"The unit fights in open formation: it makes supporting attacks with one fewer rank than normal, but is more flexible. Verify exact effects in the rulebook.",
+"Poisoned Attacks":"An unmodified To Wound roll of 6 always wounds, regardless of the target's Toughness, and allows no armour save.",
+"Ponderous":"The model may not shoot if it moved during the same turn (Move or Shoot).",
+"Random Movement":"Instead of moving normally, the model moves a random distance in a random direction (X): it cannot march or declare charges - see the rulebook for the exact procedure.",
+"Scouts":"After both armies are deployed, the unit may be placed anywhere on the table more than 12\" away from the enemy (unless it can deploy inside terrain, as per its entry).",
+"Skirmishers":"The unit fights in a loose screen: models need only stay within 2\" of another model of the unit, it has a 360° vision arc, and it is harder to hit with shooting and magic. See the full Skirmishers entry in the rulebook.",
+"Stomp Attacks":"At the end of each round of close combat, the model inflicts X automatic hits with its own Strength on one enemy unit in base contact.",
+"Strike First":"The model strikes before all models without this rule, regardless of Initiative.",
+"Strike Last":"The model strikes after all models without this rule, regardless of Initiative.",
+"Stubborn":"The unit always counts as Steadfast: it takes Break tests using its unmodified Leadership.",
+"Stupidity":"At the start of each of its controller's turns, the model/unit must pass a Leadership test or do nothing this turn (no moving, shooting, casting or fighting).",
+"Swiftstride":"When charging, fleeing or pursuing, the unit rolls 3D6 for its move and discards the lowest die.",
+"Terror":"Causes Fear. In addition, units that wish to charge it must pass a Leadership test first, and units charged by it must test or flee.",
+"Vanguard":"After both armies deploy but before the first turn, the unit may make a single free move of up to 12\" (it may not end this move within 12\" of the enemy).",
+"Veteran":"Veteran troops: the unit's experience grants it bonuses against psychology and in combat - check the exact effect in the rulebook/army list.",
+"Warband":"An unruly warband with mob tactics - check the exact effect in the rulebook/army list.",
+"Regeneration":"Each time the model suffers an unsaved wound (after armour and ward saves), roll a dice: on X+ the wound is ignored. Flaming Attacks negate Regeneration.",
+"Unbreakable":"The unit never takes Break tests and can never choose to flee - it fights to the death.",
+"Unstable":"When the unit loses a round of close combat, it immediately suffers a number of extra wounds equal to the difference in combat resolution scores.",
+"Chariot":"Chariot troop type: a carriage drawn into battle - it inflicts Impact Hits when it charges, cannot be stomped, and its attacks are resolved with the crew and mounts. See the Chariots rules in the rulebook.",
+"Undead":"The model is undead: it is Immune to Psychology and instead of fleeing it crumbles when it loses combat (see the Undead rules in your army book - Necromantic/Nehekharan Undead).",
+"Ward Save":"The model has a special save (X+) taken after its armour save; ward saves are never modified by Armour Piercing."
+};
+
+// ---------- add missing generic weapons to the library ----------
+[["Whip","Melee Weapon"],["Throwing Spear","Melee Weapon"],["Warbow","Ranged Weapon"],["Brace of Pistols","Ranged Weapon"],["Repeater Handgun","Ranged Weapon"],["Repeater Pistol","Ranged Weapon"],["Repeater Crossbow","Ranged Weapon"],["Repeater Handbow","Ranged Weapon"],["Brace of Repeater Handbows","Ranged Weapon"],["Javelin","Ranged Weapon"],["Sling","Ranged Weapon"],["Throwing Axe","Ranged Weapon"]]
+.forEach(w=>{ if(!equipment.some(e=>e.name===w[0])) equipment.push({id:"eqx"+w[0].toLowerCase().replace(/[^a-z]/g,""),name:w[0],category:w[1],desc:"",custom:false}); });
+save();
+if(typeof renderEquipment==="function") renderEquipment();
+if(typeof renderUnitEquipmentPicker==="function") renderUnitEquipmentPicker();
+
+// ---------- modal ----------
+const overlay=document.createElement("div");
+overlay.className="modal-overlay hidden";
+overlay.innerHTML='<div class="modal-box"><button class="danger modal-close">Close</button><h3 id="mTitle"></h3><div id="mBody"></div></div>';
+document.body.appendChild(overlay);
+function closeModal(){overlay.classList.add("hidden");}
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+function ruleBase(n){return n.replace(/\s*\(.*?\)/,"").trim();}
+
+function openWeaponModal(name){
+const w=weaponDetails[name]; if(!w)return;
+document.getElementById("mTitle").textContent=name;
+let h="";
+w.stats.forEach(p=>{
+if(w.stats.length>1)h+="<h4>"+p[0].replace(/:.*/,"")+"</h4>";
+const rules=p[3]&&p[3]!=="-"?p[3].split(",").map(r=>'<a class="rlink" data-name="'+r.trim().replace(/"/g,"&quot;")+'">'+r.trim()+'</a>').join(", "):"-";
+h+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+p[0]+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td><td>'+rules+'</td></tr></table>';
+});
+if(w.desc)h+="<p>"+w.desc+"</p>";
+if(w.notes)h+='<p class="wnote">Notes: '+w.notes+"</p>";
+document.getElementById("mBody").innerHTML=h;
+overlay.classList.remove("hidden");
+}
+
+function openRuleModal(name){
+const base=ruleBase(name);
+const d=ruleDescriptions[base]||ruleDescriptions[name];
+document.getElementById("mTitle").textContent=name;
+document.getElementById("mBody").innerHTML=(d?("<p>"+d+"</p>"):'<p class="wnote">No description available for this rule yet.</p>')+'<p class="wnote">Source: tow.whfb.app / The Old World rulebook - always verify against your rulebook.</p>';
+overlay.classList.remove("hidden");
+}
+
+document.addEventListener("click",e=>{
+const c=e.target.closest(".modal-close"); if(c){closeModal();return;}
+const a=e.target.closest(".wlink"); if(a){openWeaponModal(a.dataset.name);return;}
+const b=e.target.closest(".rlink"); if(b){openRuleModal(b.dataset.name);return;}
+});
+
+// ---------- make names clickable after each render ----------
+function linkifyNames(){
+const root=document.querySelector("main"); if(!root)return;
+const names=Object.keys(weaponDetails).concat(rules.map(r=>r.name));
+const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const re=new RegExp("("+names.slice().sort((a,b)=>b.length-a.length).map(escRe).join("|")+")","gi");
+const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+let n; while(n=walker.nextNode()){ if(!n.parentElement.closest("a,script,style")) nodes.push(n); }
+nodes.forEach(node=>{
+const text=node.nodeValue; re.lastIndex=0; if(!re.test(text))return; re.lastIndex=0;
+const frag=document.createDocumentFragment(); let last=0,m;
+while((m=re.exec(text))){
+if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)));
+const exact=names.find(x=>x.toLowerCase()===m[0].toLowerCase());
+const a=document.createElement("a");
+a.className=weaponDetails[exact]?"wlink":"rlink";
+a.dataset.name=exact; a.textContent=m[0];
+frag.appendChild(a); last=m.index+m[0].length;
+}
+frag.appendChild(document.createTextNode(text.slice(last)));
+node.parentNode.replaceChild(frag,node);
+});
+}
+["renderFactions","renderUnits","renderRules","renderUnitRulePicker","renderUnitEquipmentPicker","renderPendingCustomRules","renderEquipment"].forEach(fn=>{
+const orig=window[fn]; if(typeof orig!=="function")return;
+window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return r;};
+});
+linkifyNames();
+</script>
+</body>
+</html>
