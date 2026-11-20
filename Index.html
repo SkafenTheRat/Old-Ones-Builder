@@ -4,7 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#11100f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Army Builder">
 <title>Warhammer: The Old World — Army Builder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 :root {
 --bg:#11100f; --panel:#1d1a18; --panel2:#29231e;
@@ -81,12 +88,24 @@ border:1px solid #403329; font-size:13px; min-width:0;
 .equipment-cost { margin-top:9px; }
 .equipment-cost label { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
 .equipment-cost input { width:100%; }
+.equip-modes { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:8px; }
+.equip-modes label { color:var(--muted); font-size:12px; }
+.tag.option { border-style:dashed; }
+.over-limit { color:#e18b7d; }
 .list-scroll { max-height:580px; overflow-y:auto; padding-right:5px; }
 .list-scroll::-webkit-scrollbar { width:9px; }
 .list-scroll::-webkit-scrollbar-thumb { background:var(--gold); border-radius:8px; }
 .statline { display:flex; gap:8px; flex-wrap:wrap; color:var(--gold); font-size:13px; margin-top:8px; }
 .empty { text-align:center; color:var(--muted); padding:30px; }
 .notice { background:#30271e; padding:12px; border-radius:5px; color:var(--muted); font-size:13px; margin-top:12px; }
+.install-banner {
+position:fixed; left:16px; right:16px; bottom:16px; z-index:1100;
+max-width:520px; margin:0 auto; background:#1d1a18;
+border:1px solid var(--gold); border-radius:10px; padding:16px;
+box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+.install-banner strong { color:var(--gold); display:block; margin-bottom:8px; letter-spacing:1px; }
+.install-banner p { margin:0 0 8px; }
 @media(max-width:850px) {
 .grid { grid-template-columns:1fr; }
 .stat-grid { grid-template-columns:repeat(5,1fr); }
@@ -106,6 +125,7 @@ border:1px solid #403329; font-size:13px; min-width:0;
 <div class="tabs">
 <button class="active" onclick="showTab('factions',this)">Factions</button>
 <button onclick="showTab('units',this)">Units</button>
+<button onclick="showTab('army',this)">Army</button>
 <button onclick="showTab('equipment',this)">Equipment Library</button>
 <button onclick="showTab('rules',this)">Special Rules Library</button>
 <button onclick="showTab('data',this)">Data Management</button>
@@ -163,7 +183,7 @@ border:1px solid #403329; font-size:13px; min-width:0;
 <input id="uPoints" type="number" min="0" step="1" placeholder="0" oninput="renderUnitCostSummary()">
 </div>
 </div>
-<div id="unitCostSummary" class="notice">Base cost: 0 pts · Optional equipment: 0 pts · Total: 0 pts</div>
+<div id="unitCostSummary" class="notice">Base cost: 0 pts · Included equipment adds no extra points · Paid options are chosen in the army list</div>
 
 <h3>Stat Profile</h3>
 <p class="muted">M, WS, BS, S, T, W, I, A, Ld</p>
@@ -180,7 +200,7 @@ border:1px solid #403329; font-size:13px; min-width:0;
 </div>
 
 <h3>Equipment</h3>
-<p class="muted">Choose equipment from the shared library. Add custom items in the Equipment Library tab.</p>
+<p class="muted">Included equipment is part of the unit and adds no points. Mark an item as a paid option to set its price — it is chosen later, when you build an army.</p>
 <div id="unitEquipmentPicker" class="rule-grid"></div>
 <h3>Special Rules</h3>
 <p class="muted">
@@ -227,6 +247,38 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 </div>
 </div>
 <div id="unitList" class="list-scroll" style="margin-top:15px"></div>
+</div>
+</section>
+
+<section id="army" class="tab hidden">
+<div class="panel">
+<h2>Create an Army</h2>
+<p class="muted">Pick a faction and a points limit. Included equipment comes with each unit. Paid options are added on each entry below.</p>
+<div class="grid">
+<div class="field">
+<label>Army Name</label>
+<input id="aName" placeholder="Army name">
+</div>
+<div class="field">
+<label>Faction</label>
+<select id="aFaction"></select>
+</div>
+<div class="field">
+<label>Points Limit</label>
+<input id="aLimit" type="number" min="0" step="1" placeholder="2000" value="2000">
+</div>
+</div>
+<div class="actions">
+<button class="primary" onclick="addArmy()">Add Army</button>
+</div>
+</div>
+<div class="panel">
+<h2>Your Armies</h2>
+<div id="armyList" class="list-scroll"></div>
+</div>
+<div class="panel">
+<h2>Army List</h2>
+<div id="armyBuilder"></div>
 </div>
 </section>
 
@@ -371,8 +423,10 @@ let editingRuleIds = [];
 let editingRuleValues = {};
 let editingRuleFactions = {};
 let equipment = [];
-let editingEquipmentIds = [];
-let editingEquipmentCosts = {};
+let editingBasicEquipmentIds = [];
+let editingOptionCosts = {};
+let armies = [];
+let selectedArmyId = null;
 const defaultEquipment = [
 ["Hand Weapon","Melee Weapon"],["Additional Hand Weapon","Melee Weapon"],["Great Weapon","Melee Weapon"],["Halberd","Melee Weapon"],["Spear","Melee Weapon"],["Lance","Melee Weapon"],["Cavalry Spear","Melee Weapon"],["Flail","Melee Weapon"],["Morning Star","Melee Weapon"],
 ["Longbow","Ranged Weapon"],["Shortbow","Ranged Weapon"],["Crossbow","Ranged Weapon"],["Handgun","Ranged Weapon"],["Pistol","Ranged Weapon"],["Throwing Weapons","Ranged Weapon"],
@@ -393,12 +447,32 @@ return String(s??"").replace(/[&<>"']/g,c=>({
 }[c]));
 }
 
+function normalizeUnit(u) {
+if(Array.isArray(u.basicEquipmentIds)||Array.isArray(u.optionEquipment)) {
+const basicEquipmentIds=Array.isArray(u.basicEquipmentIds)?u.basicEquipmentIds.slice():[];
+const taken=new Set(basicEquipmentIds);
+const optionEquipment=(Array.isArray(u.optionEquipment)?u.optionEquipment:[])
+.filter(o=>o&&o.id&&!taken.has(o.id))
+.map(o=>({id:o.id,cost:parsePointCost(o.cost)}));
+return {...u,basicEquipmentIds,optionEquipment};
+}
+const basicEquipmentIds=[];
+const optionEquipment=[];
+(u.equipmentIds||[]).forEach(id=>{
+const cost=parsePointCost((u.equipmentCosts||{})[id]);
+if(cost>0) optionEquipment.push({id,cost});
+else basicEquipmentIds.push(id);
+});
+return {...u,basicEquipmentIds,optionEquipment};
+}
+
 function save() {
 try {
 localStorage.setItem("ow_factions",JSON.stringify(factions));
 localStorage.setItem("ow_units",JSON.stringify(units));
 localStorage.setItem("ow_rules",JSON.stringify(rules));
 localStorage.setItem("ow_equipment",JSON.stringify(equipment));
+localStorage.setItem("ow_armies",JSON.stringify(armies));
 } catch(e) {
 alert("Unable to save data in the browser.");
 }
@@ -407,7 +481,9 @@ alert("Unable to save data in the browser.");
 function load() {
 try {
 factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
-units=JSON.parse(localStorage.getItem("ow_units"))||[];
+units=(JSON.parse(localStorage.getItem("ow_units"))||[]).map(normalizeUnit);
+armies=JSON.parse(localStorage.getItem("ow_armies"))||[];
+if(!Array.isArray(armies)) armies=[];
 let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) rules=saved;
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
@@ -415,6 +491,7 @@ equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>(
 } catch(e) {
 factions=[];
 units=[];
+armies=[];
 }
 refreshAll();
 }
@@ -426,6 +503,7 @@ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"
 btn.classList.add("active");
 if(id==="units") refreshUnitSelectors();
 if(id==="equipment") renderEquipment();
+if(id==="army") renderArmies();
 }
 
 function addFaction() {
@@ -449,9 +527,15 @@ refreshAll();
 }
 
 function deleteFaction(id) {
-if(units.some(u=>u.factionId===id)) {
-if(!confirm("This faction contains units. Delete the faction and all its units?")) return;
+const hasUnits=units.some(u=>u.factionId===id);
+const hasArmies=armies.some(a=>a.factionId===id);
+if(hasUnits||hasArmies) {
+if(!confirm(hasUnits
+?"This faction contains units. Delete the faction, its units and its armies?"
+:"This faction has armies. Delete the faction and those armies?")) return;
 units=units.filter(u=>u.factionId!==id);
+armies=armies.filter(a=>a.factionId!==id);
+if(selectedArmyId&&!armies.some(a=>a.id===selectedArmyId)) selectedArmyId=null;
 } else if(!confirm("Delete this faction?")) return;
 
 factions=factions.filter(f=>f.id!==id);
@@ -499,6 +583,9 @@ document.getElementById("uFaction").innerHTML=options;
 document.getElementById("filterFaction").innerHTML=
 '<option value="all">All Factions</option>'+
 factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+
+const aFaction=document.getElementById("aFaction");
+if(aFaction) aFaction.innerHTML=options;
 }
 
 function addCustomRuleToUnit() {
@@ -575,31 +662,35 @@ const n=Number(value);
 return Number.isFinite(n)&&n>0?n:0;
 }
 
-function getSelectedEquipmentCost(ids=editingEquipmentIds,costs=editingEquipmentCosts) {
-return ids.reduce((sum,id)=>sum+parsePointCost(costs?.[id]),0);
+function equipmentById(id) {
+return equipment.find(e=>e.id===id);
 }
 
 function renderUnitCostSummary() {
 const base=parsePointCost(document.getElementById("uPoints")?.value);
-const equipmentCost=getSelectedEquipmentCost();
 const summary=document.getElementById("unitCostSummary");
-if(summary) summary.textContent=`Base cost: ${base} pts · Optional equipment: ${equipmentCost} pts · Total: ${base+equipmentCost} pts`;
+if(summary) summary.textContent=`Base cost: ${base} pts · Included equipment: ${editingBasicEquipmentIds.length} (no extra points) · Paid options defined: ${Object.keys(editingOptionCosts).length} (chosen in the army list)`;
 }
 
-function toggleEquipment(id,checked) {
+function setEquipmentMode(id,mode,checked) {
+if(mode==="basic") {
 if(checked) {
-if(!editingEquipmentIds.includes(id)) editingEquipmentIds.push(id);
-if(editingEquipmentCosts[id]===undefined) editingEquipmentCosts[id]=0;
+if(!editingBasicEquipmentIds.includes(id)) editingBasicEquipmentIds.push(id);
+delete editingOptionCosts[id];
 } else {
-editingEquipmentIds=editingEquipmentIds.filter(x=>x!==id);
+editingBasicEquipmentIds=editingBasicEquipmentIds.filter(x=>x!==id);
+}
+} else if(checked) {
+editingBasicEquipmentIds=editingBasicEquipmentIds.filter(x=>x!==id);
+if(editingOptionCosts[id]===undefined) editingOptionCosts[id]=0;
+} else {
+delete editingOptionCosts[id];
 }
 renderUnitEquipmentPicker();
-renderUnitCostSummary();
 }
 
-function updateEquipmentCost(id,value) {
-editingEquipmentCosts[id]=value;
-renderUnitCostSummary();
+function updateOptionCost(id,value) {
+editingOptionCosts[id]=value;
 }
 
 function renderUnitEquipmentPicker() {
@@ -609,10 +700,15 @@ const items=equipment.filter(e=>e.category===group);
 if(!items.length) return "";
 return `<div class="item" style="grid-column:1/-1"><strong>${esc(group)}</strong><div class="rule-grid" style="margin-top:8px">${
 items.map(e=>{
-const selected=editingEquipmentIds.includes(e.id);
+const included=editingBasicEquipmentIds.includes(e.id);
+const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
 return `<div class="rule-option">
-<label><input type="checkbox" ${selected?"checked":""} onchange="toggleEquipment('${e.id}',this.checked)"><strong>${esc(e.name)}</strong></label>
-${selected?`<div class="equipment-cost"><label>Optional Cost (pts)</label><input type="number" min="0" step="1" value="${esc(editingEquipmentCosts[e.id]??0)}" oninput="updateEquipmentCost('${e.id}',this.value)" placeholder="0"></div>`:""}
+<strong>${esc(e.name)}</strong>
+<div class="equip-modes">
+<label><input type="checkbox" ${included?"checked":""} onchange="setEquipmentMode('${e.id}','basic',this.checked)"> Included</label>
+<label><input type="checkbox" ${paid?"checked":""} onchange="setEquipmentMode('${e.id}','paid',this.checked)"> Paid option</label>
+</div>
+${paid?`<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="${esc(editingOptionCosts[e.id]??0)}" oninput="updateOptionCost('${e.id}',this.value)" placeholder="0"></div>`:""}
 ${e.desc?`<small>${esc(e.desc)}</small>`:""}
 </div>`;
 }).join("")
@@ -630,13 +726,23 @@ save(); renderEquipment(); renderUnitEquipmentPicker();
 }
 function deleteLibraryEquipment(id) {
 if(!confirm("Delete this equipment from the library? It will also be removed from units.")) return;
-equipment=equipment.filter(e=>e.id!==id); editingEquipmentIds=editingEquipmentIds.filter(x=>x!==id);
-units=units.map(u=>{
-const costs={...(u.equipmentCosts||{})};
-delete costs[id];
-return {...u,equipmentIds:(u.equipmentIds||[]).filter(x=>x!==id),equipmentCosts:costs};
-});
-save(); renderEquipment(); renderUnitEquipmentPicker(); renderUnits();
+equipment=equipment.filter(e=>e.id!==id);
+editingBasicEquipmentIds=editingBasicEquipmentIds.filter(x=>x!==id);
+delete editingOptionCosts[id];
+units=units.map(u=>normalizeUnit({
+...u,
+basicEquipmentIds:(u.basicEquipmentIds||[]).filter(x=>x!==id),
+optionEquipment:(u.optionEquipment||[]).filter(o=>o.id!==id),
+equipmentIds:(u.equipmentIds||[]).filter(x=>x!==id)
+}));
+armies=armies.map(a=>({
+...a,
+entries:(a.entries||[]).map(entry=>({
+...entry,
+selectedOptionIds:(entry.selectedOptionIds||[]).filter(x=>x!==id)
+}))
+}));
+save(); renderEquipment(); renderUnitEquipmentPicker(); renderUnits(); renderArmies();
 }
 function renderEquipment() {
 const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase();
@@ -662,6 +768,11 @@ stats[k]=document.getElementById("s"+k).value.trim();
 });
 
 let existing=units.find(u=>u.id===document.getElementById("editUnitId").value);
+const basicEquipmentIds=[...editingBasicEquipmentIds];
+const optionEquipment=Object.keys(editingOptionCosts).map(id=>({id,cost:parsePointCost(editingOptionCosts[id])}));
+const equipmentCosts={};
+basicEquipmentIds.forEach(id=>{ equipmentCosts[id]=0; });
+optionEquipment.forEach(o=>{ equipmentCosts[o.id]=o.cost; });
 
 let unit={
 id:existing?existing.id:uid(),
@@ -673,11 +784,23 @@ stats,
 ruleIds:[...editingRuleIds],
 ruleValues:{...editingRuleValues},
 ruleFactions:{...editingRuleFactions},
-equipmentIds:[...editingEquipmentIds],
-equipmentCosts:{...editingEquipmentCosts},
+basicEquipmentIds,
+optionEquipment,
+equipmentIds:[...basicEquipmentIds,...optionEquipment.map(o=>o.id)],
+equipmentCosts,
 customRules:pendingCustomRules.filter(r=>!r.libraryId).map(r=>({...r})),
 desc:document.getElementById("uDesc").value
 };
+
+if(existing) {
+const allowed=new Set(optionEquipment.map(o=>o.id));
+armies=armies.map(a=>({
+...a,
+entries:(a.entries||[]).map(entry=>entry.unitId===unit.id
+?{...entry,selectedOptionIds:(entry.selectedOptionIds||[]).filter(id=>allowed.has(id))}
+:entry)
+}));
+}
 
 if(existing) {
 units=units.map(u=>u.id===existing.id?unit:u);
@@ -688,6 +811,7 @@ units.push(unit);
 save();
 resetUnitForm();
 renderUnits();
+renderArmies();
 alert("Unit saved successfully.");
 }
 
@@ -704,8 +828,8 @@ pendingCustomRules=[];
 editingRuleIds=[];
 editingRuleValues={};
 editingRuleFactions={};
-editingEquipmentIds=[];
-editingEquipmentCosts={};
+editingBasicEquipmentIds=[];
+editingOptionCosts={};
 
 renderPendingCustomRules();
 renderUnitRulePicker();
@@ -730,8 +854,10 @@ document.getElementById("s"+k).value=u.stats?.[k]||"";
 editingRuleIds=u.ruleIds||[];
 editingRuleValues=u.ruleValues||{};
 editingRuleFactions=u.ruleFactions||{};
-editingEquipmentIds=u.equipmentIds||[];
-editingEquipmentCosts=u.equipmentCosts||{};
+const normalized=normalizeUnit(u);
+editingBasicEquipmentIds=[...(normalized.basicEquipmentIds||[])];
+editingOptionCosts={};
+(normalized.optionEquipment||[]).forEach(o=>{ editingOptionCosts[o.id]=o.cost; });
 pendingCustomRules=(u.customRules||[]).map(r=>({...r}));
 
 renderPendingCustomRules();
@@ -745,8 +871,10 @@ window.scrollTo({top:0,behavior:"smooth"});
 function deleteUnit(id) {
 if(!confirm("Delete this unit?")) return;
 units=units.filter(u=>u.id!==id);
+armies=armies.map(a=>({...a,entries:(a.entries||[]).filter(entry=>entry.unitId!==id)}));
 save();
 renderUnits();
+renderArmies();
 }
 
 function renderUnits() {
@@ -764,8 +892,7 @@ let f=factions.find(x=>x.id===u.factionId);
 let profile=["M","WS","BS","S","T","W","I","A","Ld"]
 .map(k=>k+":"+((u.stats||{})[k]||"-")).join(" · ");
 let basePoints=parsePointCost(u.points);
-let equipmentPoints=getSelectedEquipmentCost(u.equipmentIds||[],u.equipmentCosts||{});
-let totalPoints=basePoints+equipmentPoints;
+const profileUnit=normalizeUnit(u);
 
 let assigned=(u.ruleIds||[]).map(id=>{
 let rule=rules.find(r=>r.id===id);
@@ -780,7 +907,7 @@ return `
 <div class="item-head">
 <div>
 <strong>${esc(u.name)}</strong><br>
-<small>${esc(f?.name||"No faction")} · ${esc(u.category)} · ${totalPoints} pts total (${basePoints} base + ${equipmentPoints} equipment)</small>
+<small>${esc(f?.name||"No faction")} · ${esc(u.category)} · ${basePoints} pts</small>
 </div>
 <div class="actions">
 <button onclick="editUnit('${u.id}')">Edit</button>
@@ -789,9 +916,9 @@ return `
 </div>
 
 <div class="statline">${profile}</div>
-<div>${(u.equipmentIds||[]).map(id=>equipment.find(e=>e.id===id)).filter(Boolean).map(e=>{
-const cost=parsePointCost((u.equipmentCosts||{})[e.id]);
-return `<span class="tag">${esc(e.name)} (+${cost} pts)</span>`;
+<div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
+const item=equipmentById(o.id);
+return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
 }).join("")}</div>
 
 <div>
@@ -871,7 +998,7 @@ ${r.id.startsWith("base")
 }
 
 function exportData() {
-let data={version:4,factions,units,rules,equipment};
+let data={version:5,factions,units,rules,equipment,armies};
 
 let blob=new Blob([JSON.stringify(data,null,2)],{
 type:"application/json"
@@ -899,9 +1026,11 @@ throw Error("Invalid format");
 }
 
 factions=d.factions;
-units=d.units;
+units=d.units.map(normalizeUnit);
 rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
+armies=Array.isArray(d.armies)?d.armies:[];
+selectedArmyId=null;
 
 save();
 refreshAll();
@@ -916,6 +1045,160 @@ event.target.value="";
 reader.readAsText(file);
 }
 
+function armyEntryCost(entry) {
+const unit=units.find(u=>u.id===entry.unitId);
+if(!unit) return 0;
+const profile=normalizeUnit(unit);
+const qty=Math.max(1,parseInt(entry.qty,10)||1);
+const extras=(entry.selectedOptionIds||[]).reduce((sum,id)=>{
+const opt=(profile.optionEquipment||[]).find(o=>o.id===id);
+return sum+(opt?parsePointCost(opt.cost):0);
+},0);
+return (parsePointCost(profile.points)+extras)*qty;
+}
+
+function armyTotal(army) {
+return (army.entries||[]).reduce((sum,entry)=>sum+armyEntryCost(entry),0);
+}
+
+function addArmy() {
+const name=document.getElementById("aName").value.trim();
+const factionId=document.getElementById("aFaction").value;
+const limit=parsePointCost(document.getElementById("aLimit").value);
+if(!name) { alert("Enter an army name."); return; }
+if(!factionId) { alert("Create and select a faction first."); return; }
+const army={id:uid(),name,factionId,pointsLimit:limit,entries:[]};
+armies.push(army);
+selectedArmyId=army.id;
+document.getElementById("aName").value="";
+save();
+renderArmies();
+}
+
+function deleteArmy(id) {
+if(!confirm("Delete this army?")) return;
+armies=armies.filter(a=>a.id!==id);
+if(selectedArmyId===id) selectedArmyId=null;
+save();
+renderArmies();
+}
+
+function selectArmy(id) {
+selectedArmyId=id;
+renderArmies();
+}
+
+function addArmyEntry() {
+const army=armies.find(a=>a.id===selectedArmyId);
+if(!army) return;
+const unitId=document.getElementById("armyUnit").value;
+const qty=Math.max(1,parseInt(document.getElementById("armyQty").value,10)||1);
+if(!unitId) { alert("Select a unit."); return; }
+army.entries.push({id:uid(),unitId,qty,selectedOptionIds:[]});
+save();
+renderArmies();
+}
+
+function removeArmyEntry(entryId) {
+const army=armies.find(a=>a.id===selectedArmyId);
+if(!army) return;
+army.entries=(army.entries||[]).filter(entry=>entry.id!==entryId);
+save();
+renderArmies();
+}
+
+function updateArmyQty(entryId,value) {
+const army=armies.find(a=>a.id===selectedArmyId);
+const entry=army?.entries?.find(item=>item.id===entryId);
+if(!entry) return;
+entry.qty=Math.max(1,parseInt(value,10)||1);
+save();
+const line=document.getElementById("entryCost-"+entryId);
+if(line) line.textContent=armyEntryCost(entry)+" pts";
+renderArmySummary();
+}
+
+function toggleArmyOption(entryId,equipmentId,checked) {
+const army=armies.find(a=>a.id===selectedArmyId);
+const entry=army?.entries?.find(item=>item.id===entryId);
+if(!entry) return;
+const ids=new Set(entry.selectedOptionIds||[]);
+if(checked) ids.add(equipmentId);
+else ids.delete(equipmentId);
+entry.selectedOptionIds=[...ids];
+save();
+const line=document.getElementById("entryCost-"+entryId);
+if(line) line.textContent=armyEntryCost(entry)+" pts";
+renderArmySummary();
+}
+
+function renderArmySummary() {
+const el=document.getElementById("armyCost");
+const army=armies.find(a=>a.id===selectedArmyId);
+if(!el||!army) return;
+const total=armyTotal(army);
+const limit=parsePointCost(army.pointsLimit);
+const over=limit>0&&total>limit;
+el.className="notice"+(over?" over-limit":"");
+el.textContent=limit>0?`${total} / ${limit} pts${over?" · over the limit":""}`:`${total} pts · no points limit`;
+const card=document.querySelector(`[data-army-total="${army.id}"]`);
+if(card) card.textContent=`${total}${limit?` / ${limit}`:""} pts · ${(army.entries||[]).length} entries`;
+}
+
+function renderArmies() {
+const list=document.getElementById("armyList");
+const builder=document.getElementById("armyBuilder");
+if(!list||!builder) return;
+list.innerHTML=armies.map(a=>{
+const faction=factions.find(x=>x.id===a.factionId);
+const total=armyTotal(a);
+const limit=parsePointCost(a.pointsLimit);
+const active=a.id===selectedArmyId;
+return `<div class="item"><div class="item-head"><div><strong>${esc(a.name)}</strong><br><small>${esc(faction?.name||"No faction")} · <span data-army-total="${a.id}">${total}${limit?` / ${limit}`:""} pts · ${(a.entries||[]).length} entries</span></small></div><div class="actions"><button class="${active?"primary":""}" onclick="selectArmy('${a.id}')">${active?"Selected":"Open"}</button><button class="danger" onclick="deleteArmy('${a.id}')">Delete</button></div></div></div>`;
+}).join("")||'<div class="empty">No armies yet.</div>';
+
+const army=armies.find(a=>a.id===selectedArmyId);
+if(!army) {
+builder.innerHTML='<div class="empty">Select an army to add units and paid equipment.</div>';
+return;
+}
+const factionUnits=units.filter(u=>u.factionId===army.factionId);
+const total=armyTotal(army);
+const limit=parsePointCost(army.pointsLimit);
+const over=limit>0&&total>limit;
+const factionName=factions.find(f=>f.id===army.factionId)?.name||"";
+builder.innerHTML=`
+<p class="muted">${esc(army.name)} · ${esc(factionName)}</p>
+<div id="armyCost" class="notice${over?" over-limit":""}">${limit>0?`${total} / ${limit} pts${over?" · over the limit":""}`:`${total} pts · no points limit`}</div>
+<div class="grid" style="margin-top:14px">
+<div class="field"><label>Unit</label><select id="armyUnit"><option value="">Select unit</option>${factionUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</select></div>
+<div class="field"><label>Quantity</label><input id="armyQty" type="number" min="1" step="1" value="1"></div>
+</div>
+<div class="actions"><button class="primary" onclick="addArmyEntry()">Add to Army</button></div>
+<div style="margin-top:14px">
+${(army.entries||[]).map(entry=>{
+const unit=units.find(u=>u.id===entry.unitId);
+if(!unit) return `<div class="item"><div class="item-head"><div><strong>Missing unit</strong></div><button class="danger" onclick="removeArmyEntry('${entry.id}')">Remove</button></div></div>`;
+const profile=normalizeUnit(unit);
+const included=(profile.basicEquipmentIds||[]).map(equipmentById).filter(Boolean);
+const options=profile.optionEquipment||[];
+const selected=new Set(entry.selectedOptionIds||[]);
+return `<div class="item">
+<div class="item-head">
+<div><strong>${esc(unit.name)}</strong><br><small>${esc(unit.category)} · base ${parsePointCost(unit.points)} pts · line <span id="entryCost-${entry.id}">${armyEntryCost(entry)} pts</span></small></div>
+<div class="actions"><input type="number" min="1" step="1" value="${Math.max(1,parseInt(entry.qty,10)||1)}" style="width:80px" onchange="updateArmyQty('${entry.id}',this.value)"><button class="danger" onclick="removeArmyEntry('${entry.id}')">Remove</button></div>
+</div>
+<div style="margin-top:8px">${included.length?`<span class="muted">Included: </span>${included.map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}`:'<span class="muted">No included equipment.</span>'}</div>
+<div style="margin-top:8px">${options.length?`<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">${options.map(o=>{
+const item=equipmentById(o.id);
+if(!item) return "";
+return `<div class="rule-option"><label><input type="checkbox" ${selected.has(o.id)?"checked":""} onchange="toggleArmyOption('${entry.id}','${o.id}',this.checked)"><strong>${esc(item.name)}</strong> <span class="muted">+${parsePointCost(o.cost)} pts</span></label></div>`;
+}).join("")}</div>`:'<span class="muted">No paid options on this unit.</span>'}</div>
+</div>`;
+}).join("")||'<div class="empty">This army has no units yet.</div>'}
+</div>`;
+}
+
 function refreshAll() {
 renderFactions();
 refreshUnitSelectors();
@@ -924,6 +1207,7 @@ renderRules();
 renderUnitRulePicker();
 renderUnitEquipmentPicker();
 renderPendingCustomRules();
+renderArmies();
 }
 
 load();
@@ -1103,6 +1387,71 @@ const orig=window[fn]; if(typeof orig!=="function")return;
 window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return r;};
 });
 linkifyNames();
+</script>
+<div id="installBanner" class="install-banner hidden" role="dialog" aria-labelledby="installTitle">
+<strong id="installTitle">Install Army Builder</strong>
+<p id="installText">Add a shortcut to your home screen and open the builder like an app.</p>
+<p id="installHelp" class="muted hidden"></p>
+<div class="actions">
+<button id="installAccept" class="primary" type="button">Install</button>
+<button id="installDismiss" type="button">Not now</button>
+</div>
+</div>
+<script>
+(function(){
+const KEY="ow_install_choice";
+const banner=document.getElementById("installBanner");
+const help=document.getElementById("installHelp");
+const accept=document.getElementById("installAccept");
+let deferredPrompt=null;
+
+function standalone(){
+return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
+}
+function ios(){
+return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+}
+function hide(choice){
+if(choice) localStorage.setItem(KEY,choice);
+banner.classList.add("hidden");
+}
+function show(){
+if(standalone()||localStorage.getItem(KEY)) return;
+if(ios()){
+accept.classList.add("hidden");
+help.textContent="On iPhone or iPad: tap Share, then Add to Home Screen.";
+help.classList.remove("hidden");
+}
+banner.classList.remove("hidden");
+}
+
+window.addEventListener("beforeinstallprompt",function(event){
+event.preventDefault();
+deferredPrompt=event;
+accept.classList.remove("hidden");
+help.classList.add("hidden");
+show();
+});
+window.addEventListener("appinstalled",function(){ hide("installed"); });
+
+accept.addEventListener("click",async function(){
+if(!deferredPrompt){
+help.textContent="Open the browser menu and choose Install app or Add to Home Screen.";
+help.classList.remove("hidden");
+return;
+}
+deferredPrompt.prompt();
+const choice=await deferredPrompt.userChoice;
+deferredPrompt=null;
+hide(choice.outcome==="accepted"?"installed":"dismissed");
+});
+document.getElementById("installDismiss").addEventListener("click",function(){ hide("dismissed"); });
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+show();
+})();
 </script>
 </body>
 </html>
