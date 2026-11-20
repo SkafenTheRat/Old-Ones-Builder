@@ -1,4 +1,4 @@
-const CACHE = "old-ones-builder-v1";
+const CACHE = "old-ones-builder-v2";
 const ASSETS = [
   "./Index.html",
   "./manifest.webmanifest",
