@@ -411,10 +411,10 @@ Always check official rules and descriptions in your own rulebooks.
 </main>
 <script>
 const defaultRules = [
-"Ambushers","Armour Bane","Armoured Hide","Breath Weapon","Chariot Runners","Close Order","Counter Charge","Cumbersome","Detachment","Dragged Along","Drilled","Ethereal","Evasive","Extra Attacks","Fast Cavalry","Fear","Feigned Flight","Fight in Extra Rank","Fire & Flee","First Charge","Flaming Attacks","Flammable","Fly","Frenzy","Furious Charge","Hatred","Horde","Howdah","Ignores Cover","Immune to Psychology","Impact Hits","Impetuous","Killing Blow","Large Target","Levies","Loner","Magical Attacks","Magic Resistance","Mercenaries","Monster Handlers","Monster Slayer","Motley Crew","Move & Shoot","Move or Shoot","Move Through Cover","Multiple Shots","Multiple Wounds","Open Order","Poisoned Attacks","Ponderous","Quick Shot","Rallying Cry","Random Attacks","Random Movement","Regeneration","Regimental Unit","Requires Two Hands","Reserve Move","Scouts","Shieldwall","Skirmishers","Stomp Attacks","Strike First","Strike Last","Stubborn","Stupidity","Swiftstride","Terror","Timmm-berrr!","Unbreakable","Unstable","Vanguard","Veteran","Volley Fire","Warband","Warp-spawned"
+"Ambushers","Armour Bane (X)","Armoured Hide (X)","Breath Weapon","Chariot Runners","Close Order","Counter Charge","Cumbersome","Detachment","Dragged Along","Drilled","Ethereal","Evasive","Extra Attacks (+X)","Fast Cavalry","Fear","Feigned Flight","Fight in Extra Rank","Fire & Flee","First Charge","Flaming Attacks","Flammable","Fly (X)","Frenzy","Furious Charge","Hatred (X)","Horde","Howdah","Ignores Cover","Immune to Psychology","Impact Hits (X)","Impetuous","Killing Blow","Large Target","Levies","Loner","Magical Attacks","Magic Resistance (-X)","Mercenaries","Monster Handlers","Monster Slayer","Motley Crew","Move & Shoot","Move or Shoot","Move Through Cover","Multiple Shots (X)","Multiple Wounds (X)","Open Order","Poisoned Attacks","Ponderous","Quick Shot","Rallying Cry","Random Attacks","Random Movement","Regeneration (X+)","Regimental Unit","Requires Two Hands","Reserve Move","Scouts","Shieldwall","Skirmishers","Stomp Attacks (X)","Strike First","Strike Last","Stubborn","Stupidity","Swiftstride","Terror","Timmm-berrr!","Unbreakable","Unstable","Vanguard","Veteran","Volley Fire","Warband","Warp-spawned"
 ];
 
-const parameterRules = ["Armour Bane","Armoured Hide","Extra Attacks","Fly","Hatred","Impact Hits","Magic Resistance","Multiple Shots","Multiple Wounds","Random Attacks","Random Movement","Regeneration","Stomp Attacks"];
+const parameterRules = ["Armour Bane (X)","Armoured Hide (X)","Extra Attacks (+X)","Fly (X)","Hatred (X)","Impact Hits (X)","Magic Resistance (-X)","Multiple Shots (X)","Multiple Wounds (X)","Random Attacks","Random Movement","Regeneration (X+)","Stomp Attacks (X)"];
 
 let factions = [];
 let units = [];
@@ -1820,7 +1820,9 @@ const ruleDescriptions={
 "Magical Attacks":"The model's attacks count as magical: they can harm Ethereal creatures and other targets that can only be wounded by magic.",
 "Magic Resistance":"The unit resists magic, usually by improving its ward save against wounds caused by spells (or by making enemy spells harder to cast on it - verify the exact effect in the rulebook).",
 "Move Through Cover":"The unit ignores movement penalties for moving through cover and difficult terrain.",
-"Multiple Shots":"The weapon can fire X shots instead of a single one; firing more than one shot imposes a -1 To Hit penalty.",
+"Fight in Extra Rank":"A model with this rule may make supporting attacks even when it is not in the fighting rank, allowing it to attack from behind the models in front, subject to the normal rules for supporting attacks.",
+"Multiple Shots (X)":"The weapon may fire one shot normally or fire the number of shots shown in brackets. If it fires multiple shots, each To Hit roll suffers an additional -1 modifier. Every model in the same unit equipped with such weapons must choose the same firing mode. If X is determined by a dice roll, roll separately for each model.",
+"Multiple Shots":"The weapon may fire one shot normally or the number shown by its Multiple Shots value. Multiple shots impose an additional -1 To Hit modifier; consult the parameterised Multiple Shots (X) entry for the full procedure.",
 "Multiple Wounds":"Each unsaved wound inflicted by the attack is multiplied into X wounds.",
 "Open Order":"The unit fights in open formation: it makes supporting attacks with one fewer rank than normal, but is more flexible. Verify exact effects in the rulebook.",
 "Poisoned Attacks":"An unmodified To Wound roll of 6 always wounds, regardless of the target's Toughness, and allows no armour save.",
