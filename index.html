@@ -1766,8 +1766,23 @@ function workshopRefreshSelectors(){
  fill('wFaction',factions,'faction');fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');fill('oArmy',armies,'army');
 }
 function workshopEditFaction(){const f=factions.find(x=>x.id===document.getElementById('wFaction').value);if(!f){alert('Choose a faction.');return;}const n=prompt('Faction name:',f.name);if(n===null)return;if(!n.trim())return;f.name=n.trim();f.desc=prompt('Description:',f.desc||'')??f.desc;save();refreshAll();workshopRefreshSelectors();}
-function workshopEditEquipment(){const e=equipment.find(x=>x.id===document.getElementById('wEquipment').value);if(!e){alert('Choose equipment.');return;}const n=prompt('Name:',e.name);if(n===null||!n.trim())return;const c=prompt('Category:',e.category)||e.category;const d=prompt('Description / weapon profile notes:',e.desc||'');if(d===null)return;e.name=n.trim();e.category=c;e.desc=d;save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();}
-function workshopEditRule(){const r=rules.find(x=>x.id===document.getElementById('wRule').value);if(!r){alert('Choose a rule.');return;}const n=prompt('Rule name:',r.name);if(n===null||!n.trim())return;const d=prompt('Rule description:',r.desc||'');if(d===null)return;r.name=n.trim();r.desc=d;r.hasParameter=confirm('Does this rule require a bracket value?');save();renderRules();renderUnitRulePicker();renderUnits();workshopRefreshSelectors();}
+function workshopEditEquipment(){
+ const e=equipment.find(x=>x.id===document.getElementById('wEquipment').value);if(!e){alert('Choose equipment.');return;}
+ const n=prompt('Name:',e.name);if(n===null||!n.trim())return;
+ const c=prompt('Category:',e.category)||e.category;
+ const d=prompt('Description:',e.desc||'');if(d===null)return;
+ e.name=n.trim();e.category=c;e.desc=d;
+ if(c==='Melee Weapon'||c==='Ranged Weapon'){
+  const previous=(typeof weaponDetails==='object'&&weaponDetails[e.name])?weaponDetails[e.name]:null;
+  const profile=previous?.stats?.[0]||['Combat','S','-','-'];
+  const range=prompt('Range / profile type (e.g. Combat or 24"):',profile[0]);if(range===null)return;
+  const strength=prompt('Strength:',profile[1]);if(strength===null)return;
+  const ap=prompt('Armour Piercing:',profile[2]);if(ap===null)return;
+  const special=prompt('Special rules:',profile[3]);if(special===null)return;
+  weaponDetails[e.name]={cat:c,desc:d,stats:[[range,strength,ap,special||'-']],notes:previous?.notes||''};
+ }
+ save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();
+}function workshopEditRule(){const r=rules.find(x=>x.id===document.getElementById('wRule').value);if(!r){alert('Choose a rule.');return;}const n=prompt('Rule name:',r.name);if(n===null||!n.trim())return;const d=prompt('Rule description:',r.desc||'');if(d===null)return;r.name=n.trim();r.desc=d;r.hasParameter=confirm('Does this rule require a bracket value?');save();renderRules();renderUnitRulePicker();renderUnits();workshopRefreshSelectors();}
 function workshopLoadArmy(id){const a=armies.find(x=>x.id===id);if(!a)return;document.getElementById('wArmy').value=id;document.getElementById('wArmyName').value=a.name;document.getElementById('wArmyLimit').value=a.pointsLimit??'';}
 function workshopSaveArmy(){const a=armies.find(x=>x.id===document.getElementById('wArmy').value);if(!a){alert('Choose an army.');return;}const n=document.getElementById('wArmyName').value.trim();if(!n){alert('Enter a name.');return;}a.name=n;a.pointsLimit=parsePointCost(document.getElementById('wArmyLimit').value);save();renderArmies();workshopRefreshSelectors();renderOrderOfBattle();alert('Army saved.');}
 function workshopOpenArmy(){const id=document.getElementById('wArmy').value;if(!id){alert('Choose an army.');return;}selectedArmyId=id;document.querySelectorAll('.tabs button').forEach(b=>{if(b.textContent.trim()==='Army')b.click();});renderArmies();}
