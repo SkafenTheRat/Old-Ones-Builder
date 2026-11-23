@@ -520,9 +520,59 @@ function beastmenFactionId(){const f=factions.find(x=>String(x.name||"").toLower
 function seedBeastmenCatalogue(){
 const fid=beastmenFactionId();
 const specialRules="Ancient Sorcery|Belly Flop|Bestial Charge|Blessings of Chaos|Blood Greed|Blood Rage|Bloodshed & Butchery|Brayhorn|Bull-gors|Champions of Slaughter|Crown of Antlers|Dark Coven|Drunken|'Eadbutt (Giant)|Endless Malice|Ensorcelled Weapons|Father of Beasts|Foe Render|Future Sight|Gaze of the Gods|Ghostsight|Giant Attacks|Gifts from the Dark Gods|Guardians of the Herdstones|Herdstones|Jump Up & Down|Leader of the Pack (Beastmen)|Leering Spirit|Maddening Aura|Magics of the Dark Gods|Mighty Swing (Giant)|Mixed Unit|Pick Up And...|Primal Fury|The Quickening Storm|Razor Tusks|Roaming Warbands|Slaughterer's Call|The Sons of Ghorros|Soul-eater|Spurting Bile Blood|Stony Stare|Storm Call|Swallow Whole|Thump with Club".split("|");
+const ruleDescriptions={
+"Ancient Sorcery":"In a Wild Herd, Beastmen Shamans may also use Lore of Primal Magic.",
+"Belly Flop":"Giant attack: a 3-inch template produces Strength-based hits, AP -2.",
+"Bestial Charge":"Gors gain +1 Strength after charging at least 3 inches.",
+"Blessings of Chaos":"Warped Gors roll for a temporary combat mutation each fight.",
+"Blood Greed":"While Frenzied, gain +2 Attacks but roll one pursuit die.",
+"Blood Rage":"A natural double on a successful Primal Fury test also grants Frenzy.",
+"Bloodshed & Butchery":"In a Minotaur Blood Herd, selected units gain Impetuous.",
+"Brayhorn":"A Beastlord or Wargor General can help reserve Ambushers arrive.",
+"Bull-gors":"Impact Hits gain Armour Piercing -1.",
+"Champions of Slaughter":"A Minotaur Blood Herd General's Frenzy can spread to nearby units.",
+"Crown of Antlers":"Preyton Impact Hits gain Armour Bane (1) and AP -1.",
+"Dark Coven":"Wild Herd Shamans can draw nearby Wizards' power; double 1 risks shared miscast.",
+"Drunken":"Centigors roll each turn for random movement, no effect or Frenzy.",
+"'Eadbutt (Giant)":"Giant attack: a chosen fighting-rank model suffers D3+1 wounds.",
+"Endless Malice":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
+"Ensorcelled Weapons":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
+"Father of Beasts":"Ghorros Warhoof's faction rule; consult the linked source for its full effect.",
+"Foe Render":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
+"Future Sight":"Kralmaw's faction rule; consult the linked source for its full effect.",
+"Gaze of the Gods":"Beastmen character rule; consult the linked source for its full effect.",
+"Ghostsight":"Cygor faction rule; consult the linked source for its full effect.",
+"Giant Attacks":"The Giant selects attacks from its dedicated attack table.",
+"Gifts from the Dark Gods":"Wild Herd characters gain extra allowances for magic items and mutations.",
+"Guardians of the Herdstones":"In a Minotaur Blood Herd, Doombulls and Gorebulls gain special mutation options.",
+"Herdstones":"Rules for the unique Beastmen terrain feature and its battlefield auras.",
+"Jump Up & Down":"Giant attack: inflicts D6+1 Strength-based hits without armour saves.",
+"Leader of the Pack (Beastmen)":"Ungor Ravagers can join Primal Warhound units and occupy rear ranks.",
+"Leering Spirit":"Kralmaw's marker can cast Devolve as a bound spell.",
+"Maddening Aura":"Nearby enemy units test Leadership or suffer D3 Strength 3 hits.",
+"Magics of the Dark Gods":"Minotaur Blood Herd Doombull or Gorebull Generals may become Wizards.",
+"Mighty Swing (Giant)":"Giant club attack: D6+1 attacks at Strength +1 and AP -2.",
+"Mixed Unit":"Primal Warherds divide incoming shooting hits between Gors and Ungors.",
+"Pick Up And...":"Giant attack selected from its attack table; see the linked source.",
+"Primal Fury":"Core Beastmen Brayherds rule; see the linked source for its test and effects.",
+"The Quickening Storm":"Dragon Ogre faction rule; consult the linked source for its full effect.",
+"Razor Tusks":"Razorgor and chariot tusks use this faction-specific rule.",
+"Roaming Warbands":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
+"Slaughterer's Call":"Minotaur character faction rule; consult the linked source for its full effect.",
+"The Sons of Ghorros":"Ghorros Warhoof faction rule; consult the linked source for its full effect.",
+"Soul-eater":"Cygor faction rule; consult the linked source for its full effect.",
+"Spurting Bile Blood":"Jabberslythe faction rule; consult the linked source for its full effect.",
+"Stony Stare":"Cockatrice faction rule; consult the linked source for its full effect.",
+"Storm Call":"Dragon Ogre Shaggoth faction rule; consult the linked source for its full effect.",
+"Swallow Whole":"Ghorgon faction rule; consult the linked source for its full effect.",
+"Thump with Club":"Giant attack selected from its attack table; see the linked source."
+};
 specialRules.forEach(name=>{
 const id="br_rule_"+beastmenSlug(name);
-if(!factionRules.some(x=>x.id===id)) factionRules.push({id,name,desc:"Beastmen Brayherds faction-specific rule. Open the official Rules Index for the full current wording.",hasParameter:false,factionId:fid,sourceUrl:"https://tow.whfb.app/army/beastmen-brayherds"});
+const data={id,name,desc:ruleDescriptions[name]||"Beastmen Brayherds faction rule; consult the linked source for its full effect.",hasParameter:false,factionId:fid,sourceUrl:"https://tow.whfb.app/special-rules/"+beastmenSlug(name)};
+const index=factionRules.findIndex(x=>x.id===id);
+if(index>=0) factionRules[index]={...factionRules[index],...data};
+else factionRules.push(data);
 });
 const gearRows=[
 "Acidic Vomit|Ranged Weapon|Weapons of War","Braystaff|Melee Weapon|Weapons of War","Cleaver-limbs|Melee Weapon|Weapons of War","Giant's Club|Melee Weapon|Weapons of War","Grisly Totem|Other Equipment|Kralmaw's unique item","Hurl Attack|Ranged Weapon|Weapons of War","Petrifying Gaze|Ranged Weapon|Weapons of War","Slythey Tongue|Ranged Weapon|Weapons of War","Twisted Antlers|Melee Weapon|Weapons of War","Wicked Claws|Melee Weapon|Weapons of War",
@@ -569,7 +619,7 @@ const rows=[
 "wargor|Wargor|Hero|55|5,5,3,4,5,2,4,3,7|25 x 25 mm min; 30 x 30 mm max|Heavy Infantry|1|Hand Weapon|Additional Hand Weapon:3;Great Weapon:4;Light Armour:2;Heavy Armour:4;Shield:2|Blood Rage;Brayhorn;Foe Render;Gaze of the Gods;Mark of Chaos Undivided;Primal Fury;Warband|Chaos Mutations up to 50 pts; magic items up to 50 pts.|50|50",
 "warhoof|Warhoof|Hero|75|8,5,3,5,4,3,3,4,7|30 x 60 mm|Light Cavalry|1|Hand Weapon|Cavalry Spear:2;Great Weapon:4;Light Armour:2;Heavy Armour:4;Throwing Axes:2;Javelins:2;Shield:2|Drunken;Fast Cavalry;Gaze of the Gods;Mark of Chaos Undivided;Move Through Cover;Primal Fury;Stomp Attacks (1);Swiftstride;Warband|Chaos Mutations up to 50 pts; magic items up to 50 pts.|50|50",
 "bestigor-herd|Bestigor Herd|Special|13|5,4,3,4,4,1,4,1,7|30 x 30 mm|Heavy Infantry|5+|Hand Weapon;Great Weapon;Heavy Armour||Blood Rage;Close Order;Furious Charge;Mark of Chaos Undivided;Primal Fury;Warband|13 pts per model; champion, standard bearer, musician, magic standard options.|25|25",
-"gor-herd|Gor Herd|Core|7|5,4,2,3,4,1,3,1,6|25 x 25 mm|Regular Infantry|5+|Hand Weapon|Additional Hand Weapon:0;Shield:0|Bestial Charge;Blood Rage;Furious Charge;Horde;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Skirmishers;Warband|7 pts per model; unit chooses Additional Hand Weapons or Shields.|0|0",
+"gor-herd|Gor Herd|Core|7|5,4,2,3,4,1,3,1,6|25 x 25 mm|Regular Infantry|5+|Hand Weapon|Additional Hand Weapon:0;Shield:0|Bestial Charge;Blood Rage;Furious Charge;Horde;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Skirmishers;Warband|7 pts per model; True-horn may take magic items up to 25 pts; unit chooses Additional Hand Weapons or Shields.|25|0",
 "harpies|Harpies|Special|11|5,3,0,3,3,1,5,2,6|25 x 25 mm|Regular Infantry|5+|Hand Weapon||Fly (10);Move Through Cover;Scouts;Skirmishers;Swiftstride|11 pts per model; claws count as hand weapons.|0|0",
 "minotaur-herd|Minotaur Herd|Special|44|6,4,3,5,4,3,3,3,7|50 x 50 mm|Monstrous Infantry|2+|Hand Weapon;Light Armour|Additional Hand Weapon:3;Great Weapon:4;Shield:2|Armour Bane (1);Blood Greed;Blood Rage;Bull-gors;Close Order;Fear;Foe Render;Impact Hits (1);Mark of Chaos Undivided;Motley Crew;Primal Fury;Warband|44 pts per model; champion, standard, musician, magic standard options.|25|25",
 "primal-warherd|Primal Warherd|Core|7|5,4,2,3,4,1,3,1,6|25 x 25 mm|Regular Infantry|10 Gors + 10 Ungors min|Hand Weapon;Shield|Additional Hand Weapon:0;Thrusting Spears:0;Throwing Spears:0|Bestial Charge;Blood Rage;Close Order;Furious Charge;Horde;Impetuous;Mark of Chaos Undivided;Mixed Unit;Motley Crew;Move Through Cover;Primal Fury;Warband|Mixed unit: 7 pts/Gor and 6 pts/Ungor; minimum ten of each.|0|0",
