@@ -130,7 +130,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <button onclick="showTab('equipment',this)">Equipment Library</button>
 <button onclick="showTab('rules',this)">Special Rules Library</button>
 <button onclick="showTab('data',this)">Data Management</button>
-<button onclick="showTab('workshop',this)">Workshop / Order of Battle</button>
+<button onclick="showTab('workshop',this)">Builder Workshop</button>
 </div>
 
 <section id="factions" class="tab">
@@ -201,6 +201,8 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <label>Ld<input id="sLd" placeholder="-"></label>
 </div>
 
+<h3>Base Size & Troop Type</h3>
+<div class="grid"><div class="field"><label>Base Size (mm)</label><input id="uBaseSize" placeholder="e.g. 25x25, 30x60, 50x50"></div><div class="field"><label>Troop Type</label><select id="uTroopType"><option value="">Select troop type</option><option>Regular Infantry</option><option>Heavy Infantry</option><option>Monstrous Infantry</option><option>Swarms</option><option>Light Cavalry</option><option>Heavy Cavalry</option><option>Monstrous Cavalry</option><option>War Beasts</option><option>Light Chariot</option><option>Heavy Chariot</option><option>Monstrous Creature</option><option>Behemoth</option><option>War Machine</option></select></div></div>
 <h3>Equipment</h3>
 <p class="muted">Included equipment is part of the unit and adds no points. Mark an item as a paid option to set its price — it is chosen later, when you build an army.</p>
 <div id="unitEquipmentPicker" class="rule-grid"></div>
@@ -409,7 +411,7 @@ Always check official rules and descriptions in your own rulebooks.
 <div class="grid"><div class="field"><label>Faction</label><select id="wFaction"></select></div><div class="field"><label>Weapon / equipment</label><select id="wEquipment"></select></div><div class="field"><label>Special rule</label><select id="wRule"></select></div></div>
 <div class="actions"><button onclick="workshopEditFaction()">Edit faction</button><button onclick="workshopEditEquipment()">Edit weapon / equipment</button><button onclick="workshopEditRule()">Edit special rule</button></div></div>
 <div class="panel"><h2>Army management</h2><div class="grid"><div class="field"><label>Army</label><select id="wArmy"></select></div><div class="field"><label>Name</label><input id="wArmyName"></div><div class="field"><label>Points limit</label><input id="wArmyLimit" type="number" min="0"></div></div><div class="actions"><button class="primary" onclick="workshopSaveArmy()">Save army details</button><button onclick="workshopOpenArmy()">Open army builder</button></div></div>
-<div class="panel"><h2>Order of Battle</h2><p class="muted">Pełny podgląd wybranej armii: jednostki, profile, wyposażenie, wybrane opcje, zasady, limity i punkty.</p><div class="field"><label>Army</label><select id="oArmy" onchange="renderOrderOfBattle()"></select></div><div class="actions"><button class="primary" onclick="renderOrderOfBattle()">Refresh</button><button onclick="printOrderOfBattle()">Print / Save as PDF</button></div><div id="orderOfBattle" style="margin-top:14px"><div class="empty">Choose an army.</div></div></div>
+</div>
 </section>
 </main>
 <script>
@@ -868,6 +870,8 @@ factionId,
 category:document.getElementById("uCategory").value,
 points:document.getElementById("uPoints").value,
 stats,
+baseSize:document.getElementById("uBaseSize").value.trim(),
+troopType:document.getElementById("uTroopType").value,
 ruleIds:[...editingRuleIds],
 ruleValues:{...editingRuleValues},
 ruleFactions:{...editingRuleFactions},
@@ -904,12 +908,13 @@ alert("Unit saved successfully.");
 
 function resetUnitForm() {
 [
-"uName","uPoints","uDesc","editUnitId",
+"uName","uPoints","uDesc","editUnitId","uBaseSize",
 "sM","sWS","sBS","sS","sT","sW","sI","sA","sLd",
 "customRuleName","customRuleDesc"
 ].forEach(id=>document.getElementById(id).value="");
 
 document.getElementById("uCategory").value="Core";
+document.getElementById("uTroopType").value="";
 
 pendingCustomRules=[];
 editingRuleIds=[];
@@ -933,6 +938,8 @@ document.getElementById("uFaction").value=u.factionId;
 document.getElementById("uCategory").value=u.category;
 document.getElementById("uPoints").value=u.points||"";
 document.getElementById("uDesc").value=u.desc||"";
+document.getElementById("uBaseSize").value=u.baseSize||"";
+document.getElementById("uTroopType").value=u.troopType||"";
 
 ["M","WS","BS","S","T","W","I","A","Ld"].forEach(k=>{
 document.getElementById("s"+k).value=u.stats?.[k]||"";
@@ -1003,6 +1010,7 @@ return `
 </div>
 
 <div class="statline">${profile}</div>
+<div class="muted"><b>Base:</b> ${esc(u.baseSize||"Not set")} · <b>Troop type:</b> ${esc(u.troopType||"Not set")}</div>
 <div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
 const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
@@ -1140,7 +1148,7 @@ return `<article class="unit-card compact">
 <p class="meta">${esc(faction?.name||"No faction")} · ${esc(profile.category||"-")} · ${points} pts</p>
 </div>
 </header>
-<table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
+<table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table><p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <p class="compact-line"><strong>Included:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
 <p class="compact-line"><strong>Options:</strong> ${options.length?options.map(o=>{
 const item=equipmentById(o.id);
@@ -1753,17 +1761,11 @@ window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return
 linkifyNames();
 </script>
 
-<style>
-#orderOfBattle .oob-unit{border:1px solid var(--line);background:#25201c;padding:14px;margin:10px 0;border-radius:6px;break-inside:avoid}
-#orderOfBattle .oob-stats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-#orderOfBattle .oob-stats span{border:1px solid var(--line);padding:4px 7px;border-radius:4px;font-size:12px}
-#orderOfBattle .oob-total{font-size:22px;color:var(--gold);font-weight:bold}
-#orderOfBattle .oob-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--gold);padding-bottom:12px}
-</style>
+
 <script>
 function workshopRefreshSelectors(){
  const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="">Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
- fill('wFaction',factions,'faction');fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');fill('oArmy',armies,'army');
+ fill('wFaction',factions,'faction');fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');
 }
 function workshopEditFaction(){const f=factions.find(x=>x.id===document.getElementById('wFaction').value);if(!f){alert('Choose a faction.');return;}const n=prompt('Faction name:',f.name);if(n===null)return;if(!n.trim())return;f.name=n.trim();f.desc=prompt('Description:',f.desc||'')??f.desc;save();refreshAll();workshopRefreshSelectors();}
 function workshopEditEquipment(){
@@ -1786,21 +1788,7 @@ function workshopEditEquipment(){
 function workshopLoadArmy(id){const a=armies.find(x=>x.id===id);if(!a)return;document.getElementById('wArmy').value=id;document.getElementById('wArmyName').value=a.name;document.getElementById('wArmyLimit').value=a.pointsLimit??'';}
 function workshopSaveArmy(){const a=armies.find(x=>x.id===document.getElementById('wArmy').value);if(!a){alert('Choose an army.');return;}const n=document.getElementById('wArmyName').value.trim();if(!n){alert('Enter a name.');return;}a.name=n;a.pointsLimit=parsePointCost(document.getElementById('wArmyLimit').value);save();renderArmies();workshopRefreshSelectors();renderOrderOfBattle();alert('Army saved.');}
 function workshopOpenArmy(){const id=document.getElementById('wArmy').value;if(!id){alert('Choose an army.');return;}selectedArmyId=id;document.querySelectorAll('.tabs button').forEach(b=>{if(b.textContent.trim()==='Army')b.click();});renderArmies();}
-function renderOrderOfBattle(){
- const el=document.getElementById('orderOfBattle');if(!el)return;const a=armies.find(x=>x.id===document.getElementById('oArmy').value);if(!a){el.innerHTML='<div class="empty">Choose an army above.</div>';return;}
- const faction=factions.find(x=>x.id===a.factionId),infamy=armiesOfInfamy.find(x=>x.id===a.armyOfInfamyId),total=armyTotal(a),limit=parsePointCost(a.pointsLimit),cats={};let body='';
- (a.entries||[]).forEach((entry,i)=>{const u=units.find(x=>x.id===entry.unitId);if(!u){body+='<article class="oob-unit">Missing unit entry</article>';return;}const p=normalizeUnit(u),qty=Math.max(1,parseInt(entry.qty,10)||1),cost=armyEntryCost(entry);cats[u.category]=(cats[u.category]||0)+cost;
- const stats=['M','WS','BS','S','T','W','I','A','Ld'].map(k=>'<span><b>'+k+'</b> '+esc(p.stats?.[k]||'-')+'</span>').join('');
- const included=(p.basicEquipmentIds||[]).map(equipmentById).filter(Boolean).map(x=>esc(x.name));
- const options=(entry.selectedOptionIds||[]).map(id=>(p.optionEquipment||[]).find(o=>o.id===id)).filter(Boolean).map(o=>{const x=equipmentById(o.id);return x?esc(x.name)+' (+'+parsePointCost(o.cost)+' pts)':'';}).filter(Boolean);
- const rulesHtml=unitRuleDetails(p).map(x=>'<li><b>'+esc(x.label)+'</b>'+(x.desc?' — '+esc(x.desc):'')+'</li>').join('')+(p.customRules||[]).map(x=>'<li><b>'+esc(x.name)+'</b>: '+esc(x.desc||'')+'</li>').join('');
- body+='<article class="oob-unit"><h3>'+(i+1)+'. '+esc(p.name)+' × '+qty+'</h3><div class="muted">'+esc(p.category||'Unit')+' · '+parsePointCost(p.points)+' pts each · '+cost+' pts total</div><div class="oob-stats">'+stats+'</div><p><b>Included:</b> '+(included.join(', ')||'—')+'</p><p><b>Selected options:</b> '+(options.join(', ')||'—')+'</p><p><b>Special rules:</b></p><ul>'+(rulesHtml||'<li>—</li>')+'</ul>'+(p.desc?'<p>'+esc(p.desc)+'</p>':'')+'</article>';
- });
- const rows=Object.entries(cats).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td style="text-align:right">'+v+' pts</td></tr>').join('');
- el.innerHTML='<div class="oob-head"><div><h2>'+esc(a.name)+'</h2><div class="muted">'+esc(faction?.name||'Unknown faction')+' · '+esc(infamy?.name||'Grand Army / standard list')+'</div><div class="muted">'+(a.entries||[]).length+' entries</div></div><div class="oob-total">'+total+' pts'+(limit?' / '+limit:'')+'</div></div>'+(infamy?'<div class="notice"><b>Army of Infamy:</b> '+esc(infamy.name)+(infamy.source?' · '+esc(infamy.source):'')+(infamy.rulesText?'<p>'+esc(infamy.rulesText)+'</p>':'')+'</div>':'')+'<h3>Points by category</h3><table style="width:100%"><tbody>'+rows+'</tbody></table><h3>Order of Battle</h3>'+(body||'<div class="empty">No units in this army.</div>')+'<div class="notice">Total: <b>'+total+' pts</b>'+(limit?' · '+(total>limit?'Over limit by '+(total-limit)+' pts':'Remaining '+(limit-total)+' pts'):'')+'</div>';
-}
-function printOrderOfBattle(){renderOrderOfBattle();const h=document.getElementById('orderOfBattle')?.innerHTML;if(!h||h.includes('Choose an army above')){alert('Choose an army first.');return;}const w=window.open('','_blank');if(!w){alert('Allow pop-ups to print.');return;}w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Order of Battle</title><style>body{font:14px Georgia,serif;color:#211b14;margin:24px}h2,h3{color:#71552c}article{border:1px solid #b9a47d;padding:12px;margin:12px 0;break-inside:avoid}.oob-stats{display:flex;flex-wrap:wrap;gap:6px}.oob-stats span{border:1px solid #aaa;padding:4px 7px}.oob-total{font-size:22px;color:#71552c;font-weight:bold}.oob-head{display:flex;justify-content:space-between;border-bottom:2px solid #71552c;padding-bottom:12px}.muted{color:#665c50}td{padding:5px;border-bottom:1px solid #ddd}.notice{padding:10px;background:#eee;margin:10px 0}</style></head><body>'+h+'<script>window.onload=()=>window.print()<\\/script></body></html>');w.document.close();}
-const oldShowTab=window.showTab;window.showTab=function(id,btn){oldShowTab(id,btn);if(id==='workshop'){workshopRefreshSelectors();renderOrderOfBattle();}};
+const oldShowTab=window.showTab;window.showTab=function(id,btn){oldShowTab(id,btn);if(id==='workshop'){workshopRefreshSelectors();}};
 const oldRefreshAll=window.refreshAll;window.refreshAll=function(){oldRefreshAll();workshopRefreshSelectors();};
 workshopRefreshSelectors();
 </script>
