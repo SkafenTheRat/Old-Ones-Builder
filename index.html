@@ -123,8 +123,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <main>
 
 <div class="tabs">
-<button class="active" onclick="showTab('factions',this)">Factions</button>
-<button onclick="showTab('units',this)">Units</button>
+<button class="active" onclick="showTab('units',this)">Units</button>
 <button onclick="showTab('army',this)">Army</button>
 <button onclick="showTab('infamy',this)">Army of Infamy</button>
 <button onclick="showTab('equipment',this)">Equipment Library</button>
@@ -133,18 +132,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <button onclick="showTab('workshop',this)">Builder Workshop</button>
 </div>
 
-<section id="factions" class="tab">
-<div class="panel">
-<h2>Game Factions</h2>
-<p class="muted">The game's factions are built into the army builder and cannot be added, renamed or deleted. Create armies by selecting one of these existing factions in the Army Creator.</p>
-</div>
-<div class="panel">
-<h2>Available Factions</h2>
-<div id="factionList" class="list-scroll"></div>
-</div>
-</section>
-
-<section id="units" class="tab hidden">
+<section id="units" class="tab">
 <div class="panel">
 <h2>Unit Creator</h2>
 
@@ -352,7 +340,7 @@ Select rules from the library to assign them to units. Bracket values can be con
 <section id="data" class="tab hidden">
 <div class="panel">
 <h2>Data Management</h2>
-<p>Your factions, units and rules are automatically saved in your browser.</p>
+<p>Your units, armies and rules are automatically saved in your browser. Game factions are built in.</p>
 <div class="actions">
 <button class="primary" onclick="exportData()">Export All Data (JSON)</button>
 <button onclick="document.getElementById('importFile').click()">Import Data (JSON)</button>
@@ -394,9 +382,9 @@ Always check official rules and descriptions in your own rulebooks.
 </div>
 </section>
 <section id="workshop" class="tab hidden">
-<div class="panel"><h2>Builder Workshop — edit content</h2><p class="muted">Edytuj dane bezpośrednio w aplikacji. Nowe wpisy tworzysz w odpowiednich zakładkach Factions, Units, Equipment Library i Special Rules Library.</p>
-<div class="grid"><div class="field"><label>Faction</label><select id="wFaction"></select></div><div class="field"><label>Weapon / equipment</label><select id="wEquipment"></select></div><div class="field"><label>Special rule</label><select id="wRule"></select></div></div>
-<div class="actions"><button onclick="workshopEditFaction()">Edit faction</button><button onclick="workshopEditEquipment()">Edit weapon / equipment</button><button onclick="workshopEditRule()">Edit special rule</button></div></div>
+<div class="panel"><h2>Builder Workshop — edit content</h2><p class="muted">Edytuj dane bezpośrednio w aplikacji. Armie korzystają z wbudowanych frakcji gry. Jednostki, wyposażenie i zasady edytujesz w odpowiednich zakładkach.</p>
+<div class="grid"><div class="field"><label>Weapon / equipment</label><select id="wEquipment"></select></div><div class="field"><label>Special rule</label><select id="wRule"></select></div></div>
+<div class="actions"><button onclick="workshopEditEquipment()">Edit weapon / equipment</button><button onclick="workshopEditRule()">Edit special rule</button></div></div>
 <div class="panel"><h2>Army management</h2><div class="grid"><div class="field"><label>Army</label><select id="wArmy"></select></div><div class="field"><label>Name</label><input id="wArmyName"></div><div class="field"><label>Points limit</label><input id="wArmyLimit" type="number" min="0"></div></div><div class="actions"><button class="primary" onclick="workshopSaveArmy()">Save army details</button><button onclick="workshopOpenArmy()">Open army builder</button></div></div>
 </div>
 </section>
@@ -432,6 +420,25 @@ const defaultEquipment = [
 ["Longbow","Ranged Weapon"],["Shortbow","Ranged Weapon"],["Crossbow","Ranged Weapon"],["Handgun","Ranged Weapon"],["Pistol","Ranged Weapon"],["Throwing Weapons","Ranged Weapon"],
 ["Light Armour","Armour"],["Heavy Armour","Armour"],["Full Plate Armour","Armour"],["Shield","Shield"],["Barding","Other Equipment"]
 ].map((x,i)=>({id:"eqbase"+i,name:x[0],category:x[1],desc:"",custom:false}));
+
+function removeUnavailableWeapons() {
+const names=new Set(["handbow","repeater handbow","brace of repeater handbows"]);
+const ids=new Set([...names].map(name=>"eqx"+name.replace(/[^a-z]/g,"")));
+equipment.filter(e=>names.has(String(e.name||"").toLowerCase())).forEach(e=>ids.add(e.id));
+equipment=equipment.filter(e=>!names.has(String(e.name||"").toLowerCase()));
+const keep=id=>!ids.has(id);
+units=units.map(u=>{
+const costs={...(u.equipmentCosts||{})};
+ids.forEach(id=>delete costs[id]);
+return {...u,
+ basicEquipmentIds:(u.basicEquipmentIds||[]).filter(keep),
+ optionEquipment:(u.optionEquipment||[]).filter(o=>keep(o.id)),
+ equipmentIds:(u.equipmentIds||[]).filter(keep),
+ equipmentCosts:costs
+};
+});
+armies=armies.map(a=>({...a,entries:(a.entries||[]).map(entry=>({...entry,selectedOptionIds:(entry.selectedOptionIds||[]).filter(keep)}))}));
+}
 
 function uid() {
 return Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -493,6 +500,8 @@ let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
 equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
+removeUnavailableWeapons();
+save();
 } catch(e) {
 factions=[];
 units=[];
@@ -510,33 +519,6 @@ if(id==="units") refreshUnitSelectors();
 if(id==="equipment") renderEquipment();
 if(id==="army") renderArmies();
 if(id==="infamy") renderInfamy();
-}
-
-function addFaction() {
-alert("Factions are predefined by the game. You can create armies for an existing faction in the Army Creator.");
-}
-
-function deleteFaction(id) {
-alert("Game factions cannot be deleted.");
-}
-
-function editFaction(id) {
-alert("Game factions cannot be renamed or edited.");
-}
-
-function renderFactions() {
-let el=document.getElementById("factionList");
-el.innerHTML=factions.map(f=>`
-<div class="item">
-<div class="item-head">
-<div>
-<strong>${esc(f.name)}</strong><br>
-<small>${esc(f.desc||"Game faction")} · ${units.filter(u=>u.factionId===f.id).length} units</small>
-</div>
-<span class="muted">Built-in faction</span>
-</div>
-</div>
-`).join("")||'<div class="empty">No game factions are available.</div>';
 }
 
 function refreshUnitSelectors() {
@@ -850,7 +832,7 @@ renderPendingCustomRules();
 renderUnitRulePicker();
 renderUnitEquipmentPicker();
 
-document.querySelectorAll(".tabs button")[1].click();
+document.querySelectorAll(".tabs button")[0].click();
 window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -1231,6 +1213,7 @@ rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
 armies=Array.isArray(d.armies)?d.armies:[];
 armiesOfInfamy=Array.isArray(d.armiesOfInfamy)?d.armiesOfInfamy:[];
+removeUnavailableWeapons();
 selectedArmyId=null;
 
 save();
@@ -1267,7 +1250,7 @@ const name=document.getElementById("aName").value.trim();
 const factionId=document.getElementById("aFaction").value;
 const limit=parsePointCost(document.getElementById("aLimit").value);
 if(!name) { alert("Enter an army name."); return; }
-if(!factionId) { alert("Create and select a faction first."); return; }
+if(!factionId) { alert("Select a game faction first."); return; }
 const infamyId=document.getElementById("aInfamy").value||null;
 const army={id:uid(),name,factionId,pointsLimit:limit,entries:[],armyOfInfamyId:infamyId};
 armies.push(army);
@@ -1472,7 +1455,6 @@ const el=document.getElementById("infamyList");if(!el)return;
 el.innerHTML=armiesOfInfamy.map(x=>{const f=factions.find(v=>v.id===x.factionId);return '<div class="item"><div class="item-head"><div><strong>'+esc(x.name)+'</strong><br><small>'+esc(f?.name||"Missing faction")+' · '+esc(x.source||"Custom source")+' · '+(x.allowedUnitIds?.length||"All")+' selected units</small><p class="muted">'+esc(x.description||"")+'</p></div><div class="actions"><button onclick="editInfamy(\''+x.id+'\')">Edit</button><button class="danger" onclick="deleteInfamy(\''+x.id+'\')">Delete</button></div></div></div>';}).join("")||'<div class="empty">No Armies of Infamy created yet.</div>';
 }
 function refreshAll() {
-renderFactions();
 refreshUnitSelectors();
 renderUnits();
 renderRules();
@@ -1583,7 +1565,7 @@ const ruleDescriptions={
 };
 
 // ---------- add missing generic weapons to the library ----------
-[["Whip","Melee Weapon"],["Throwing Spear","Melee Weapon"],["Warbow","Ranged Weapon"],["Brace of Pistols","Ranged Weapon"],["Repeater Handgun","Ranged Weapon"],["Repeater Pistol","Ranged Weapon"],["Repeater Crossbow","Ranged Weapon"],["Repeater Handbow","Ranged Weapon"],["Brace of Repeater Handbows","Ranged Weapon"],["Javelin","Ranged Weapon"],["Sling","Ranged Weapon"],["Throwing Axe","Ranged Weapon"]]
+[["Whip","Melee Weapon"],["Throwing Spear","Melee Weapon"],["Warbow","Ranged Weapon"],["Brace of Pistols","Ranged Weapon"],["Repeater Handgun","Ranged Weapon"],["Repeater Pistol","Ranged Weapon"],["Repeater Crossbow","Ranged Weapon"],["Javelin","Ranged Weapon"],["Sling","Ranged Weapon"],["Throwing Axe","Ranged Weapon"]]
 .forEach(w=>{ if(!equipment.some(e=>e.name===w[0])) equipment.push({id:"eqx"+w[0].toLowerCase().replace(/[^a-z]/g,""),name:w[0],category:w[1],desc:"",custom:false}); });
 save();
 if(typeof renderEquipment==="function") renderEquipment();
@@ -1652,7 +1634,7 @@ frag.appendChild(document.createTextNode(text.slice(last)));
 node.parentNode.replaceChild(frag,node);
 });
 }
-["renderFactions","renderUnits","renderRules","renderUnitRulePicker","renderUnitEquipmentPicker","renderPendingCustomRules","renderEquipment"].forEach(fn=>{
+["renderUnits","renderRules","renderUnitRulePicker","renderUnitEquipmentPicker","renderPendingCustomRules","renderEquipment"].forEach(fn=>{
 const orig=window[fn]; if(typeof orig!=="function")return;
 window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return r;};
 });
@@ -1663,9 +1645,8 @@ linkifyNames();
 <script>
 function workshopRefreshSelectors(){
  const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="">Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
- fill('wFaction',factions,'faction');fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');
+ fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');
 }
-function workshopEditFaction(){const f=factions.find(x=>x.id===document.getElementById('wFaction').value);if(!f){alert('Choose a faction.');return;}const n=prompt('Faction name:',f.name);if(n===null)return;if(!n.trim())return;f.name=n.trim();f.desc=prompt('Description:',f.desc||'')??f.desc;save();refreshAll();workshopRefreshSelectors();}
 function workshopEditEquipment(){
  const e=equipment.find(x=>x.id===document.getElementById('wEquipment').value);if(!e){alert('Choose equipment.');return;}
  const n=prompt('Name:',e.name);if(n===null||!n.trim())return;
