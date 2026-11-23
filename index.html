@@ -2027,7 +2027,7 @@ function renderMagicItems(){
  const sharedHtml=categories.map(type=>{
   const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type).toLowerCase().includes(q));
   if(!list.length)return "";
-  return '<h4 class="magic-category-heading">'+esc(type)+"s ("+list.length+')</h4>'+list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small></div>').join("");
+  return '<h4 class="magic-category-heading">'+esc(categoryLabels[type])+" ("+list.length+')</h4>'+list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small></div>').join("");
  }).join("");
  const priv=factionMagicItems.filter(x=>(x.name+" "+x.type+" "+(x.factionName||"")).toLowerCase().includes(q));
  if(a)a.innerHTML=sharedHtml||'<div class="empty">No common magic items found.</div>';
