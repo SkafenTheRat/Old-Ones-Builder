@@ -704,7 +704,7 @@ function syncCoreEquipmentCatalogue(){
 defaultEquipment.forEach(def=>{
 let item=equipment.find(e=>e.id===def.id)||equipment.find(e=>String(e.name||"").toLowerCase()===def.name.toLowerCase()||(def.legacyName&&String(e.name||"").toLowerCase()===def.legacyName.toLowerCase()));
 const detail=weaponDetails[def.name];
-const canonical={...def,desc:detail?.desc||def.desc||"",custom:false,sourceUrl:"https://tow.whfb.app/weapons-of-war/"+({"Additional Hand Weapon":"two-hand-weapons-additional-hand-weapon","Thrusting Spear":"thrusting-spear","Throwing Weapons":"throwing-weapons","Brace of Pistols":"brace-of-pistols"}[def.name]||indexSlug(def.name))};
+const canonical={...def,desc:detail?.desc||def.desc||"",custom:false,sourceUrl:"https://tow.whfb.app/weapons-of-war/"+({"Additional Hand Weapon":"two-hand-weapons-additional-hand-weapon","Thrusting Spear":"thrusting-spear","Throwing Weapons":"throwing-weapons","Brace of Pistols":"brace-of-pistols"}[def.name]||String(def.name).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""))};
 if(item) Object.assign(item,canonical);
 else equipment.push({...canonical});
 });
@@ -1756,7 +1756,6 @@ renderPendingCustomRules();
 renderArmies();
 }
 
-load();
 </script>
 <!-- ===== WEAPON/ RULE POPUPS + GENERIC WEAPONS (data: tow.whfb.app) ===== -->
 <style>
@@ -1808,6 +1807,8 @@ const weaponDetails={
 "Shield":{cat:"Shield",desc:"Adds +1 to the model's armour save (in close combat, and against shooting from its front arc).",stats:[]},
 "Barding":{cat:"Other Equipment",desc:"Armour for a mount: +1 to the mount's armour save, but the mount suffers -1 to its Movement.",stats:[]}
 };
+
+load();
 
 // ---------- RULE EFFECTS (source: tow.whfb.app / Rulebook) ----------
 const ruleDescriptions={
