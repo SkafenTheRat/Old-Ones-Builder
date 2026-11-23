@@ -634,7 +634,7 @@ const rows=[
 "razorgor-herd|Razorgor Herd|Core|52|7,3,0,5,5,3,2,4,6|50 x 75 mm|War Beast|1+|Hand Weapon;Light Armour||Armour Bane (1);Fear;Foe Render;Impact Hits (D3);Loner;Open Order;Primal Fury;Razor Tusks;Swiftstride|Tusk counts as hand weapon; calloused hide counts as light armour.|0|0",
 "razorgor-chariot|Razorgor Chariot|Special|120|-,-,-,5,5,4,-,-,-|50 x 100 mm|Heavy Chariot|1|Hand Weapon;Great Weapon;Cavalry Spear||Armour Bane (1);Close Order;Fear;First Charge;Foe Render;Impact Hits (D6+2);Mark of Chaos Undivided;Primal Fury;Razor Tusks|120 pts; Armour Value 4+; Bestigor/Gor crew with Razorgor.|0|0",
 "tuskgor-chariot|Tuskgor Chariot|Core|85|-,-,-,5,4,4,-,-,-|50 x 100 mm|Heavy Chariot|1|Hand Weapon;Great Weapon;Cavalry Spear||Close Order;First Charge;Impact Hits (D6+1);Mark of Chaos Undivided;Primal Fury;Razor Tusks;Warband|85 pts; Armour Value 4+; may be a character mount.|0|0",
-"chaos-giant|Chaos Giant|Rare|200|6,3,1,6,7,6,2,*,10|50 x 50 mm min; 50 x 75 mm max|Behemoth|1|Giant's Club;Light Armour|Heavy Armour:10;Regeneration (6+):20|Belly Flop;Close Order;Eadbutt (Giant);Giant Attacks;Immune to Psychology;Jump Up & Down;Large Target;Mighty Swing (Giant);Pick Up And...;Stomp Attacks (D6);Terror;Thump with Club;Timmm-berrr!;Unbreakable|Giant's Club profile varies with the Giant Attacks result.|0|0",
+"chaos-giant|Chaos Giant|Rare|200|6,3,1,6,7,6,2,*,10|50 x 50 mm min; 50 x 75 mm max|Behemoth|1|Giant's Club;Light Armour|Heavy Armour:10;Regeneration (6+):20|Belly Flop;Close Order;Eadbutt (Giant);Giant Attacks;Immune to Psychology;Jump Up & Down;Large Target;Mighty Swing (Giant);Pick Up And...;Stomp Attacks (D6);Terror;Thump with Club;Timmm-berrr!Unbreakable|Giant's Club profile varies with the Giant Attacks result.|0|0",
 "cockatrice|Cockatrice|Special|155|4,4,5,4,5,4,6,6,6|50 x 50 mm|Monstrous Creature|1|Hand Weapon;Petrifying Gaze;Heavy Armour||Close Order;Fly (10);Large Target;Stomp Attacks (1);Stony Stare;Swiftstride;Terror|Claws count as hand weapons; Scaly Skin counts as heavy armour.|0|0",
 "cygor|Cygor|Special|205|7,2,1,6,6,6,3,4,8|60 x 100 mm|Behemoth|1|Hand Weapon;Hurl Attack;Light Armour||Close Order;Ghostsight;Immune to Psychology;Large Target;Soul-eater;Stomp Attacks (D3);Stubborn;Terror;Timmm-berrr!|Claws count as hand weapons; calloused hide counts as light armour.|0|0",
 "dragon-ogre-shaggoth|Dragon Ogre Shaggoth|Rare|225|7,6,2,6,5,6,4,5,9|50 x 75 mm|Monstrous Creature|1|Hand Weapon;Light Armour|Additional Hand Weapon:3;Great Weapon:4;Heavy Armour:6|Armour Bane (2);Armoured Hide (2);Close Order;Ensorcelled Weapons;Immune to Psychology;Large Target;Stomp Attacks (D3+1);Storm Call;Terror;The Quickening Storm|225 pts; mutations up to 50 pts; magic items up to 50 pts.|50|50",
@@ -1123,6 +1123,7 @@ ${(u.customRules||[]).map(r=>`
 `).join("")}
 
 ${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
+${u.sourceUrl?`<p class="muted"><a href="${esc(u.sourceUrl)}" target="_blank" rel="noopener">Source profile</a></p>`:""}
 </div>
 `;
 }).join("")||'<div class="empty">No units found. Create your first unit above.</div>';
