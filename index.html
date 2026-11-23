@@ -589,7 +589,7 @@ const gearRows=[
 gearRows.forEach(row=>{
 const p=row.split("|"),name=p[0],id="br_eq_"+beastmenSlug(name);
 if(!factionEquipment.some(x=>x.id===id)){
-let path="weapons-of-war";
+let path="army/beastmen-brayherds";
 if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
 else if(p[2].includes("Magic")||p[2].includes("Talisman")||p[2].includes("Enchanted")||p[2].includes("Arcane"))path="magic-items/beastmen-brayherds-magic-items";
 else if(name==="Mansmasher"||name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
