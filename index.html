@@ -612,7 +612,8 @@ const gearRows=[
 gearRows.forEach(row=>{
 const p=row.split("|"),name=p[0],id="br_eq_"+beastmenSlug(name);
 let path="army/beastmen-brayherds";
-if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
+if(p[2]==="Weapons of War")path="weapons-of-war/"+beastmenSlug(name);
+else if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
 else if(p[2].includes("Magic")||p[2].includes("Talisman")||p[2].includes("Enchanted")||p[2].includes("Arcane"))path="magic-items/beastmen-brayherds-magic-items";
 else if(name==="Mansmasher"||name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
 const data={id,name,category:p[1],desc:p[2],custom:false,factionId:fid,sourceUrl:"https://tow.whfb.app/"+path};
@@ -1819,6 +1820,11 @@ const weaponDetails={
 "Wicked Claws":{cat:"Melee Weapon",desc:"Razor-sharp claws.",stats:[["Combat","S","-2","-"]]},
 };
 
+weaponDetails["Throwing Spears"]=weaponDetails["Throwing Spear"];
+weaponDetails["Thrusting Spears"]=weaponDetails["Thrusting Spear"];
+weaponDetails["Throwing Axes"]=weaponDetails["Throwing Axe"];
+weaponDetails["Javelins"]=weaponDetails["Javelin"];
+
 load();
 
 // ---------- RULE EFFECTS (source: tow.whfb.app / Rulebook) ----------
@@ -1844,7 +1850,8 @@ const ruleDescriptions={
 "Magical Attacks":"The model's attacks count as magical: they can harm Ethereal creatures and other targets that can only be wounded by magic.",
 "Magic Resistance":"The unit resists magic, usually by improving its ward save against wounds caused by spells (or by making enemy spells harder to cast on it - verify the exact effect in the rulebook).",
 "Move Through Cover":"The unit ignores movement penalties for moving through cover and difficult terrain.",
-"Fight in Extra Rank":"A model with this rule may make supporting attacks even when it is not in the fighting rank, allowing it to attack from behind the models in front, subject to the normal rules for supporting attacks.",
+"Fight in Extra Rank":"A model with this rule may make supporting attacks even when it is not in the fighting rank, allowing it to attack from behind the models in front, subject to the normal restrictions on supporting attacks.",
+"Requires Two Hands":"A model using a weapon with this rule cannot use a shield during the Combat phase. A shield may still be used against wounds caused by shooting or magic in other phases.",
 "Multiple Shots (X)":"The weapon may fire one shot normally or fire the number of shots shown in brackets. If it fires multiple shots, each To Hit roll suffers an additional -1 modifier. Every model in the same unit equipped with such weapons must choose the same firing mode. If X is determined by a dice roll, roll separately for each model.",
 "Multiple Shots":"The weapon may fire one shot normally or the number shown by its Multiple Shots value. Multiple shots impose an additional -1 To Hit modifier; consult the parameterised Multiple Shots (X) entry for the full procedure.",
 "Multiple Wounds":"Each unsaved wound inflicted by the attack is multiplied into X wounds.",
@@ -2146,7 +2153,7 @@ function openEquipmentModal(idOrName){
  const detail=findNamed(Object.entries(weaponDetails).map(([name,value])=>({name,...value})),item.name);
  document.getElementById("mTitle").textContent=item.name;
  let html='<p><strong>Category:</strong> '+esc(item.category||"Equipment")+'</p>';
- const description=item.desc||detail?.desc||"";
+ const description=detail?.desc||item.desc||"";
  if(description)html+='<p>'+esc(description)+'</p>';
  if(detail?.stats?.length){
   detail.stats.forEach(p=>{
