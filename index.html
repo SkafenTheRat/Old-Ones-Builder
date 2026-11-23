@@ -2071,5 +2071,141 @@ seedMagicItemCatalogue();
 save();
 renderMagicItems();
 </script>
+
+<script>
+/* ---------- Unified links for every library entry ---------- */
+function indexSlug(value){
+ return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+ .replace(/&/g,"and").replace(/['’"]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+}
+function magicItemRuleUrl(item){
+ if(item?.sourceUrl && !/\/magic-items\/(magic-weapons|magic-armour|talismans|magic-standards|enchanted-items|arcane-items|beastmen-brayherds-magic-items)$/i.test(item.sourceUrl)) return item.sourceUrl;
+ return "https://tow.whfb.app/magic-item/"+indexSlug(item?.name);
+}
+function equipmentRuleUrl(item){
+ if(item?.sourceUrl && item.custom) return item.sourceUrl;
+ const name=String(item?.name||"").trim();
+ const aliases={"Additional Hand Weapon":"two-hand-weapons-additional-hand-weapon","Spear":"spears","Throwing Weapons":"throwing-weapons","Throwing Spear":"throwing-spear","Brace of Pistols":"brace-of-pistols"};
+ return "https://tow.whfb.app/weapons-of-war/"+(aliases[name]||indexSlug(name));
+}
+function specialRuleUrl(rule,name){
+ if(rule?.sourceUrl) return rule.sourceUrl;
+ const base=ruleBase(name||rule?.name||"");
+ const aliases={"Armour Bane":"armour-bane-x","Armoured Hide":"armoured-hide-x","Extra Attacks":"extra-attacks-x","Fly":"fly-x","Hatred":"hatred-x","Impact Hits":"impact-hits-x","Magic Resistance":"magic-resistance-x","Multiple Shots":"multiple-shots-x","Multiple Wounds":"multiple-wounds-x","Regeneration":"regeneration-x","Stomp Attacks":"stomp-attacks-x"};
+ return "https://tow.whfb.app/special-rules/"+(aliases[base]||indexSlug(base));
+}
+function findNamed(list,name){
+ const key=String(name||"").toLowerCase();
+ return (list||[]).find(x=>String(x.name||"").toLowerCase()===key);
+}
+function openMagicItemModal(idOrName){
+ const all=[...magicItems,...factionMagicItems];
+ const item=all.find(x=>x.id===idOrName)||findNamed(all,idOrName);
+ if(!item)return;
+ document.getElementById("mTitle").textContent=item.name;
+ const points=item.points==null?"No points value listed":esc(item.points)+" pts";
+ const faction=item.factionName?'<p><strong>Faction:</strong> '+esc(item.factionName)+'</p>':"";
+ const common=item.extremelyCommon?'<p><strong>Extremely Common</strong></p>':"";
+ const desc=item.desc?'<p>'+esc(item.desc)+'</p>':'<p>Open the individual index entry to read this item’s complete rules, restrictions and interactions.</p>';
+ document.getElementById("mBody").innerHTML='<p><strong>Type:</strong> '+esc(item.type)+'</p><p><strong>Points:</strong> '+points+'</p>'+faction+common+desc+'<p><a href="'+esc(magicItemRuleUrl(item))+'" target="_blank" rel="noopener">Open the full rules for '+esc(item.name)+' in the online index</a></p>';
+ overlay.classList.remove("hidden");
+}
+function openEquipmentModal(idOrName){
+ const all=[...equipment,...factionEquipment];
+ const item=all.find(x=>x.id===idOrName)||findNamed(all,idOrName);
+ if(!item)return;
+ const detail=findNamed(Object.entries(weaponDetails).map(([name,value])=>({name,...value})),item.name);
+ document.getElementById("mTitle").textContent=item.name;
+ let html='<p><strong>Category:</strong> '+esc(item.category||"Equipment")+'</p>';
+ const description=item.desc||detail?.desc||"";
+ if(description)html+='<p>'+esc(description)+'</p>';
+ if(detail?.stats?.length){
+  detail.stats.forEach(p=>{
+   const specials=p[3]&&p[3]!=="-"?p[3].split(",").map(r=>'<a class="rlink" data-name="'+esc(r.trim())+'">'+esc(r.trim())+'</a>').join(", "):"-";
+   html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td><td>'+specials+'</td></tr></table>';
+  });
+ }
+ if(detail?.notes)html+='<p class="wnote">Notes: '+esc(detail.notes)+'</p>';
+ html+='<p><a href="'+esc(equipmentRuleUrl(item))+'" target="_blank" rel="noopener">Open the full rules for '+esc(item.name)+' in the online index</a></p>';
+ document.getElementById("mBody").innerHTML=html;
+ overlay.classList.remove("hidden");
+}
+function openWeaponModal(name){
+ const detail=weaponDetails[name]||findNamed(Object.entries(weaponDetails).map(([n,v])=>({name:n,...v})),name);
+ if(!detail){openEquipmentModal(name);return;}
+ document.getElementById("mTitle").textContent=name;
+ let html="";
+ (detail.stats||[]).forEach(p=>{
+  const specials=p[3]&&p[3]!=="-"?p[3].split(",").map(r=>'<a class="rlink" data-name="'+esc(r.trim())+'">'+esc(r.trim())+'</a>').join(", "):"-";
+  html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td><td>'+specials+'</td></tr></table>';
+ });
+ if(detail.desc)html+='<p>'+esc(detail.desc)+'</p>';
+ if(detail.notes)html+='<p class="wnote">Notes: '+esc(detail.notes)+'</p>';
+ html+='<p><a href="'+esc(equipmentRuleUrl({name}))+'" target="_blank" rel="noopener">Open the full rules for '+esc(name)+' in the online index</a></p>';
+ document.getElementById("mBody").innerHTML=html;
+ overlay.classList.remove("hidden");
+}
+function openRuleModal(name){
+ const base=ruleBase(name);
+ const factionRule=findNamed(factionRules,base)||findNamed(factionRules,name);
+ const sharedRule=findNamed(rules,base)||findNamed(rules,name);
+ const rule=factionRule||sharedRule;
+ document.getElementById("mTitle").textContent=name;
+ const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
+ const source=specialRuleUrl(rule,name);
+ document.getElementById("mBody").innerHTML='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open the full rule in the online index</a></p>';
+ overlay.classList.remove("hidden");
+}
+function linkifyNames(){
+ const root=document.querySelector("main");if(!root)return;
+ const registry=new Map();
+ const add=(items,kind)=>{
+  (items||[]).forEach(item=>{
+   const name=typeof item==="string"?item:item?.name;
+   if(!name)return;
+   const key=String(name).toLowerCase();
+   if(!registry.has(key))registry.set(key,{name:String(name),kind,id:typeof item==="object"?item.id:null});
+  });
+ };
+ add(magicItems,"magic");add(factionMagicItems,"magic");
+ add(equipment,"equipment");add(factionEquipment,"equipment");
+ add(Object.keys(weaponDetails),"weapon");
+ add(rules,"rule");add(factionRules,"rule");
+ add(units.flatMap(u=>u.customRules||[]),"rule");
+ const entries=[...registry.values()].sort((a,b)=>b.name.length-a.name.length);
+ if(!entries.length)return;
+ const escRe=v=>v.replace(/[.*+?^{}()|[\]\\]/g,"\\$&").replace(/\$/g,"\\$");
+ const re=new RegExp("("+entries.map(x=>escRe(x.name)).join("|")+")","gi");
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+ let node;
+ while(node=walker.nextNode()){
+  if(!node.parentElement.closest("a,script,style,button,input,textarea,select"))nodes.push(node);
+ }
+ nodes.forEach(textNode=>{
+  const value=textNode.nodeValue;re.lastIndex=0;if(!re.test(value))return;re.lastIndex=0;
+  const fragment=document.createDocumentFragment();let last=0,match;
+  while((match=re.exec(value))){
+   if(match.index>last)fragment.appendChild(document.createTextNode(value.slice(last,match.index)));
+   const entry=registry.get(match[0].toLowerCase());
+   const a=document.createElement("a");
+   a.className=entry.kind==="magic"?"magiclink":entry.kind==="equipment"?"elink":entry.kind==="weapon"?"wlink":"rlink";
+   if(entry.id)a.dataset.id=entry.id;
+   a.dataset.name=entry.name;a.textContent=match[0];
+   fragment.appendChild(a);last=match.index+match[0].length;
+  }
+  fragment.appendChild(document.createTextNode(value.slice(last)));
+  textNode.parentNode.replaceChild(fragment,textNode);
+ });
+}
+document.addEventListener("click",e=>{
+ const equipmentLink=e.target.closest(".elink");
+ if(equipmentLink){openEquipmentModal(equipmentLink.dataset.id||equipmentLink.dataset.name);return;}
+});
+magicItems.forEach(x=>{x.sourceUrl=magicItemRuleUrl(x);});
+factionMagicItems.forEach(x=>{x.sourceUrl=magicItemRuleUrl(x);});
+save();
+linkifyNames();
+</script>
+
 </body>
 </html>
