@@ -202,7 +202,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 </div>
 
 <h3>Base Size & Troop Type</h3>
-<div class="grid"><div class="field"><label>Base Size (mm)</label><input id="uBaseSize" placeholder="e.g. 25x25, 30x60, 50x50"></div><div class="field"><label>Troop Type</label><select id="uTroopType"><option value="">Select troop type</option><option>Regular Infantry</option><option>Heavy Infantry</option><option>Monstrous Infantry</option><option>Swarms</option><option>Light Cavalry</option><option>Heavy Cavalry</option><option>Monstrous Cavalry</option><option>War Beasts</option><option>Light Chariot</option><option>Heavy Chariot</option><option>Monstrous Creature</option><option>Behemoth</option><option>War Machine</option></select></div></div>
+<div class="grid"><div class="field"><label>Base Size (mm)</label><input id="uBaseSize" placeholder="e.g. 25x25, 30x60, 50x50"></div><div class="field"><label>Troop Type</label><input id="uTroopType" placeholder="e.g. Regular Infantry, Heavy Cavalry, Behemoth"></div></div>
 <h3>Equipment</h3>
 <p class="muted">Included equipment is part of the unit and adds no points. Mark an item as a paid option to set its price — it is chosen later, when you build an army.</p>
 <div id="unitEquipmentPicker" class="rule-grid"></div>
@@ -501,7 +501,7 @@ if(!Array.isArray(armies)) armies=[];
 armiesOfInfamy=JSON.parse(localStorage.getItem("ow_armies_of_infamy"))||[];
 if(!Array.isArray(armiesOfInfamy)) armiesOfInfamy=[];
 let saved=JSON.parse(localStorage.getItem("ow_rules"));
-if(saved) rules=saved;
+if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
 equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
 } catch(e) {
@@ -1066,7 +1066,7 @@ return (u.ruleIds||[]).map(id=>{
 const rule=rules.find(r=>r.id===id);
 if(!rule) return null;
 const label=formatUnitRuleLabel(u,id);
-const desc=rule.desc||(typeof ruleDescriptions==="object"?ruleDescriptions[rule.name]:"");
+const desc=rule.desc||"";
 return {label,desc:desc||""};
 }).filter(Boolean);
 }
