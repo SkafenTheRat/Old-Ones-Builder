@@ -130,6 +130,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <button onclick="showTab('equipment',this)">Equipment Library</button>
 <button onclick="showTab('rules',this)">Special Rules Library</button>
 <button onclick="showTab('data',this)">Data Management</button>
+<button onclick="showTab('workshop',this)">Workshop / Order of Battle</button>
 </div>
 
 <section id="factions" class="tab">
@@ -403,9 +404,14 @@ Always check official rules and descriptions in your own rulebooks.
 </p>
 </div>
 </section>
-
+<section id="workshop" class="tab hidden">
+<div class="panel"><h2>Builder Workshop — edit content</h2><p class="muted">Edytuj dane bezpośrednio w aplikacji. Nowe wpisy tworzysz w odpowiednich zakładkach Factions, Units, Equipment Library i Special Rules Library.</p>
+<div class="grid"><div class="field"><label>Faction</label><select id="wFaction"></select></div><div class="field"><label>Weapon / equipment</label><select id="wEquipment"></select></div><div class="field"><label>Special rule</label><select id="wRule"></select></div></div>
+<div class="actions"><button onclick="workshopEditFaction()">Edit faction</button><button onclick="workshopEditEquipment()">Edit weapon / equipment</button><button onclick="workshopEditRule()">Edit special rule</button></div></div>
+<div class="panel"><h2>Army management</h2><div class="grid"><div class="field"><label>Army</label><select id="wArmy"></select></div><div class="field"><label>Name</label><input id="wArmyName"></div><div class="field"><label>Points limit</label><input id="wArmyLimit" type="number" min="0"></div></div><div class="actions"><button class="primary" onclick="workshopSaveArmy()">Save army details</button><button onclick="workshopOpenArmy()">Open army builder</button></div></div>
+<div class="panel"><h2>Order of Battle</h2><p class="muted">Pełny podgląd wybranej armii: jednostki, profile, wyposażenie, wybrane opcje, zasady, limity i punkty.</p><div class="field"><label>Army</label><select id="oArmy" onchange="renderOrderOfBattle()"></select></div><div class="actions"><button class="primary" onclick="renderOrderOfBattle()">Refresh</button><button onclick="printOrderOfBattle()">Print / Save as PDF</button></div><div id="orderOfBattle" style="margin-top:14px"><div class="empty">Choose an army.</div></div></div>
+</section>
 </main>
-
 <script>
 const defaultRules = [
 "Armour Bane",
@@ -1079,7 +1085,7 @@ ${r.id.startsWith("base")
 }
 
 function exportData() {
-let data={version:5,factions,units,rules,equipment,armies};
+let data={version:6,factions,units,rules,equipment,armies,armiesOfInfamy};
 
 let blob=new Blob([JSON.stringify(data,null,2)],{
 type:"application/json"
@@ -1323,6 +1329,7 @@ units=d.units.map(normalizeUnit);
 rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
 armies=Array.isArray(d.armies)?d.armies:[];
+armiesOfInfamy=Array.isArray(d.armiesOfInfamy)?d.armiesOfInfamy:[];
 selectedArmyId=null;
 
 save();
@@ -1745,6 +1752,44 @@ window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return
 });
 linkifyNames();
 </script>
+
+<style>
+#orderOfBattle .oob-unit{border:1px solid var(--line);background:#25201c;padding:14px;margin:10px 0;border-radius:6px;break-inside:avoid}
+#orderOfBattle .oob-stats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#orderOfBattle .oob-stats span{border:1px solid var(--line);padding:4px 7px;border-radius:4px;font-size:12px}
+#orderOfBattle .oob-total{font-size:22px;color:var(--gold);font-weight:bold}
+#orderOfBattle .oob-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--gold);padding-bottom:12px}
+</style>
+<script>
+function workshopRefreshSelectors(){
+ const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="">Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
+ fill('wFaction',factions,'faction');fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');fill('oArmy',armies,'army');
+}
+function workshopEditFaction(){const f=factions.find(x=>x.id===document.getElementById('wFaction').value);if(!f){alert('Choose a faction.');return;}const n=prompt('Faction name:',f.name);if(n===null)return;if(!n.trim())return;f.name=n.trim();f.desc=prompt('Description:',f.desc||'')??f.desc;save();refreshAll();workshopRefreshSelectors();}
+function workshopEditEquipment(){const e=equipment.find(x=>x.id===document.getElementById('wEquipment').value);if(!e){alert('Choose equipment.');return;}const n=prompt('Name:',e.name);if(n===null||!n.trim())return;const c=prompt('Category:',e.category)||e.category;const d=prompt('Description / weapon profile notes:',e.desc||'');if(d===null)return;e.name=n.trim();e.category=c;e.desc=d;save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();}
+function workshopEditRule(){const r=rules.find(x=>x.id===document.getElementById('wRule').value);if(!r){alert('Choose a rule.');return;}const n=prompt('Rule name:',r.name);if(n===null||!n.trim())return;const d=prompt('Rule description:',r.desc||'');if(d===null)return;r.name=n.trim();r.desc=d;r.hasParameter=confirm('Does this rule require a bracket value?');save();renderRules();renderUnitRulePicker();renderUnits();workshopRefreshSelectors();}
+function workshopLoadArmy(id){const a=armies.find(x=>x.id===id);if(!a)return;document.getElementById('wArmy').value=id;document.getElementById('wArmyName').value=a.name;document.getElementById('wArmyLimit').value=a.pointsLimit??'';}
+function workshopSaveArmy(){const a=armies.find(x=>x.id===document.getElementById('wArmy').value);if(!a){alert('Choose an army.');return;}const n=document.getElementById('wArmyName').value.trim();if(!n){alert('Enter a name.');return;}a.name=n;a.pointsLimit=parsePointCost(document.getElementById('wArmyLimit').value);save();renderArmies();workshopRefreshSelectors();renderOrderOfBattle();alert('Army saved.');}
+function workshopOpenArmy(){const id=document.getElementById('wArmy').value;if(!id){alert('Choose an army.');return;}selectedArmyId=id;document.querySelectorAll('.tabs button').forEach(b=>{if(b.textContent.trim()==='Army')b.click();});renderArmies();}
+function renderOrderOfBattle(){
+ const el=document.getElementById('orderOfBattle');if(!el)return;const a=armies.find(x=>x.id===document.getElementById('oArmy').value);if(!a){el.innerHTML='<div class="empty">Choose an army above.</div>';return;}
+ const faction=factions.find(x=>x.id===a.factionId),infamy=armiesOfInfamy.find(x=>x.id===a.armyOfInfamyId),total=armyTotal(a),limit=parsePointCost(a.pointsLimit),cats={};let body='';
+ (a.entries||[]).forEach((entry,i)=>{const u=units.find(x=>x.id===entry.unitId);if(!u){body+='<article class="oob-unit">Missing unit entry</article>';return;}const p=normalizeUnit(u),qty=Math.max(1,parseInt(entry.qty,10)||1),cost=armyEntryCost(entry);cats[u.category]=(cats[u.category]||0)+cost;
+ const stats=['M','WS','BS','S','T','W','I','A','Ld'].map(k=>'<span><b>'+k+'</b> '+esc(p.stats?.[k]||'-')+'</span>').join('');
+ const included=(p.basicEquipmentIds||[]).map(equipmentById).filter(Boolean).map(x=>esc(x.name));
+ const options=(entry.selectedOptionIds||[]).map(id=>(p.optionEquipment||[]).find(o=>o.id===id)).filter(Boolean).map(o=>{const x=equipmentById(o.id);return x?esc(x.name)+' (+'+parsePointCost(o.cost)+' pts)':'';}).filter(Boolean);
+ const rulesHtml=unitRuleDetails(p).map(x=>'<li><b>'+esc(x.label)+'</b>'+(x.desc?' — '+esc(x.desc):'')+'</li>').join('')+(p.customRules||[]).map(x=>'<li><b>'+esc(x.name)+'</b>: '+esc(x.desc||'')+'</li>').join('');
+ body+='<article class="oob-unit"><h3>'+(i+1)+'. '+esc(p.name)+' × '+qty+'</h3><div class="muted">'+esc(p.category||'Unit')+' · '+parsePointCost(p.points)+' pts each · '+cost+' pts total</div><div class="oob-stats">'+stats+'</div><p><b>Included:</b> '+(included.join(', ')||'—')+'</p><p><b>Selected options:</b> '+(options.join(', ')||'—')+'</p><p><b>Special rules:</b></p><ul>'+(rulesHtml||'<li>—</li>')+'</ul>'+(p.desc?'<p>'+esc(p.desc)+'</p>':'')+'</article>';
+ });
+ const rows=Object.entries(cats).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td style="text-align:right">'+v+' pts</td></tr>').join('');
+ el.innerHTML='<div class="oob-head"><div><h2>'+esc(a.name)+'</h2><div class="muted">'+esc(faction?.name||'Unknown faction')+' · '+esc(infamy?.name||'Grand Army / standard list')+'</div><div class="muted">'+(a.entries||[]).length+' entries</div></div><div class="oob-total">'+total+' pts'+(limit?' / '+limit:'')+'</div></div>'+(infamy?'<div class="notice"><b>Army of Infamy:</b> '+esc(infamy.name)+(infamy.source?' · '+esc(infamy.source):'')+(infamy.rulesText?'<p>'+esc(infamy.rulesText)+'</p>':'')+'</div>':'')+'<h3>Points by category</h3><table style="width:100%"><tbody>'+rows+'</tbody></table><h3>Order of Battle</h3>'+(body||'<div class="empty">No units in this army.</div>')+'<div class="notice">Total: <b>'+total+' pts</b>'+(limit?' · '+(total>limit?'Over limit by '+(total-limit)+' pts':'Remaining '+(limit-total)+' pts'):'')+'</div>';
+}
+function printOrderOfBattle(){renderOrderOfBattle();const h=document.getElementById('orderOfBattle')?.innerHTML;if(!h||h.includes('Choose an army above')){alert('Choose an army first.');return;}const w=window.open('','_blank');if(!w){alert('Allow pop-ups to print.');return;}w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Order of Battle</title><style>body{font:14px Georgia,serif;color:#211b14;margin:24px}h2,h3{color:#71552c}article{border:1px solid #b9a47d;padding:12px;margin:12px 0;break-inside:avoid}.oob-stats{display:flex;flex-wrap:wrap;gap:6px}.oob-stats span{border:1px solid #aaa;padding:4px 7px}.oob-total{font-size:22px;color:#71552c;font-weight:bold}.oob-head{display:flex;justify-content:space-between;border-bottom:2px solid #71552c;padding-bottom:12px}.muted{color:#665c50}td{padding:5px;border-bottom:1px solid #ddd}.notice{padding:10px;background:#eee;margin:10px 0}</style></head><body>'+h+'<script>window.onload=()=>window.print()<\\/script></body></html>');w.document.close();}
+const oldShowTab=window.showTab;window.showTab=function(id,btn){oldShowTab(id,btn);if(id==='workshop'){workshopRefreshSelectors();renderOrderOfBattle();}};
+const oldRefreshAll=window.refreshAll;window.refreshAll=function(){oldRefreshAll();workshopRefreshSelectors();};
+workshopRefreshSelectors();
+</script>
+
 <div id="installBanner" class="install-banner hidden" role="dialog" aria-labelledby="installTitle">
 <strong id="installTitle">Install Army Builder</strong>
 <p id="installText">Add a shortcut to your home screen and open the builder like an app.</p>
