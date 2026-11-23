@@ -167,7 +167,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <input id="uName" placeholder="Unit name">
 </div>
 <div class="field">
-<label>Faction</label>
+<label>Owning Faction</label>
 <select id="uFaction"></select>
 </div>
 <div class="field">
@@ -276,7 +276,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <h3>Army-specific Rules</h3>
 <textarea id="iRules" placeholder="Add army-wide special rules, restrictions and notes. Use your own summary; do not paste extensive copyrighted rule text."></textarea>
 <h3>Unit Access</h3>
-<p class="muted">Choose which existing units from this faction may be used. If none are selected, all faction units remain available.</p>
+<p class="muted">Choose which units from this faction this Army of Infamy permits. These are shared faction units, not copies assigned to this list. If all are selected, every current and future unit from this faction is permitted.</p>
 <div id="iUnitAccess" class="rule-grid"></div>
 <div class="actions">
 <button class="primary" onclick="saveInfamy()">Save Army of Infamy</button>
@@ -947,7 +947,7 @@ return `
 <div class="item-head">
 <div>
 <strong>${esc(u.name)}</strong><br>
-<small>${esc(f?.name||"No faction")} · ${esc(u.category)} · ${basePoints} pts</small>
+<small>${esc(f?.name||"No faction")} faction · ${esc(u.category)} · ${basePoints} pts</small>
 </div>
 <div class="actions">
 <button onclick="editUnit('${u.id}')">Edit</button>
@@ -956,7 +956,7 @@ return `
 </div>
 
 <div class="statline">${profile}</div>
-<div class="muted"><b>Base:</b> ${esc(u.baseSize||"Not set")} · <b>Troop type:</b> ${esc(u.troopType||"Not set")}</div>
+<div class="muted"><b>Faction unit</b> · <b>Base:</b> ${esc(u.baseSize||"Not set")} · <b>Troop type:</b> ${esc(u.troopType||"Not set")}</div>
 <div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
 const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
@@ -1401,6 +1401,13 @@ const card=document.querySelector(`[data-army-total="${army.id}"]`);
 if(card) card.textContent=`${total}${limit?` / ${limit}`:""} pts · ${(army.entries||[]).length} entries`;
 }
 
+function unitAllowedInArmyList(unit,army,armyList) {
+if(!unit||!army||unit.factionId!==army.factionId) return false;
+if(!armyList) return true; // Grand Army: every unit owned by this faction is available.
+const allowed=Array.isArray(armyList.allowedUnitIds)?armyList.allowedUnitIds:[];
+return allowed.length===0||allowed.includes(unit.id);
+}
+
 function renderArmies() {
 const list=document.getElementById("armyList");
 const builder=document.getElementById("armyBuilder");
@@ -1420,7 +1427,7 @@ return;
 }
 const infamy=armiesOfInfamy.find(x=>x.id===army.armyOfInfamyId);
 const allowed=infamy?.allowedUnitIds||[];
-const factionUnits=units.filter(u=>u.factionId===army.factionId&&(!allowed.length||allowed.includes(u.id)));
+const factionUnits=units.filter(u=>unitAllowedInArmyList(u,army,infamy));
 const total=armyTotal(army);
 const limit=parsePointCost(army.pointsLimit);
 const over=limit>0&&total>limit;
