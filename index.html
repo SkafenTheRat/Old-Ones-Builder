@@ -72,6 +72,12 @@ padding:13px; border-radius:6px; margin-bottom:9px;
 .magic-category .item { margin-bottom:7px; }
 .magic-category .item:last-child { margin-bottom:0; }
 @media(max-width:850px){#magicItemLibrary{grid-template-columns:1fr;}}
+#equipmentLibrary, #beastmenEquipmentLibrary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:none; overflow:visible; padding-right:0; }
+.equipment-category { background:#201c19; border:1px solid var(--line); border-radius:7px; padding:12px; min-width:0; }
+.equipment-category-heading { color:var(--gold); margin:0 0 10px; font-size:16px; border-bottom:1px solid var(--line); padding-bottom:8px; }
+.equipment-category .item { margin-bottom:7px; }
+.equipment-category .item:last-child { margin-bottom:0; }
+@media(max-width:850px){#equipmentLibrary,#beastmenEquipmentLibrary{grid-template-columns:1fr;}}
 .stat-grid {
 display:grid; grid-template-columns:repeat(9,minmax(0,1fr));
 gap:7px; margin:12px 0;
@@ -312,7 +318,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
 <div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3><div id="factionMagicItemLibrary" class="list-scroll"></div></div><h3>Add Custom Equipment</h3><div class="grid">
 <div class="field"><label>Equipment Name</label><input id="newEquipmentName" placeholder="Equipment name"></div>
-<div class="field"><label>Category</label><select id="newEquipmentCategory"><option>Melee Weapon</option><option>Ranged Weapon</option><option>Armour</option><option>Shield</option><option>Other Equipment</option></select></div>
+<div class="field"><label>Category</label><select id="newEquipmentCategory"><option value="Melee Weapons">Melee Weapons</option><option value="Ranged Weapons">Ranged Weapons</option><option value="Armour">Armour</option><option value="Additional Equipment">Additional Equipment</option></select></div>
 <div class="field" style="grid-column:1/-1"><label>Description</label><input id="newEquipmentDesc" placeholder="Description"></div></div>
 <div class="actions"><button class="primary" onclick="addLibraryEquipment()">Add to Library</button></div></div></section>
 <section id="rules" class="tab hidden">
@@ -887,11 +893,11 @@ editingOptionCosts[id]=value;
 }
 
 function renderUnitEquipmentPicker() {
-const groups=["Melee Weapon","Ranged Weapon","Armour","Shield","Other Equipment"];
+const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
 const factionId=document.getElementById("uFaction")?.value||"";
 const visibleEquipment=equipment.concat(factionEquipment.filter(e=>e.factionId===factionId));
 document.getElementById("unitEquipmentPicker").innerHTML=groups.map(group=>{
-const items=visibleEquipment.filter(e=>e.category===group);
+const items=visibleEquipment.filter(e=>equipmentGroup(e)===group);
 if(!items.length) return "";
 return `<div class="item" style="grid-column:1/-1"><strong>${esc(group)}</strong><div class="rule-grid" style="margin-top:8px">${
 items.map(e=>{
@@ -939,13 +945,29 @@ selectedOptionIds:(entry.selectedOptionIds||[]).filter(x=>x!==id)
 }));
 save(); renderEquipment(); renderUnitEquipmentPicker(); renderUnits(); renderArmies();
 }
+function equipmentGroup(e){
+const category=String(e?.category||"").trim().toLowerCase();
+if(category==="melee weapon"||category==="melee weapons") return "Melee Weapons";
+if(category==="ranged weapon"||category==="ranged weapons") return "Ranged Weapons";
+if(category==="armour"||category==="armor") return "Armour";
+return "Additional Equipment";
+}
+function renderEquipmentGroup(list,privateItems){
+const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
+return groups.map(group=>{
+const items=list.filter(e=>equipmentGroup(e)===group);
+const rows=items.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · Beastmen Brayherds only':'')+'</small></div>'+(privateItems?'<a href="'+esc(e.sourceUrl||"https://tow.whfb.app/army/beastmen-brayherds")+'" target="_blank" rel="noopener">Source</a>':e.custom?'<button class="danger" onclick="deleteLibraryEquipment(\''+e.id+'\')">Delete</button>':'<span class="muted">Shared Equipment</span>')+'</div>'+(privateItems&&e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>').join("");
+return '<section class="equipment-category"><h4 class="equipment-category-heading">'+esc(group)+' ('+items.length+')</h4>'+(rows||'<p class="muted">No equipment in this category.</p>')+'</section>';
+}).join("");
+}
 function renderEquipment() {
 const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase();
 const list=equipment.filter(e=>(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
-document.getElementById("equipmentLibrary").innerHTML=list.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(e.category)+'</small></div>'+(e.custom?'<button class="danger" onclick="deleteLibraryEquipment(\''+e.id+'\')">Delete</button>':'<span class="muted">Shared Equipment</span>')+'</div></div>').join("")||'<div class="empty">No shared equipment found.</div>';
+const library=document.getElementById("equipmentLibrary");
+if(library) library.innerHTML=renderEquipmentGroup(list,false);
 const privateList=factionEquipment.filter(e=>e.factionId===beastmenFactionId()&&(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
 const privateEl=document.getElementById("beastmenEquipmentLibrary");
-if(privateEl) privateEl.innerHTML=privateList.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(e.category)+' · Beastmen Brayherds only</small><p class="muted">'+esc(e.desc)+'</p></div><a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen equipment found.</div>';
+if(privateEl) privateEl.innerHTML=renderEquipmentGroup(privateList,true);
 }
 
 function saveUnit() {
