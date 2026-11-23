@@ -416,66 +416,10 @@ Always check official rules and descriptions in your own rulebooks.
 </main>
 <script>
 const defaultRules = [
-"Armour Bane",
-"Close Order",
-"Counter Charge",
-"Drilled",
-"Fast Cavalry",
-"First Charge",
-"Fly",
-"Frenzy",
-"Hatred",
-"Immune to Psychology",
-"Impact Hits",
-"Killing Blow",
-"Large Target",
-"Magical Attacks",
-"Magic Resistance",
-"Multiple Shots",
-"Poisoned Attacks",
-"Regeneration",
-"Stomp Attacks",
-"Stubborn",
-"Swiftstride",
-"Terror",
-"Vanguard",
-"Veteran",
-"Warband",
-"Ambushers",
-"Chariot",
-"Ethereal",
-"Fear",
-"Flammable",
-"Move through Cover",
-"Multiple Wounds",
-"Open Order",
-"Ponderous",
-"Random Movement",
-"Scouts",
-"Skirmishers",
-"Strike First",
-"Strike Last",
-"Stupidity",
-"Unbreakable",
-"Unstable",
-"Undead",
-"Breath Weapon",
-"Ward Save"
+"Ambushers","Armour Bane","Armoured Hide","Breath Weapon","Chariot Runners","Close Order","Counter Charge","Cumbersome","Detachment","Dragged Along","Drilled","Ethereal","Evasive","Extra Attacks","Fast Cavalry","Fear","Feigned Flight","Fight in Extra Rank","Fire & Flee","First Charge","Flaming Attacks","Flammable","Fly","Frenzy","Furious Charge","Hatred","Horde","Howdah","Ignores Cover","Immune to Psychology","Impact Hits","Impetuous","Killing Blow","Large Target","Levies","Loner","Magical Attacks","Magic Resistance","Mercenaries","Monster Handlers","Monster Slayer","Motley Crew","Move & Shoot","Move or Shoot","Move Through Cover","Multiple Shots","Multiple Wounds","Open Order","Poisoned Attacks","Ponderous","Quick Shot","Rallying Cry","Random Attacks","Random Movement","Regeneration","Regimental Unit","Requires Two Hands","Reserve Move","Scouts","Shieldwall","Skirmishers","Stomp Attacks","Strike First","Strike Last","Stubborn","Stupidity","Swiftstride","Terror","Timmm-berrr!","Unbreakable","Unstable","Vanguard","Veteran","Volley Fire","Warband","Warp-spawned"
 ];
 
-const parameterRules = [
-"Armour Bane",
-"Magic Resistance",
-"Fly",
-"Impact Hits",
-"Multiple Wounds",
-"Stomp Attacks",
-"Multiple Shots",
-"Poisoned Attacks",
-"Regeneration",
-"Ward Save",
-"Breath Weapon"
-];
+const parameterRules = ["Armour Bane","Armoured Hide","Extra Attacks","Fly","Hatred","Impact Hits","Magic Resistance","Multiple Shots","Multiple Wounds","Random Attacks","Random Movement","Regeneration","Stomp Attacks"];
 
 let factions = [];
 let units = [];
@@ -1719,9 +1663,9 @@ overlay.classList.remove("hidden");
 
 function openRuleModal(name){
 const base=ruleBase(name);
-const d=ruleDescriptions[base]||ruleDescriptions[name];
 document.getElementById("mTitle").textContent=name;
-document.getElementById("mBody").innerHTML=(d?("<p>"+d+"</p>"):'<p class="wnote">No description available for this rule yet.</p>')+'<p class="wnote">Source: tow.whfb.app / The Old World rulebook - always verify against your rulebook.</p>';
+const slug=base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+document.getElementById("mBody").innerHTML='<p>Quick reference only. Consult the live index for the current wording and interactions.</p><p><a href="https://tow.whfb.app/special-rules/'+slug+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
 overlay.classList.remove("hidden");
 }
 
