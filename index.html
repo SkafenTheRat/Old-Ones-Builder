@@ -2074,6 +2074,9 @@ renderMagicItems();
 
 <script>
 /* ---------- Unified links for every library entry ---------- */
+const libraryLinkStyle=document.createElement("style");
+libraryLinkStyle.textContent=".magiclink,.elink,.wlink,.rlink{cursor:pointer;text-decoration:underline dotted;}";
+document.head.appendChild(libraryLinkStyle);
 function indexSlug(value){
  return String(value||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
  .replace(/&/g,"and").replace(/['’"]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -2083,7 +2086,7 @@ function magicItemRuleUrl(item){
  return "https://tow.whfb.app/magic-item/"+indexSlug(item?.name);
 }
 function equipmentRuleUrl(item){
- if(item?.sourceUrl && item.custom) return item.sourceUrl;
+ if(item?.sourceUrl && !/\/weapons-of-war(?:\/|$)/i.test(item.sourceUrl)) return item.sourceUrl;
  const name=String(item?.name||"").trim();
  const aliases={"Additional Hand Weapon":"two-hand-weapons-additional-hand-weapon","Spear":"spears","Throwing Weapons":"throwing-weapons","Throwing Spear":"throwing-spear","Brace of Pistols":"brace-of-pistols"};
  return "https://tow.whfb.app/weapons-of-war/"+(aliases[name]||indexSlug(name));
@@ -2149,7 +2152,8 @@ function openRuleModal(name){
  const base=ruleBase(name);
  const factionRule=findNamed(factionRules,base)||findNamed(factionRules,name);
  const sharedRule=findNamed(rules,base)||findNamed(rules,name);
- const rule=factionRule||sharedRule;
+ const unitRule=units.flatMap(u=>u.customRules||[]).find(r=>String(r.name||"").toLowerCase()===base.toLowerCase()||String(r.name||"").toLowerCase()===String(name).toLowerCase());
+ const rule=factionRule||sharedRule||unitRule;
  document.getElementById("mTitle").textContent=name;
  const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
  const source=specialRuleUrl(rule,name);
