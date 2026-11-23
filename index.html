@@ -588,13 +588,14 @@ const gearRows=[
 ];
 gearRows.forEach(row=>{
 const p=row.split("|"),name=p[0],id="br_eq_"+beastmenSlug(name);
-if(!factionEquipment.some(x=>x.id===id)){
 let path="army/beastmen-brayherds";
 if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
 else if(p[2].includes("Magic")||p[2].includes("Talisman")||p[2].includes("Enchanted")||p[2].includes("Arcane"))path="magic-items/beastmen-brayherds-magic-items";
 else if(name==="Mansmasher"||name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
-factionEquipment.push({id,name,category:p[1],desc:p[2],custom:false,factionId:fid,sourceUrl:"https://tow.whfb.app/"+path});
-}
+const data={id,name,category:p[1],desc:p[2],custom:false,factionId:fid,sourceUrl:"https://tow.whfb.app/"+path};
+const existingIndex=factionEquipment.findIndex(x=>x.id===id);
+if(existingIndex>=0) factionEquipment[existingIndex]={...factionEquipment[existingIndex],...data};
+else factionEquipment.push(data);
 });
 const mutations={"Slug-skin":50,"Crown of Horns (Beastmen)":45,"Muscular Monstrosity":35,"Pelt of Midnight":35,"Gouge-tusks":30,"Rune of the Beast Ascendant":25,"Many-limbed Fiend":20,"Gnarled Hide":15,"Uncanny Senses":10};
 const magic={"The Black Maul":80,"Primeval Club":60,"Axe of Men":50,"The Axes of Khorgor":40,"Mangelder":40,"Hunter's Spear":35,"The Brass Cleaver":30,"Scimitar of Skultar":25,"Full Plate Chaos Armour":40,"Pelt of the Dark Young":40,"Heavy Chaos Armour":30,"The Blackened Plate":25,"The Fur of Sharggu":20,"Chalice of Dark Rain":50,"Cornucopia of Corpulence":30,"Rune of the True Beast":30,"Dark Heart":25,"The Gore Banner":50,"Totem of Rust":50,"Banner of the Warped Moon":45,"The Beast Banner":40,"Manbane Standard":40,"Vitriolic Totem":30,"Banner of Outrage":25,"The Soiled Tapestry":15,"Stone of Spite":45,"Horn of the Great Hunt":35,"Horn of the First Beast":30,"Scourge of the Burdened":25,"Cacophonous Dirge":15,"Skin of Man":15,"The Plague Chalice":40,"Blood of the Shadowgave":35,"Daemon Heart":30,"Hagtree Fetish":30,"Goretooth":15,"Jagged Dagger":15};
