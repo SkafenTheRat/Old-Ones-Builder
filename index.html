@@ -495,6 +495,8 @@ alert("Unable to save data in the browser.");
 function load() {
 try {
 factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
+const catalogueFactions=["Beastmen Brayherds","Chaos Dwarfs","Daemons of Chaos","Dark Elves","Dwarfen Mountain Holds","Empire of Man","Grand Cathay","High Elf Realms","Kingdom of Bretonnia","Lizardmen","Ogre Kingdoms","Orc & Goblin Tribes","Realms of Men","Skaven","Tomb Kings of Khemri","Vampire Counts","Warriors of Chaos","Wood Elf Realms","Mercenaries","Renegade Crowns of the Realms of Man"];
+catalogueFactions.forEach(name=>{if(!factions.some(f=>f.name.toLowerCase()===name.toLowerCase()))factions.push({id:"catalogue_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"Faction catalogue entry — unit and army-list data must be verified against its current source."});});
 units=(JSON.parse(localStorage.getItem("ow_units"))||[]).map(normalizeUnit);
 armies=JSON.parse(localStorage.getItem("ow_armies"))||[];
 if(!Array.isArray(armies)) armies=[];
