@@ -409,6 +409,8 @@ let pendingCustomRules = [];
 let editingRuleIds = [];
 let editingRuleValues = {};
 let editingRuleFactions = {};
+let factionRules = [];
+let factionEquipment = [];
 let equipment = [];
 let editingBasicEquipmentIds = [];
 let editingOptionCosts = {};
@@ -501,6 +503,8 @@ localStorage.setItem("ow_factions",JSON.stringify(factions));
 localStorage.setItem("ow_units",JSON.stringify(units));
 localStorage.setItem("ow_rules",JSON.stringify(rules));
 localStorage.setItem("ow_equipment",JSON.stringify(equipment));
+localStorage.setItem("ow_faction_rules",JSON.stringify(factionRules));
+localStorage.setItem("ow_faction_equipment",JSON.stringify(factionEquipment));
 localStorage.setItem("ow_armies",JSON.stringify(armies));
 localStorage.setItem("ow_armies_of_infamy",JSON.stringify(armiesOfInfamy));
 } catch(e) {
@@ -523,6 +527,8 @@ let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
 equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
+factionRules=JSON.parse(localStorage.getItem("ow_faction_rules"))||[];
+factionEquipment=JSON.parse(localStorage.getItem("ow_faction_equipment"))||[];
 removeUnavailableWeapons();
 save();
 } catch(e) {
@@ -663,7 +669,14 @@ return Number.isFinite(n)&&n>0?n:0;
 }
 
 function equipmentById(id) {
-return equipment.find(e=>e.id===id);
+return equipment.find(e=>e.id===id)||factionEquipment.find(e=>e.id===id)||null;
+}
+function ruleById(id) {
+return rules.find(r=>r.id===id)||factionRules.find(r=>r.id===id)||null;
+}
+function rulesForFaction(factionId,selectedIds) {
+const selected=new Set(selectedIds||[]);
+return rules.concat(factionRules.filter(r=>r.factionId===factionId||selected.has(r.id)));
 }
 
 function renderUnitCostSummary() {
@@ -1004,7 +1017,7 @@ ${r.id.startsWith("base")
 }
 
 function exportData() {
-let data={version:6,factions,units,rules,equipment,armies,armiesOfInfamy};
+let data={version:7,factions,units,rules,equipment,factionRules,factionEquipment,armies,armiesOfInfamy};
 
 let blob=new Blob([JSON.stringify(data,null,2)],{
 type:"application/json"
@@ -1248,6 +1261,8 @@ factions=d.factions;
 units=d.units.map(normalizeUnit);
 rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
+factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
+factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
 armies=Array.isArray(d.armies)?d.armies:[];
 armiesOfInfamy=Array.isArray(d.armiesOfInfamy)?d.armiesOfInfamy:[];
 removeUnavailableWeapons();
