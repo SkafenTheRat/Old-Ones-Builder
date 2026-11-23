@@ -126,6 +126,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 <button class="active" onclick="showTab('factions',this)">Factions</button>
 <button onclick="showTab('units',this)">Units</button>
 <button onclick="showTab('army',this)">Army</button>
+<button onclick="showTab('infamy',this)">Army of Infamy</button>
 <button onclick="showTab('equipment',this)">Equipment Library</button>
 <button onclick="showTab('rules',this)">Special Rules Library</button>
 <button onclick="showTab('data',this)">Data Management</button>
@@ -250,6 +251,39 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 </div>
 </section>
 
+<section id="infamy" class="tab hidden">
+<div class="panel">
+<h2>Army of Infamy Creator</h2>
+<p class="muted">Create a themed army list attached to an existing faction. Define its composition limits, unit access and special rules. This is a custom list editor; verify official restrictions against the relevant Arcane Journal.</p>
+<div class="grid">
+<div class="field"><label>Parent Faction</label><select id="iFaction"></select></div>
+<div class="field"><label>Army of Infamy Name</label><input id="iName" placeholder="e.g. Slayer Host"></div>
+<div class="field"><label>Short Description</label><input id="iDesc" placeholder="Theme and identity"></div>
+<div class="field"><label>Source / Publication</label><input id="iSource" placeholder="Arcane Journal / custom"></div>
+</div>
+<h3>Composition Limits (%)</h3>
+<p class="muted">Set the maximum or minimum share of the army for each category. Leave a field empty if that category has no special limit.</p>
+<div class="grid">
+<div class="field"><label>Characters maximum</label><input id="iCharacters" type="number" min="0" max="100" placeholder="50"></div>
+<div class="field"><label>Core minimum</label><input id="iCore" type="number" min="0" max="100" placeholder="25"></div>
+<div class="field"><label>Special maximum</label><input id="iSpecial" type="number" min="0" max="100" placeholder="50"></div>
+<div class="field"><label>Rare maximum</label><input id="iRare" type="number" min="0" max="100" placeholder="25"></div>
+<div class="field"><label>Mercenaries maximum</label><input id="iMercenaries" type="number" min="0" max="100" placeholder="20"></div>
+</div>
+<h3>Army-specific Rules</h3>
+<textarea id="iRules" placeholder="Add army-wide special rules, restrictions and notes. Use your own summary; do not paste extensive copyrighted rule text."></textarea>
+<h3>Unit Access</h3>
+<p class="muted">Choose which existing units from this faction may be used. If none are selected, all faction units remain available.</p>
+<div id="iUnitAccess" class="rule-grid"></div>
+<div class="actions">
+<button class="primary" onclick="saveInfamy()">Save Army of Infamy</button>
+<button onclick="resetInfamyForm()">Clear Form</button>
+</div>
+<input type="hidden" id="editInfamyId">
+</div>
+<div class="panel"><h2>Saved Armies of Infamy</h2><div id="infamyList" class="list-scroll"></div></div>
+</section>
+
 <section id="army" class="tab hidden">
 <div class="panel">
 <h2>Create an Army</h2>
@@ -267,7 +301,12 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <label>Points Limit</label>
 <input id="aLimit" type="number" min="0" step="1" placeholder="2000" value="2000">
 </div>
+<div class="field">
+<label>Army List Type</label>
+<select id="aInfamy" onchange="updateArmyListTypeHint()"><option value="">Grand Army / standard list</option></select>
 </div>
+</div>
+<p id="armyListTypeHint" class="muted">Choose a faction first; an Army of Infamy can then be selected if one has been created for it.</p>
 <div class="actions">
 <button class="primary" onclick="addArmy()">Add Army</button>
 </div>
@@ -447,6 +486,7 @@ let equipment = [];
 let editingBasicEquipmentIds = [];
 let editingOptionCosts = {};
 let armies = [];
+let armiesOfInfamy = [];
 let selectedArmyId = null;
 const defaultEquipment = [
 ["Hand Weapon","Melee Weapon"],["Additional Hand Weapon","Melee Weapon"],["Great Weapon","Melee Weapon"],["Halberd","Melee Weapon"],["Spear","Melee Weapon"],["Lance","Melee Weapon"],["Cavalry Spear","Melee Weapon"],["Flail","Melee Weapon"],["Morning Star","Melee Weapon"],
@@ -494,6 +534,7 @@ localStorage.setItem("ow_units",JSON.stringify(units));
 localStorage.setItem("ow_rules",JSON.stringify(rules));
 localStorage.setItem("ow_equipment",JSON.stringify(equipment));
 localStorage.setItem("ow_armies",JSON.stringify(armies));
+localStorage.setItem("ow_armies_of_infamy",JSON.stringify(armiesOfInfamy));
 } catch(e) {
 alert("Unable to save data in the browser.");
 }
@@ -505,6 +546,8 @@ factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
 units=(JSON.parse(localStorage.getItem("ow_units"))||[]).map(normalizeUnit);
 armies=JSON.parse(localStorage.getItem("ow_armies"))||[];
 if(!Array.isArray(armies)) armies=[];
+armiesOfInfamy=JSON.parse(localStorage.getItem("ow_armies_of_infamy"))||[];
+if(!Array.isArray(armiesOfInfamy)) armiesOfInfamy=[];
 let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) rules=saved;
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
@@ -525,6 +568,7 @@ btn.classList.add("active");
 if(id==="units") refreshUnitSelectors();
 if(id==="equipment") renderEquipment();
 if(id==="army") renderArmies();
+if(id==="infamy") renderInfamy();
 }
 
 function addFaction() {
@@ -606,7 +650,18 @@ document.getElementById("filterFaction").innerHTML=
 factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
 
 const aFaction=document.getElementById("aFaction");
-if(aFaction) aFaction.innerHTML=options;
+if(aFaction) {
+aFaction.innerHTML=options;
+aFaction.onchange=refreshArmyInfamyOptions;
+}
+const iFaction=document.getElementById("iFaction");
+if(iFaction) {
+const current=iFaction.value;
+iFaction.innerHTML=options;
+if(factions.some(f=>f.id===current)) iFaction.value=current;
+iFaction.onchange=renderInfamyUnitAccess;
+}
+refreshArmyInfamyOptions();
 
 const pdfFaction=document.getElementById("pdfFaction");
 if(pdfFaction) pdfFaction.innerHTML=
@@ -1305,7 +1360,8 @@ const factionId=document.getElementById("aFaction").value;
 const limit=parsePointCost(document.getElementById("aLimit").value);
 if(!name) { alert("Enter an army name."); return; }
 if(!factionId) { alert("Create and select a faction first."); return; }
-const army={id:uid(),name,factionId,pointsLimit:limit,entries:[]};
+const infamyId=document.getElementById("aInfamy").value||null;
+const army={id:uid(),name,factionId,pointsLimit:limit,entries:[],armyOfInfamyId:infamyId};
 armies.push(army);
 selectedArmyId=army.id;
 document.getElementById("aName").value="";
@@ -1400,13 +1456,17 @@ if(!army) {
 builder.innerHTML='<div class="empty">Select an army to add units and paid equipment.</div>';
 return;
 }
-const factionUnits=units.filter(u=>u.factionId===army.factionId);
+const infamy=armiesOfInfamy.find(x=>x.id===army.armyOfInfamyId);
+const allowed=infamy?.allowedUnitIds||[];
+const factionUnits=units.filter(u=>u.factionId===army.factionId&&(!allowed.length||allowed.includes(u.id)));
 const total=armyTotal(army);
 const limit=parsePointCost(army.pointsLimit);
 const over=limit>0&&total>limit;
 const factionName=factions.find(f=>f.id===army.factionId)?.name||"";
+const armyListName=infamy?infamy.name:"Grand Army / standard list";
 builder.innerHTML=`
-<p class="muted">${esc(army.name)} · ${esc(factionName)}</p>
+<p class="muted">${esc(army.name)} · ${esc(factionName)} · ${esc(armyListName)}</p>
+${infamy?.rulesText?'<div class="notice">'+esc(infamy.rulesText)+'</div>':''}
 <div id="armyCost" class="notice${over?" over-limit":""}">${limit>0?`${total} / ${limit} pts${over?" · over the limit":""}`:`${total} pts · no points limit`}</div>
 <div class="grid" style="margin-top:14px">
 <div class="field"><label>Unit</label><select id="armyUnit"><option value="">Select unit</option>${factionUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</select></div>
@@ -1437,6 +1497,65 @@ return `<div class="rule-option"><label><input type="checkbox" ${selected.has(o.
 </div>`;
 }
 
+function refreshArmyInfamyOptions() {
+const factionId=document.getElementById("aFaction")?.value||"";
+const select=document.getElementById("aInfamy");
+if(!select) return;
+const previous=select.value;
+select.innerHTML='<option value="">Grand Army / standard list</option>'+armiesOfInfamy.filter(x=>x.factionId===factionId).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
+if(armiesOfInfamy.some(x=>x.id===previous&&x.factionId===factionId)) select.value=previous;
+updateArmyListTypeHint();
+}
+function updateArmyListTypeHint() {
+const el=document.getElementById("armyListTypeHint");
+if(!el) return;
+const chosen=armiesOfInfamy.find(x=>x.id===document.getElementById("aInfamy")?.value);
+el.textContent=chosen?"Selected list: "+chosen.name+". Unit access is filtered to the units enabled in its definition.":"Choose a faction first; an Army of Infamy can then be selected if one has been created for it.";
+}
+function renderInfamyUnitAccess() {
+const factionId=document.getElementById("iFaction")?.value||"";
+const el=document.getElementById("iUnitAccess");
+if(!el) return;
+const current=armiesOfInfamy.find(x=>x.id===document.getElementById("editInfamyId")?.value);
+const allowed=new Set(current?.allowedUnitIds||[]);
+el.innerHTML=units.filter(u=>u.factionId===factionId).map(u=>'<div class="rule-option"><label><input type="checkbox" class="infamy-unit" value="'+esc(u.id)+'" '+(!current||!current.allowedUnitIds?.length||allowed.has(u.id)?"checked":"")+'> '+esc(u.name)+' <small>('+esc(u.category||"Unit")+')</small></label></div>').join("")||'<div class="empty">No units exist for this faction yet. You can save the list and add units later.</div>';
+}
+function resetInfamyForm() {
+["iName","iDesc","iSource","iCharacters","iCore","iSpecial","iRare","iMercenaries","iRules","editInfamyId"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+renderInfamyUnitAccess();
+}
+function saveInfamy() {
+const factionId=document.getElementById("iFaction").value;
+const name=document.getElementById("iName").value.trim();
+if(!factionId){alert("Choose an existing parent faction first.");return;}
+if(!name){alert("Enter an Army of Infamy name.");return;}
+const num=id=>{const v=document.getElementById(id).value;return v===""?null:Math.max(0,Math.min(100,Number(v)));};
+const allowedUnitIds=[...document.querySelectorAll(".infamy-unit:checked")].map(x=>x.value);
+const id=document.getElementById("editInfamyId").value;
+const record={id:id||uid(),factionId,name,description:document.getElementById("iDesc").value.trim(),source:document.getElementById("iSource").value.trim(),limits:{charactersMax:num("iCharacters"),coreMin:num("iCore"),specialMax:num("iSpecial"),rareMax:num("iRare"),mercenariesMax:num("iMercenaries")},rulesText:document.getElementById("iRules").value.trim(),allowedUnitIds};
+const index=armiesOfInfamy.findIndex(x=>x.id===record.id);
+if(index>=0) armiesOfInfamy[index]=record; else armiesOfInfamy.push(record);
+save();resetInfamyForm();renderInfamy();refreshArmyInfamyOptions();
+}
+function editInfamy(id) {
+const x=armiesOfInfamy.find(v=>v.id===id);if(!x)return;
+document.getElementById("editInfamyId").value=x.id;
+document.getElementById("iFaction").value=x.factionId;
+["iName","iDesc","iSource","iRules"].forEach((id,i)=>document.getElementById(id).value=[x.name,x.description||"",x.source||"",x.rulesText||""][i]);
+const vals=[x.limits?.charactersMax,x.limits?.coreMin,x.limits?.specialMax,x.limits?.rareMax,x.limits?.mercenariesMax];
+["iCharacters","iCore","iSpecial","iRare","iMercenaries"].forEach((id,i)=>document.getElementById(id).value=vals[i]??"");
+renderInfamyUnitAccess();
+document.querySelectorAll(".infamy-unit").forEach(c=>c.checked=!x.allowedUnitIds?.length||x.allowedUnitIds.includes(c.value));
+}
+function deleteInfamy(id) {
+if(armies.some(a=>a.armyOfInfamyId===id)){alert("This list is used by an army. Delete or change that army first.");return;}
+if(!confirm("Delete this Army of Infamy definition?"))return;
+armiesOfInfamy=armiesOfInfamy.filter(x=>x.id!==id);save();renderInfamy();refreshArmyInfamyOptions();
+}
+function renderInfamy() {
+const el=document.getElementById("infamyList");if(!el)return;
+el.innerHTML=armiesOfInfamy.map(x=>{const f=factions.find(v=>v.id===x.factionId);return '<div class="item"><div class="item-head"><div><strong>'+esc(x.name)+'</strong><br><small>'+esc(f?.name||"Missing faction")+' · '+esc(x.source||"Custom source")+' · '+(x.allowedUnitIds?.length||"All")+' selected units</small><p class="muted">'+esc(x.description||"")+'</p></div><div class="actions"><button onclick="editInfamy(\''+x.id+'\')">Edit</button><button class="danger" onclick="deleteInfamy(\''+x.id+'\')">Delete</button></div></div></div>';}).join("")||'<div class="empty">No Armies of Infamy created yet.</div>';
+}
 function refreshAll() {
 renderFactions();
 refreshUnitSelectors();
