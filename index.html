@@ -615,7 +615,8 @@ let path="army/beastmen-brayherds";
 if(p[2]==="Weapons of War")path="weapons-of-war/"+beastmenSlug(name);
 else if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
 else if(p[2].includes("Magic")||p[2].includes("Talisman")||p[2].includes("Enchanted")||p[2].includes("Arcane"))path="magic-items/beastmen-brayherds-magic-items";
-else if(name==="Mansmasher"||name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
+else if(name==="Mansmasher")path="magic-item/mansmasher";
+else if(name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
 const data={id,name,category:p[1],desc:p[2],custom:false,factionId:fid,sourceUrl:"https://tow.whfb.app/"+path};
 const existingIndex=factionEquipment.findIndex(x=>x.id===id);
 if(existingIndex>=0) factionEquipment[existingIndex]={...factionEquipment[existingIndex],...data};
@@ -1808,6 +1809,7 @@ const weaponDetails={
 "Shield":{cat:"Shield",desc:"Adds +1 to the model's armour save (in close combat, and against shooting from its front arc).",stats:[]},
 "Barding":{cat:"Other Equipment",desc:"Armour for a mount: +1 to the mount's armour save, but the mount suffers -1 to its Movement.",stats:[]}
 
+"Mansmasher":{cat:"Melee Weapon",desc:"Ghorros Warhoof's magic weapon.",stats:[["Combat","S+1","-1","Armour Bane (1),Magical Attacks,Multiple Wounds (D3)"]],notes:"The Strength modifier applies only during a turn in which its wielder charged."},
 "Acidic Vomit":{cat:"Ranged Weapon",desc:"A Beastmen monster's acidic vomit attack.",stats:[["N/A","3","-1","-"]]},
 "Braystaff":{cat:"Melee Weapon",desc:"A Bray-Shaman's staff, hung with bones, shells and skulls.",stats:[],notes:"When its combat is chosen, the wielder must choose offensive or defensive use. Offensively it counts as a Great Weapon. Defensively it counts as a Hand Weapon and gives its wielder an Armour Value of 5+."},
 "Cleaver-limbs":{cat:"Melee Weapon",desc:"The Beastmen monster's bladed limbs.",stats:[["Combat","S","-2","-"]]},
