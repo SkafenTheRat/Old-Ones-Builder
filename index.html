@@ -2022,6 +2022,7 @@ function openMagicItemModal(id){
 function renderMagicItems(){
  const q=(document.getElementById("magicItemSearch")?.value||"").toLowerCase();
  const categories=["Magic Weapon","Magic Armour","Talisman","Magic Standard","Enchanted Item","Arcane Item"];
+ const categoryLabels={"Magic Weapon":"Magic Weapons","Magic Armour":"Magic Armour","Talisman":"Talismans","Magic Standard":"Magic Standards","Enchanted Item":"Enchanted Items","Arcane Item":"Arcane Items"};
  const a=document.getElementById("magicItemLibrary"),b=document.getElementById("factionMagicItemLibrary");
  const sharedHtml=categories.map(type=>{
   const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type).toLowerCase().includes(q));
