@@ -422,7 +422,7 @@ const defaultEquipment = [
 ].map((x,i)=>({id:"eqbase"+i,name:x[0],category:x[1],desc:"",custom:false}));
 
 function normalizeRenegadeCrownsFaction() {
-const oldNames=new Set(["realms of men","renegade crowns of the realms of man"]);
+const oldNames=new Set(["realms of men","renegade crowns of the realms of man","renegade crowns of the realms of men"]);
 const canonicalName="Renegade Crowns";
 const canonicalId="catalogue_renegade_crowns";
 const matching=factions.filter(f=>{
