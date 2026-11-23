@@ -695,8 +695,6 @@ equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>(
 factionRules=JSON.parse(localStorage.getItem("ow_faction_rules"))||[];
 factionEquipment=JSON.parse(localStorage.getItem("ow_faction_equipment"))||[];
 seedBeastmenCatalogue();
-factionRules=JSON.parse(localStorage.getItem("ow_faction_rules"))||[];
-factionEquipment=JSON.parse(localStorage.getItem("ow_faction_equipment"))||[];
 removeUnavailableWeapons();
 save();
 } catch(e) {
@@ -1428,8 +1426,6 @@ factions=d.factions;
 units=d.units.map(normalizeUnit);
 rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
-factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
-factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
 factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
 factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
 armies=Array.isArray(d.armies)?d.armies:[];
