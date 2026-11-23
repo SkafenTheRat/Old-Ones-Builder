@@ -1921,7 +1921,7 @@ frag.appendChild(document.createTextNode(text.slice(last)));
 node.parentNode.replaceChild(frag,node);
 });
 }
-["renderUnits","renderRules","renderUnitRulePicker","renderUnitEquipmentPicker","renderPendingCustomRules","renderEquipment"].forEach(fn=>{
+["renderUnits","renderRules","renderUnitRulePicker","renderUnitEquipmentPicker","renderPendingCustomRules","renderEquipment","renderArmies","renderInfamy"].forEach(fn=>{
 const orig=window[fn]; if(typeof orig!=="function")return;
 window[fn]=function(){const r=orig.apply(this,arguments); linkifyNames(); return r;};
 });
