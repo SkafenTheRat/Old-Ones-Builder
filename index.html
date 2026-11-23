@@ -251,7 +251,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <h3>Army-specific Rules</h3>
 <textarea id="iRules" placeholder="Add army-wide special rules, restrictions and notes. Use your own summary; do not paste extensive copyrighted rule text."></textarea>
 <h3>Unit Access</h3>
-<p class="muted">Choose which units from this faction this Army of Infamy permits. These are shared faction units, not copies assigned to this list. If all are selected, every current and future unit from this faction is permitted.</p>
+<p class="muted">Choose which units from the parent faction and the shared Mercenaries pool this Army of Infamy permits. These are shared units, not copies assigned to this list. If all are selected, every current and future unit from both groups is permitted.</p>
 <div id="iUnitAccess" class="rule-grid"></div>
 <div class="actions">
 <button class="primary" onclick="saveInfamy()">Save Army of Infamy</button>
@@ -265,7 +265,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <section id="army" class="tab hidden">
 <div class="panel">
 <h2>Create an Army</h2>
-<p class="muted">Pick a faction and a points limit. Units are owned by their faction, not by an individual army, so the same unit can be reused in any army of that faction. Grand Army lists can use all faction units; an Army of Infamy can restrict access through its Unit Access settings. Included equipment comes with each unit. Paid options are added on each entry below.</p>
+<p class="muted">Pick a main faction and a points limit. Units are shared across armies. Mercenaries are not a standalone army faction: their units can be added to any other faction's army. Grand Army lists can use all faction units and Mercenaries; an Army of Infamy can restrict access through its Unit Access settings.</p>
 <div class="grid">
 <div class="field">
 <label>Army Name</label>
@@ -544,11 +544,23 @@ if(id==="army") renderArmies();
 if(id==="infamy") renderInfamy();
 }
 
+function isMercenaryFaction(faction) {
+return String(faction?.name||"").trim().toLowerCase()==="mercenaries";
+}
+function isMercenaryUnit(unit) {
+const owner=factions.find(f=>f.id===unit?.factionId);
+return isMercenaryFaction(owner);
+}
+function playableArmyFactions() {
+return factions.filter(f=>!isMercenaryFaction(f));
+}
 function refreshUnitSelectors() {
-let options='<option value="">Select faction</option>'+
+const allFactionOptions='<option value="">Select faction</option>'+
 factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+const armyFactionOptions='<option value="">Select faction</option>'+
+playableArmyFactions().map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
 
-document.getElementById("uFaction").innerHTML=options;
+document.getElementById("uFaction").innerHTML=allFactionOptions;
 
 document.getElementById("filterFaction").innerHTML=
 '<option value="all">All Factions</option>'+
@@ -556,14 +568,16 @@ factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
 
 const aFaction=document.getElementById("aFaction");
 if(aFaction) {
-aFaction.innerHTML=options;
+const current=aFaction.value;
+aFaction.innerHTML=armyFactionOptions;
+if(playableArmyFactions().some(f=>f.id===current)) aFaction.value=current;
 aFaction.onchange=refreshArmyInfamyOptions;
 }
 const iFaction=document.getElementById("iFaction");
 if(iFaction) {
 const current=iFaction.value;
-iFaction.innerHTML=options;
-if(factions.some(f=>f.id===current)) iFaction.value=current;
+iFaction.innerHTML=armyFactionOptions;
+if(playableArmyFactions().some(f=>f.id===current)) iFaction.value=current;
 iFaction.onchange=renderInfamyUnitAccess;
 }
 refreshArmyInfamyOptions();
@@ -1273,7 +1287,8 @@ const name=document.getElementById("aName").value.trim();
 const factionId=document.getElementById("aFaction").value;
 const limit=parsePointCost(document.getElementById("aLimit").value);
 if(!name) { alert("Enter an army name."); return; }
-if(!factionId) { alert("Select a game faction first."); return; }
+const selectedFaction=factions.find(f=>f.id===factionId);
+if(!selectedFaction||isMercenaryFaction(selectedFaction)) { alert("Choose a main game faction. Mercenaries can be added as units to any other faction's army."); return; }
 const infamyId=document.getElementById("aInfamy").value||null;
 const army={id:uid(),name,factionId,pointsLimit:limit,entries:[],armyOfInfamyId:infamyId};
 armies.push(army);
@@ -1354,8 +1369,11 @@ if(card) card.textContent=`${total}${limit?` / ${limit}`:""} pts · ${(army.entr
 }
 
 function unitAllowedInArmyList(unit,army,armyList) {
-if(!unit||!army||unit.factionId!==army.factionId) return false;
-if(!armyList) return true; // Grand Army: every unit owned by this faction is available.
+if(!unit||!army) return false;
+const belongsToArmyFaction=unit.factionId===army.factionId;
+const isSharedMercenary=isMercenaryUnit(unit);
+if(!belongsToArmyFaction&&!isSharedMercenary) return false;
+if(!armyList) return true; // Grand Army: faction units and the shared Mercenaries pool are available.
 const allowed=Array.isArray(armyList.allowedUnitIds)?armyList.allowedUnitIds:[];
 return allowed.length===0||allowed.includes(unit.id);
 }
@@ -1380,6 +1398,12 @@ return;
 const infamy=armiesOfInfamy.find(x=>x.id===army.armyOfInfamyId);
 const allowed=infamy?.allowedUnitIds||[];
 const factionUnits=units.filter(u=>unitAllowedInArmyList(u,army,infamy));
+const ownFactionUnits=factionUnits.filter(u=>u.factionId===army.factionId);
+const mercenaryUnits=factionUnits.filter(isMercenaryUnit);
+const unitOptions=[
+ownFactionUnits.length?`<optgroup label="${esc(factions.find(f=>f.id===army.factionId)?.name||"Faction")}">${ownFactionUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</optgroup>`:"",
+mercenaryUnits.length?`<optgroup label="Mercenaries">${mercenaryUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</optgroup>`:""
+].join("");
 const total=armyTotal(army);
 const limit=parsePointCost(army.pointsLimit);
 const over=limit>0&&total>limit;
@@ -1389,8 +1413,9 @@ builder.innerHTML=`
 <p class="muted">${esc(army.name)} · ${esc(factionName)} · ${esc(armyListName)}</p>
 ${infamy?.rulesText?'<div class="notice">'+esc(infamy.rulesText)+'</div>':''}
 <div id="armyCost" class="notice${over?" over-limit":""}">${limit>0?`${total} / ${limit} pts${over?" · over the limit":""}`:`${total} pts · no points limit`}</div>
+<p class="muted">Choose units from ${esc(factionName)} or from the shared Mercenaries pool. Mercenary units can be added to any other faction's army.</p>
 <div class="grid" style="margin-top:14px">
-<div class="field"><label>Unit</label><select id="armyUnit"><option value="">Select unit</option>${factionUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</select></div>
+<div class="field"><label>Unit</label><select id="armyUnit"><option value="">Select unit</option>${unitOptions}</select></div>
 <div class="field"><label>Quantity</label><input id="armyQty" type="number" min="1" step="1" value="1"></div>
 </div>
 <div class="actions"><button class="primary" onclick="addArmyEntry()">Add to Army</button></div>
@@ -1439,7 +1464,12 @@ const el=document.getElementById("iUnitAccess");
 if(!el) return;
 const current=armiesOfInfamy.find(x=>x.id===document.getElementById("editInfamyId")?.value);
 const allowed=new Set(current?.allowedUnitIds||[]);
-el.innerHTML=units.filter(u=>u.factionId===factionId).map(u=>'<div class="rule-option"><label><input type="checkbox" class="infamy-unit" value="'+esc(u.id)+'" '+(!current||!current.allowedUnitIds?.length||allowed.has(u.id)?"checked":"")+'> '+esc(u.name)+' <small>('+esc(u.category||"Unit")+')</small></label></div>').join("")||'<div class="empty">No units exist for this faction yet. You can save the list and add units later.</div>';
+const isChecked=u=>!current||!current.allowedUnitIds?.length||allowed.has(u.id);
+const renderGroup=(title,list)=>list.length?'<div class="muted" style="grid-column:1/-1;margin-top:8px"><strong>'+esc(title)+'</strong></div>'+list.map(u=>'<div class="rule-option"><label><input type="checkbox" class="infamy-unit" value="'+esc(u.id)+'" '+(isChecked(u)?"checked":"")+'> '+esc(u.name)+' <small>('+esc(u.category||"Unit")+')</small></label></div>').join(""):"";
+const factionUnits=units.filter(u=>u.factionId===factionId);
+const mercenaryUnits=units.filter(isMercenaryUnit);
+const content=renderGroup("Faction units",factionUnits)+renderGroup("Mercenaries",mercenaryUnits);
+el.innerHTML=content||'<div class="empty">No units exist for this faction or in the Mercenaries pool yet. You can save the list and add units later.</div>';
 }
 function resetInfamyForm() {
 ["iName","iDesc","iSource","iCharacters","iCore","iSpecial","iRare","iMercenaries","iRules","editInfamyId"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
@@ -1448,7 +1478,8 @@ renderInfamyUnitAccess();
 function saveInfamy() {
 const factionId=document.getElementById("iFaction").value;
 const name=document.getElementById("iName").value.trim();
-if(!factionId){alert("Choose an existing parent faction first.");return;}
+const parentFaction=factions.find(f=>f.id===factionId);
+if(!parentFaction||isMercenaryFaction(parentFaction)){alert("Choose a main game faction. Mercenaries can only be added as units.");return;}
 if(!name){alert("Enter an Army of Infamy name.");return;}
 const num=id=>{const v=document.getElementById(id).value;return v===""?null:Math.max(0,Math.min(100,Number(v)));};
 const allowedUnitIds=[...document.querySelectorAll(".infamy-unit:checked")].map(x=>x.value);
