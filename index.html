@@ -135,24 +135,11 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 
 <section id="factions" class="tab">
 <div class="panel">
-<h2>Create a Faction</h2>
-<div class="grid">
-<div class="field">
-<label>Faction Name</label>
-<input id="fName" placeholder="Faction name">
+<h2>Game Factions</h2>
+<p class="muted">The game's factions are built into the army builder and cannot be added, renamed or deleted. Create armies by selecting one of these existing factions in the Army Creator.</p>
 </div>
-<div class="field">
-<label>Faction Description</label>
-<input id="fDesc" placeholder="Short description">
-</div>
-</div>
-<div class="actions">
-<button class="primary" onclick="addFaction()">Add Faction</button>
-</div>
-</div>
-
 <div class="panel">
-<h2>Your Factions</h2>
+<h2>Available Factions</h2>
 <div id="factionList" class="list-scroll"></div>
 </div>
 </section>
@@ -526,53 +513,15 @@ if(id==="infamy") renderInfamy();
 }
 
 function addFaction() {
-let name=document.getElementById("fName").value.trim();
-let desc=document.getElementById("fDesc").value.trim();
-
-if(!name) {
-alert("Enter a faction name.");
-return;
-}
-if(factions.some(f=>f.name.toLowerCase()===name.toLowerCase())) {
-alert("This faction already exists.");
-return;
-}
-
-factions.push({id:uid(),name,desc});
-document.getElementById("fName").value="";
-document.getElementById("fDesc").value="";
-save();
-refreshAll();
+alert("Factions are predefined by the game. You can create armies for an existing faction in the Army Creator.");
 }
 
 function deleteFaction(id) {
-const hasUnits=units.some(u=>u.factionId===id);
-const hasArmies=armies.some(a=>a.factionId===id);
-if(hasUnits||hasArmies) {
-if(!confirm(hasUnits
-?"This faction contains units. Delete the faction, its units and its armies?"
-:"This faction has armies. Delete the faction and those armies?")) return;
-units=units.filter(u=>u.factionId!==id);
-armies=armies.filter(a=>a.factionId!==id);
-if(selectedArmyId&&!armies.some(a=>a.id===selectedArmyId)) selectedArmyId=null;
-} else if(!confirm("Delete this faction?")) return;
-
-factions=factions.filter(f=>f.id!==id);
-save();
-refreshAll();
+alert("Game factions cannot be deleted.");
 }
 
 function editFaction(id) {
-let f=factions.find(x=>x.id===id);
-let name=prompt("New faction name:",f.name);
-if(name===null) return;
-name=name.trim();
-if(!name) return;
-
-f.name=name;
-f.desc=prompt("Faction description:",f.desc)||"";
-save();
-refreshAll();
+alert("Game factions cannot be renamed or edited.");
 }
 
 function renderFactions() {
@@ -582,15 +531,12 @@ el.innerHTML=factions.map(f=>`
 <div class="item-head">
 <div>
 <strong>${esc(f.name)}</strong><br>
-<small>${esc(f.desc||"No description")} · ${units.filter(u=>u.factionId===f.id).length} units</small>
+<small>${esc(f.desc||"Game faction")} · ${units.filter(u=>u.factionId===f.id).length} units</small>
 </div>
-<div class="actions">
-<button onclick="editFaction('${f.id}')">Edit</button>
-<button class="danger" onclick="deleteFaction('${f.id}')">Delete</button>
+<span class="muted">Built-in faction</span>
 </div>
 </div>
-</div>
-`).join("")||'<div class="empty">No factions have been created yet.</div>';
+`).join("")||'<div class="empty">No game factions are available.</div>';
 }
 
 function refreshUnitSelectors() {
