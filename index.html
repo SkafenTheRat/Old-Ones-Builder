@@ -304,7 +304,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
 <div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
 <div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
-<h3>Add Custom Equipment</h3><div class="grid">
+<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3><div id="factionMagicItemLibrary" class="list-scroll"></div></div><h3>Add Custom Equipment</h3><div class="grid">
 <div class="field"><label>Equipment Name</label><input id="newEquipmentName" placeholder="Equipment name"></div>
 <div class="field"><label>Category</label><select id="newEquipmentCategory"><option>Melee Weapon</option><option>Ranged Weapon</option><option>Armour</option><option>Shield</option><option>Other Equipment</option></select></div>
 <div class="field" style="grid-column:1/-1"><label>Description</label><input id="newEquipmentDesc" placeholder="Description"></div></div>
@@ -413,6 +413,8 @@ let editingRuleValues = {};
 let editingRuleFactions = {};
 let factionRules = [];
 let factionEquipment = [];
+let magicItems = [];
+let factionMagicItems = [];
 let equipment = [];
 let editingBasicEquipmentIds = [];
 let editingOptionCosts = {};
@@ -507,6 +509,8 @@ localStorage.setItem("ow_rules",JSON.stringify(rules));
 localStorage.setItem("ow_equipment",JSON.stringify(equipment));
 localStorage.setItem("ow_faction_rules",JSON.stringify(factionRules));
 localStorage.setItem("ow_faction_equipment",JSON.stringify(factionEquipment));
+localStorage.setItem("ow_magic_items",JSON.stringify(magicItems));
+localStorage.setItem("ow_faction_magic_items",JSON.stringify(factionMagicItems));
 localStorage.setItem("ow_armies",JSON.stringify(armies));
 localStorage.setItem("ow_armies_of_infamy",JSON.stringify(armiesOfInfamy));
 } catch(e) {
@@ -1183,7 +1187,7 @@ if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div cla
 }
 
 function exportData() {
-let data={version:7,factions,units,rules,equipment,factionRules,factionEquipment,armies,armiesOfInfamy};
+let data={version:8,factions,units,rules,equipment,factionRules,factionEquipment,magicItems,factionMagicItems,armies,armiesOfInfamy};
 
 let blob=new Blob([JSON.stringify(data,null,2)],{
 type:"application/json"
@@ -1389,6 +1393,51 @@ body{background:#fff;}
 ${body}
 </div>
 <script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250));<\/script>
+
+<script>
+function seedMagicItemCatalogue(){
+ const common=[
+ ["Ogre Blade","Magic Weapon",75],["Cackling Blade","Magic Weapon",65],["Sword of Battle","Magic Weapon",60],["Duellist's Blades","Magic Weapon",55],["Dragon Slaying Sword","Magic Weapon",50],["Meteor Hammer","Magic Weapon",50],["Headsman's Axe","Magic Weapon",45],["Spelleater Axe","Magic Weapon",35],["Giant Blade","Magic Weapon",30],["Hell-forged Axe","Magic Weapon",30],["Sword of Sorrow","Magic Weapon",30],["Sword of Swiftness","Magic Weapon",25],
+ ["Armour of Destiny","Magic Armour",70],["Bedazzling Helm","Magic Armour",60],["Armour of Silvered Steel","Magic Armour",40],["Glittering Scales","Magic Armour",35],["Shield of the Warrior True","Magic Armour",30],["Levitating Shield","Magic Armour",25],["Spellshield","Magic Armour",25],["Armour of Meteoric Iron","Magic Armour",20],["Trailblazer's Hauberk","Magic Armour",20],["Enchanted Shield","Magic Armour",10],["Charmed Shield","Magic Armour",5],
+ ["Dawnstone","Talisman",35],["Icon of Fortitude","Talisman",35],["Ironhide Talisman","Talisman",30],["Talisman of Protection","Talisman",30],["Paymaster's Coin","Talisman",25],["Obsidian Lodestone","Talisman",20],["Luckstone","Talisman",15],
+ ["Banner of Iron Resolve","Magic Standard",50],["Banner of the Steadfast","Magic Standard",50],["Totem of Wrath","Magic Standard",50],["Razor Standard","Magic Standard",40],["Banner of Swirling Wind","Magic Standard",30],["Rampaging Banner","Magic Standard",30],["The Blazing Banner","Magic Standard",25],["Monster Hunter's Tapestry","Magic Standard",25],["War Banner","Magic Standard",25],
+ ["Wizarding Hat","Enchanted Item",45],["Arch-Lightning Rod","Enchanted Item",40],["Flying Carpet","Enchanted Item",40],["Healing Potion","Enchanted Item",35],["Ruby Ring of Ruin","Enchanted Item",35],["Potion of Fervour","Enchanted Item",30],["Potion of Strength","Enchanted Item",25],["Becalming Orb","Enchanted Item",20],["Potion of Toughness","Enchanted Item",20],["Potion of Speed","Enchanted Item",10],["Potion of Foolhardiness","Enchanted Item",5],
+ ["Feedback Scroll","Arcane Item",60],["Scroll of Transmogrification","Arcane Item",50],["Wand of Jet","Arcane Item",45],["Staff of Quietude","Arcane Item",35],["Lore Familiar","Arcane Item",30],["Scroll of Disruption","Arcane Item",30],["Tome of Spellcraft","Arcane Item",30],["Dispel Scroll","Arcane Item",20],["Power Scroll","Arcane Item",20],["Arcane Familiar","Arcane Item",15]
+ ];
+ const sources={"Magic Weapon":"magic-weapons","Magic Armour":"magic-armour","Talisman":"talismans","Magic Standard":"magic-standards","Enchanted Item":"enchanted-items","Arcane Item":"arcane-items"};
+ const seen=new Set(magicItems.map(x=>String(x.name).toLowerCase()));
+ common.forEach(([name,type,points])=>{if(!seen.has(name.toLowerCase()))magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,desc:"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});});
+ const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");if(!f)return;
+ const beastmen=[
+ ["The Black Maul","Magic Weapon",80],["Primeval Club","Magic Weapon",60],["Axe of Men","Magic Weapon",50],["The Axes of Khorgor","Magic Weapon",40],["Mangelder","Magic Weapon",40],["Hunter's Spear","Magic Weapon",35],["The Brass Cleaver","Magic Weapon",30],["Scimitar of Skultar","Magic Weapon",25],
+ ["Full Plate Chaos Armour","Magic Armour",40],["Pelt of the Dark Young","Magic Armour",40],["Heavy Chaos Armour","Magic Armour",30],["The Blackened Plate","Magic Armour",25],["The Fur of Sharggu","Magic Armour",20],
+ ["Chalice of Dark Rain","Talisman",50],["Cornucopia of Corpulence","Talisman",30],["Rune of the True Beast","Talisman",30],["Dark Heart","Talisman",25],
+ ["The Gore Banner","Magic Standard",50],["Totem of Rust","Magic Standard",50],["Banner of the Warped Moon","Magic Standard",45],["The Beast Banner","Magic Standard",40],["Manbane Standard","Magic Standard",40],["Vitriolic Totem","Magic Standard",30],["Banner of Outrage","Magic Standard",25],["The Soiled Tapestry","Magic Standard",15],
+ ["Stone of Spite","Enchanted Item",45],["Horn of the Great Hunt","Enchanted Item",35],["Horn of the First Beast","Enchanted Item",30],["Scourge of the Burdened","Enchanted Item",25],["Cacophonous Dirge","Enchanted Item",15],["Skin of Man","Enchanted Item",15],
+ ["The Plague Chalice","Arcane Item",40],["Blood of the Shadowgave","Arcane Item",35],["Daemon Heart","Arcane Item",30],["Hagtree Fetish","Arcane Item",30],["Goretooth","Arcane Item",15],["Jagged Dagger","Arcane Item",15]
+ ];
+ const privateSeen=new Set(factionMagicItems.filter(x=>x.factionId===f.id).map(x=>x.name.toLowerCase()));
+ beastmen.forEach(([name,type,points])=>{if(!privateSeen.has(name.toLowerCase()))factionMagicItems.push({id:"fmi_beastmen_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,factionId:f.id,factionName:f.name,desc:"",sourceUrl:"https://tow.whfb.app/magic-items/beastmen-brayherds-magic-items"});});
+}
+function openMagicItemModal(id){
+ const x=[...magicItems,...factionMagicItems].find(i=>i.id===id);if(!x)return;
+ document.getElementById("mTitle").textContent=x.name;
+ document.getElementById("mBody").innerHTML="<p><strong>Type:</strong> "+esc(x.type)+"</p><p><strong>Points:</strong> "+esc(x.points)+"</p>"+(x.factionName?"<p><strong>Faction:</strong> "+esc(x.factionName)+"</p>":"")+"<p>"+esc(x.desc||"See the source for the complete item effect and restrictions.")+"</p><p><a href='"+esc(x.sourceUrl)+"' target='_blank' rel='noopener'>Open in Warhammer: The Old World Online Rules Index</a></p>";
+ overlay.classList.remove("hidden");
+}
+function renderMagicItems(){
+ const q=(document.getElementById("magicItemSearch")?.value||"").toLowerCase();
+ const shared=magicItems.filter(x=>(x.name+" "+x.type).toLowerCase().includes(q));
+ const priv=factionMagicItems.filter(x=>(x.name+" "+x.type+" "+(x.factionName||"")).toLowerCase().includes(q));
+ const a=document.getElementById("magicItemLibrary"),b=document.getElementById("factionMagicItemLibrary");
+ if(a)a.innerHTML=shared.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(x.type)+' · '+esc(x.points)+' pts</small></div>').join("")||'<div class="empty">No items found.</div>';
+ if(b)b.innerHTML=priv.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(x.type)+' · '+esc(x.factionName)+' · '+esc(x.points)+' pts</small></div>').join("")||'<div class="empty">No faction items found.</div>';
+}
+document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a)openMagicItemModal(a.dataset.id);});
+seedMagicItemCatalogue();
+renderMagicItems();
+</script>
+
 </body>
 </html>`;
 
@@ -1429,6 +1478,8 @@ rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
 factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
 factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
+magicItems=Array.isArray(d.magicItems)?d.magicItems:[];
+factionMagicItems=Array.isArray(d.factionMagicItems)?d.factionMagicItems:[];
 armies=Array.isArray(d.armies)?d.armies:[];
 armiesOfInfamy=Array.isArray(d.armiesOfInfamy)?d.armiesOfInfamy:[];
 removeUnavailableWeapons();
