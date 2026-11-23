@@ -1179,7 +1179,7 @@ document.getElementById("ruleLibrary").innerHTML=list.map(r=>`
 `).join("")||'<div class="empty">No shared rules found.</div>';
 const privateList=factionRules.filter(r=>r.factionId===beastmenFactionId()&&(r.name+" "+(r.desc||"")).toLowerCase().includes(q));
 const privateEl=document.getElementById("beastmenRuleLibrary");
-if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong>'+esc(r.name)+'</strong><br><small>'+esc(r.desc)+'</small></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
+if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong><a class="rlink" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong><br><small>'+esc(r.desc)+'</small></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
 }
 
 function exportData() {
@@ -1837,9 +1837,14 @@ overlay.classList.remove("hidden");
 
 function openRuleModal(name){
 const base=ruleBase(name);
+const factionRule=factionRules.find(r=>String(r.name||"").toLowerCase()===base.toLowerCase()||String(r.name||"").toLowerCase()===String(name).toLowerCase());
+const sharedRule=rules.find(r=>String(r.name||"").toLowerCase()===base.toLowerCase());
+const rule=factionRule||sharedRule;
 document.getElementById("mTitle").textContent=name;
+const description=rule?.desc||"Quick reference only. Consult the live index for the current wording and interactions.";
 const slug=base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-document.getElementById("mBody").innerHTML='<p>Quick reference only. Consult the live index for the current wording and interactions.</p><p><a href="https://tow.whfb.app/special-rules/'+slug+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
+const source=rule?.sourceUrl||("https://tow.whfb.app/special-rules/"+slug);
+document.getElementById("mBody").innerHTML='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
 overlay.classList.remove("hidden");
 }
 
@@ -1852,7 +1857,7 @@ const b=e.target.closest(".rlink"); if(b){openRuleModal(b.dataset.name);return;}
 // ---------- make names clickable after each render ----------
 function linkifyNames(){
 const root=document.querySelector("main"); if(!root)return;
-const names=Object.keys(weaponDetails).concat(rules.map(r=>r.name));
+const names=Object.keys(weaponDetails).concat(rules.map(r=>r.name),factionRules.map(r=>r.name));
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const re=new RegExp("("+names.slice().sort((a,b)=>b.length-a.length).map(escRe).join("|")+")","gi");
 const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
