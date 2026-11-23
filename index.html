@@ -143,7 +143,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 </div>
 <div class="field">
 <label>Owning Faction</label>
-<select id="uFaction"></select>
+<select id="uFaction" onchange="renderUnitRulePicker();renderUnitEquipmentPicker()"></select>
 </div>
 <div class="field">
 <label>Category</label>
@@ -303,6 +303,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <h2>Equipment Library</h2><p class="muted">Common Old World equipment entries. Check your army book for faction-specific options and exact rules.</p>
 <div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
 <div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
+<div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
 <h3>Add Custom Equipment</h3><div class="grid">
 <div class="field"><label>Equipment Name</label><input id="newEquipmentName" placeholder="Equipment name"></div>
 <div class="field"><label>Category</label><select id="newEquipmentCategory"><option>Melee Weapon</option><option>Ranged Weapon</option><option>Armour</option><option>Shield</option><option>Other Equipment</option></select></div>
@@ -319,6 +320,7 @@ Select rules from the library to assign them to units. Bracket values can be con
 <input id="ruleSearch" oninput="renderRules()" placeholder="Search rules...">
 </div>
 <div id="ruleLibrary" class="list-scroll" style="margin-top:14px"></div>
+<div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction rules</h3><p class="muted">These rules are stored separately from shared special rules and are only offered when editing Beastmen units.</p><div id="beastmenRuleLibrary" class="list-scroll"></div></div>
 
 <h3>Add a Custom Rule to the Library</h3>
 <div class="grid">
@@ -750,7 +752,9 @@ function updateRuleValue(id,value) { editingRuleValues[id]=value; }
 function updateRuleFaction(id,value) { editingRuleFactions[id]=value; }
 
 function renderUnitRulePicker() {
-document.getElementById("unitRulePicker").innerHTML=rules.map(r=>{
+const factionId=document.getElementById("uFaction")?.value||"";
+const visibleRules=rulesForFaction(factionId,editingRuleIds);
+document.getElementById("unitRulePicker").innerHTML=visibleRules.map(r=>{
 let selected=editingRuleIds.includes(r.id);
 let value=editingRuleValues[r.id]||"";
 let needsValue=r.hasParameter||parameterRules.includes(r.name);
@@ -821,8 +825,10 @@ editingOptionCosts[id]=value;
 
 function renderUnitEquipmentPicker() {
 const groups=["Melee Weapon","Ranged Weapon","Armour","Shield","Other Equipment"];
+const factionId=document.getElementById("uFaction")?.value||"";
+const visibleEquipment=equipment.concat(factionEquipment.filter(e=>e.factionId===factionId));
 document.getElementById("unitEquipmentPicker").innerHTML=groups.map(group=>{
-const items=equipment.filter(e=>e.category===group);
+const items=visibleEquipment.filter(e=>e.category===group);
 if(!items.length) return "";
 return `<div class="item" style="grid-column:1/-1"><strong>${esc(group)}</strong><div class="rule-grid" style="margin-top:8px">${
 items.map(e=>{
@@ -873,8 +879,12 @@ save(); renderEquipment(); renderUnitEquipmentPicker(); renderUnits(); renderArm
 function renderEquipment() {
 const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase();
 const list=equipment.filter(e=>(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
-document.getElementById("equipmentLibrary").innerHTML=list.map(e=>`<div class="item"><div class="item-head"><div><strong>${esc(e.name)}</strong><br><small>${esc(e.category)}</small></div>${e.custom?`<button class="danger" onclick="deleteLibraryEquipment('${e.id}')">Delete</button>`:'<span class="muted">Default Equipment</span>'}</div></div>`).join("")||'<div class="empty">No equipment found.</div>';
+document.getElementById("equipmentLibrary").innerHTML=list.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(e.category)+'</small></div>'+(e.custom?'<button class="danger" onclick="deleteLibraryEquipment(\''+e.id+'\')">Delete</button>':'<span class="muted">Shared Equipment</span>')+'</div></div>').join("")||'<div class="empty">No shared equipment found.</div>';
+const privateList=factionEquipment.filter(e=>e.factionId===beastmenFactionId()&&(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
+const privateEl=document.getElementById("beastmenEquipmentLibrary");
+if(privateEl) privateEl.innerHTML=privateList.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(e.category)+' · Beastmen Brayherds only</small><p class="muted">'+esc(e.desc)+'</p></div><a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen equipment found.</div>';
 }
+
 function saveUnit() {
 let name=document.getElementById("uName").value.trim();
 let factionId=document.getElementById("uFaction").value;
@@ -1026,7 +1036,7 @@ let basePoints=parsePointCost(u.points);
 const profileUnit=normalizeUnit(u);
 
 let assigned=(u.ruleIds||[]).map(id=>{
-let rule=rules.find(r=>r.id===id);
+let rule=ruleById(id);
 if(!rule) return null;
 let value=(u.ruleValues||{})[id];
 if(rule.name==="Hatred") { const target=factions.find(f=>f.id===(u.ruleFactions||{})[id]); return target?`Hatred (${target.name})`:"Hatred"; }
@@ -1110,23 +1120,14 @@ renderUnits();
 }
 
 function renderRules() {
-let q=document.getElementById("ruleSearch").value.toLowerCase();
-let list=rules.filter(r=>r.name.toLowerCase().includes(q));
-
+const q=(document.getElementById("ruleSearch")?.value||"").toLowerCase();
+const list=rules.filter(r=>r.name.toLowerCase().includes(q));
 document.getElementById("ruleLibrary").innerHTML=list.map(r=>`
-<div class="item">
-<div class="item-head">
-<div>
-<strong>${esc(r.name)}</strong><br>
-<small>${esc(r.desc||"No description provided.")}</small>
-${r.hasParameter?'<span class="tag">Bracket value</span>':''}
-</div>
-${r.id.startsWith("base")
-?'<span class="muted">Default Rule</span>'
-:`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}
-</div>
-</div>
-`).join("")||'<div class="empty">No rules found.</div>';
+<div class="item"><div class="item-head"><div><strong>${esc(r.name)}</strong><br><small>${esc(r.desc||"No description provided.")}</small>${r.hasParameter?'<span class="tag">Bracket value</span>':''}</div>${r.id.startsWith("base")?'<span class="muted">Default Rule</span>':`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}</div></div>
+`).join("")||'<div class="empty">No shared rules found.</div>';
+const privateList=factionRules.filter(r=>r.factionId===beastmenFactionId()&&(r.name+" "+(r.desc||"")).toLowerCase().includes(q));
+const privateEl=document.getElementById("beastmenRuleLibrary");
+if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong>'+esc(r.name)+'</strong><br><small>'+esc(r.desc)+'</small></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
 }
 
 function exportData() {
@@ -1144,7 +1145,7 @@ URL.revokeObjectURL(a.href);
 }
 
 function formatUnitRuleLabel(u,ruleId) {
-const rule=rules.find(r=>r.id===ruleId);
+const rule=ruleById(ruleId);
 if(!rule) return null;
 if(rule.name==="Hatred") {
 const target=factions.find(f=>f.id===(u.ruleFactions||{})[ruleId]);
@@ -1156,7 +1157,7 @@ return value?`${rule.name} (${value})`:rule.name;
 
 function unitRuleDetails(u) {
 return (u.ruleIds||[]).map(id=>{
-const rule=rules.find(r=>r.id===id);
+const rule=ruleById(id);
 if(!rule) return null;
 const label=formatUnitRuleLabel(u,id);
 const desc=rule.desc||"";
