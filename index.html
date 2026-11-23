@@ -512,6 +512,116 @@ alert("Unable to save data in the browser.");
 }
 }
 
+
+function beastmenSlug(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
+function beastmenFactionId(){const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");return f?f.id:"catalogue_beastmen_brayherds";}
+function seedBeastmenCatalogue(){
+const fid=beastmenFactionId();
+const specialRules="Ancient Sorcery|Belly Flop|Bestial Charge|Blessings of Chaos|Blood Greed|Blood Rage|Bloodshed & Butchery|Brayhorn|Bull-gors|Champions of Slaughter|Crown of Antlers|Dark Coven|Drunken|'Eadbutt (Giant)|Endless Malice|Ensorcelled Weapons|Father of Beasts|Foe Render|Future Sight|Gaze of the Gods|Ghostsight|Giant Attacks|Gifts from the Dark Gods|Guardians of the Herdstones|Herdstones|Jump Up & Down|Leader of the Pack (Beastmen)|Leering Spirit|Maddening Aura|Magics of the Dark Gods|Mighty Swing (Giant)|Mixed Unit|Pick Up And...|Primal Fury|The Quickening Storm|Razor Tusks|Roaming Warbands|Slaughterer's Call|The Sons of Ghorros|Soul-eater|Spurting Bile Blood|Stony Stare|Storm Call|Swallow Whole|Thump with Club".split("|");
+specialRules.forEach(name=>{
+const id="br_rule_"+beastmenSlug(name);
+if(!factionRules.some(x=>x.id===id)) factionRules.push({id,name,desc:"Beastmen Brayherds faction-specific rule. Open the official Rules Index for the full current wording.",hasParameter:false,factionId:fid,sourceUrl:"https://tow.whfb.app/army/beastmen-brayherds"});
+});
+const gearRows=[
+"Acidic Vomit|Ranged Weapon|Weapons of War","Braystaff|Melee Weapon|Weapons of War","Cleaver-limbs|Melee Weapon|Weapons of War","Giant's Club|Melee Weapon|Weapons of War","Grisly Totem|Other Equipment|Kralmaw's unique item","Hurl Attack|Ranged Weapon|Weapons of War","Petrifying Gaze|Ranged Weapon|Weapons of War","Slythey Tongue|Ranged Weapon|Weapons of War","Twisted Antlers|Melee Weapon|Weapons of War","Wicked Claws|Melee Weapon|Weapons of War",
+"Throwing Spears|Ranged Weapon|Beastmen equipment option","Thrusting Spears|Melee Weapon|Beastmen equipment option","Throwing Axes|Ranged Weapon|Beastmen equipment option","Javelins|Ranged Weapon|Beastmen equipment option",
+"Mansmasher|Melee Weapon|Ghorros Warhoof's unique weapon","Skull of the Unicorn Lord|Other Equipment|Ghorros Warhoof's unique item",
+"Slug-skin|Other Equipment|Chaos Mutation · 50 pts","Crown of Horns (Beastmen)|Other Equipment|Chaos Mutation · 45 pts","Muscular Monstrosity|Other Equipment|Chaos Mutation · 35 pts","Pelt of Midnight|Other Equipment|Chaos Mutation · 35 pts","Gouge-tusks|Other Equipment|Chaos Mutation · 30 pts","Rune of the Beast Ascendant|Other Equipment|Chaos Mutation · 25 pts","Many-limbed Fiend|Other Equipment|Chaos Mutation · 20 pts","Gnarled Hide|Other Equipment|Chaos Mutation · 15 pts","Uncanny Senses|Other Equipment|Chaos Mutation · 10 pts",
+"The Black Maul|Melee Weapon|Magic Weapon · 80 pts","Primeval Club|Melee Weapon|Magic Weapon · 60 pts","Axe of Men|Melee Weapon|Magic Weapon · 50 pts","The Axes of Khorgor|Melee Weapon|Magic Weapon · 40 pts","Mangelder|Melee Weapon|Magic Weapon · 40 pts","Hunter's Spear|Ranged Weapon|Magic Weapon · 35 pts","The Brass Cleaver|Melee Weapon|Magic Weapon · 30 pts","Scimitar of Skultar|Melee Weapon|Magic Weapon · 25 pts",
+"Full Plate Chaos Armour|Armour|Magic Armour · 40 pts","Pelt of the Dark Young|Armour|Magic Armour · 40 pts","Heavy Chaos Armour|Armour|Magic Armour · 30 pts","The Blackened Plate|Armour|Magic Armour · 25 pts","The Fur of Sharggu|Armour|Magic Armour · 20 pts",
+"Chalice of Dark Rain|Other Equipment|Talisman · 50 pts","Cornucopia of Corpulence|Other Equipment|Talisman · 30 pts","Rune of the True Beast|Other Equipment|Talisman · 30 pts","Dark Heart|Other Equipment|Talisman · 25 pts",
+"The Gore Banner|Other Equipment|Magic Standard · 50 pts","Totem of Rust|Other Equipment|Magic Standard · 50 pts","Banner of the Warped Moon|Other Equipment|Magic Standard · 45 pts","The Beast Banner|Other Equipment|Magic Standard · 40 pts","Manbane Standard|Other Equipment|Magic Standard · 40 pts","Vitriolic Totem|Other Equipment|Magic Standard · 30 pts","Banner of Outrage|Other Equipment|Magic Standard · 25 pts","The Soiled Tapestry|Other Equipment|Magic Standard · 15 pts",
+"Stone of Spite|Other Equipment|Enchanted Item · 45 pts","Horn of the Great Hunt|Other Equipment|Enchanted Item · 35 pts","Horn of the First Beast|Other Equipment|Enchanted Item · 30 pts","Scourge of the Burdened|Other Equipment|Enchanted Item · 25 pts","Cacophonous Dirge|Other Equipment|Enchanted Item · 15 pts","Skin of Man|Other Equipment|Enchanted Item · 15 pts",
+"The Plague Chalice|Other Equipment|Arcane Item · 40 pts","Blood of the Shadowgave|Other Equipment|Arcane Item · 35 pts","Daemon Heart|Other Equipment|Arcane Item · 30 pts","Hagtree Fetish|Other Equipment|Arcane Item · 30 pts","Goretooth|Other Equipment|Arcane Item · 15 pts","Jagged Dagger|Other Equipment|Arcane Item · 15 pts"
+];
+gearRows.forEach(row=>{
+const p=row.split("|"),name=p[0],id="br_eq_"+beastmenSlug(name);
+if(!factionEquipment.some(x=>x.id===id)){
+let path="weapons-of-war";
+if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
+else if(p[2].includes("Magic")||p[2].includes("Talisman")||p[2].includes("Enchanted")||p[2].includes("Arcane"))path="magic-items/beastmen-brayherds-magic-items";
+else if(name==="Mansmasher"||name==="Skull of the Unicorn Lord")path="unit/ghorros-warhoof";
+factionEquipment.push({id,name,category:p[1],desc:p[2],custom:false,factionId:fid,sourceUrl:"https://tow.whfb.app/"+path});
+}
+});
+const mutations={"Slug-skin":50,"Crown of Horns (Beastmen)":45,"Muscular Monstrosity":35,"Pelt of Midnight":35,"Gouge-tusks":30,"Rune of the Beast Ascendant":25,"Many-limbed Fiend":20,"Gnarled Hide":15,"Uncanny Senses":10};
+const magic={"The Black Maul":80,"Primeval Club":60,"Axe of Men":50,"The Axes of Khorgor":40,"Mangelder":40,"Hunter's Spear":35,"The Brass Cleaver":30,"Scimitar of Skultar":25,"Full Plate Chaos Armour":40,"Pelt of the Dark Young":40,"Heavy Chaos Armour":30,"The Blackened Plate":25,"The Fur of Sharggu":20,"Chalice of Dark Rain":50,"Cornucopia of Corpulence":30,"Rune of the True Beast":30,"Dark Heart":25,"The Gore Banner":50,"Totem of Rust":50,"Banner of the Warped Moon":45,"The Beast Banner":40,"Manbane Standard":40,"Vitriolic Totem":30,"Banner of Outrage":25,"The Soiled Tapestry":15,"Stone of Spite":45,"Horn of the Great Hunt":35,"Horn of the First Beast":30,"Scourge of the Burdened":25,"Cacophonous Dirge":15,"Skin of Man":15,"The Plague Chalice":40,"Blood of the Shadowgave":35,"Daemon Heart":30,"Hagtree Fetish":30,"Goretooth":15,"Jagged Dagger":15};
+function getGear(name){
+const aliases={"hand weapon":"Hand Weapon","additional hand weapon":"Additional Hand Weapon","great weapon":"Great Weapon","light armour":"Light Armour","heavy armour":"Heavy Armour","shield":"Shield","shortbow":"Shortbow","cavalry spear":"Cavalry Spear"};
+const canonical=aliases[String(name||"").toLowerCase()]||name;
+return equipment.find(x=>String(x.name).toLowerCase()===String(canonical).toLowerCase())||factionEquipment.find(x=>String(x.name).toLowerCase()===String(canonical).toLowerCase())||null;
+}
+function resolveRule(label){
+const pool=rules.concat(factionRules.filter(x=>x.factionId===fid));let r=pool.find(x=>String(x.name).toLowerCase()===String(label).toLowerCase()),value="";
+if(!r){const m=String(label).match(/^(.*?)\s*\((.*?)\)$/);if(m){r=pool.find(x=>String(x.name).toLowerCase()===m[1].trim().toLowerCase());value=m[2].trim();}}
+return r?{id:r.id,value}:null;
+}
+const rows=[
+"ghorros-warhoof|Ghorros Warhoof|Hero|155|8,5,3,5,4,3,4,4,8|30 x 60 mm|Heavy Cavalry|1|Hand Weapon;Mansmasher;Skull of the Unicorn Lord||Drunken;Father of Beasts;Gaze of the Gods;Mark of Chaos Undivided;Move Through Cover;Primal Fury;Stomp Attacks (D3);Swiftstride;The Sons of Ghorros;Warband|Named Centigor Chieftain; fixed profile and equipment.|0|0",
+"kralmaw-the-prophet-of-ruin|Kralmaw, the Prophet of Ruin|Hero|245|5,3,3,4,5,4,3,2,8|30 x 30 mm; 25 x 25 mm marker|Regular Infantry|1|Hand Weapon;Grisly Totem;Braystaff||Future Sight;Gaze of the Gods;Leering Spirit;Mark of Chaos Undivided;Primal Fury;Warband|Named Level 4 Great Bray-Shaman; fixed profile and equipment.|0|0",
+"beastlord|Beastlord|Hero|115|5,6,3,5,5,3,5,4,8|25 x 25 mm min; 30 x 30 mm max|Heavy Infantry|1|Hand Weapon|Additional Hand Weapon:3;Great Weapon:4;Light Armour:2;Heavy Armour:4;Shield:2|Blood Rage;Brayhorn;Foe Render;Gaze of the Gods;Mark of Chaos Undivided;Primal Fury;Warband|Chaos Mutations up to 50 pts; magic items up to 100 pts.|100|50",
+"bray-shaman|Bray-Shaman|Hero|65|5,4,3,3,4,2,3,1,7|25 x 25 mm min; 30 x 30 mm max|Regular Infantry|1|Braystaff|Tuskgor Chariot:85;Razorgor Chariot:120|Gaze of the Gods;Mark of Chaos Undivided;Primal Fury;Warband|Level 1 Wizard; Level 2 upgrade +30 pts; mutations up to 50 pts; magic items up to 50 pts.|50|50",
+"doombull|Doombull|Hero|210|6,6,3,6,5,5,5,5,8|50 x 50 mm|Monstrous Infantry|1|Hand Weapon|Additional Hand Weapon:3;Great Weapon:4;Light Armour:3;Heavy Armour:6;Shield:5|Armour Bane (1);Blood Greed;Blood Rage;Bull-gors;Fear;Foe Render;Gaze of the Gods;Impact Hits (1);Mark of Chaos Undivided;Primal Fury;Slaughterer's Call;Warband|Chaos Mutations up to 50 pts; magic items up to 100 pts.|100|50",
+"gorebull|Gorebull|Hero|130|6,5,3,5,5,4,4,4,7|50 x 50 mm|Monstrous Infantry|1|Hand Weapon|Additional Hand Weapon:3;Great Weapon:4;Light Armour:3;Heavy Armour:6;Shield:5|Armour Bane (1);Blood Greed;Blood Rage;Bull-gors;Fear;Foe Render;Gaze of the Gods;Impact Hits (1);Mark of Chaos Undivided;Primal Fury;Slaughterer's Call;Warband|Chaos Mutations up to 50 pts; magic items up to 50 pts.|50|50",
+"great-bray-shaman|Great Bray-Shaman|Hero|150|5,5,3,4,5,3,4,2,8|25 x 25 mm min; 30 x 30 mm max|Regular Infantry|1|Braystaff|Tuskgor Chariot:85;Razorgor Chariot:120|Gaze of the Gods;Mark of Chaos Undivided;Primal Fury;Warband|Level 3 Wizard; Level 4 upgrade +30 pts; mutations up to 50 pts; magic items up to 100 pts.|100|50",
+"wargor|Wargor|Hero|55|5,5,3,4,5,2,4,3,7|25 x 25 mm min; 30 x 30 mm max|Heavy Infantry|1|Hand Weapon|Additional Hand Weapon:3;Great Weapon:4;Light Armour:2;Heavy Armour:4;Shield:2|Blood Rage;Brayhorn;Foe Render;Gaze of the Gods;Mark of Chaos Undivided;Primal Fury;Warband|Chaos Mutations up to 50 pts; magic items up to 50 pts.|50|50",
+"warhoof|Warhoof|Hero|75|8,5,3,5,4,3,3,4,7|30 x 60 mm|Light Cavalry|1|Hand Weapon|Cavalry Spear:2;Great Weapon:4;Light Armour:2;Heavy Armour:4;Throwing Axes:2;Javelins:2;Shield:2|Drunken;Fast Cavalry;Gaze of the Gods;Mark of Chaos Undivided;Move Through Cover;Primal Fury;Stomp Attacks (1);Swiftstride;Warband|Chaos Mutations up to 50 pts; magic items up to 50 pts.|50|50",
+"bestigor-herd|Bestigor Herd|Special|13|5,4,3,4,4,1,4,1,7|30 x 30 mm|Heavy Infantry|5+|Hand Weapon;Great Weapon;Heavy Armour||Blood Rage;Close Order;Furious Charge;Mark of Chaos Undivided;Primal Fury;Warband|13 pts per model; champion, standard bearer, musician, magic standard options.|25|25",
+"gor-herd|Gor Herd|Core|7|5,4,2,3,4,1,3,1,6|25 x 25 mm|Regular Infantry|5+|Hand Weapon|Additional Hand Weapon:0;Shield:0|Bestial Charge;Blood Rage;Furious Charge;Horde;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Skirmishers;Warband|7 pts per model; unit chooses Additional Hand Weapons or Shields.|0|0",
+"harpies|Harpies|Special|11|5,3,0,3,3,1,5,2,6|25 x 25 mm|Regular Infantry|5+|Hand Weapon||Move Through Cover;Scouts;Skirmishers;Swiftstride|11 pts per model; claws count as hand weapons.|0|0",
+"minotaur-herd|Minotaur Herd|Special|44|6,4,3,5,4,3,3,3,7|50 x 50 mm|Monstrous Infantry|2+|Hand Weapon;Light Armour|Additional Hand Weapon:3;Great Weapon:4;Shield:2|Armour Bane (1);Blood Greed;Blood Rage;Bull-gors;Close Order;Fear;Foe Render;Impact Hits (1);Mark of Chaos Undivided;Motley Crew;Primal Fury;Warband|44 pts per model; champion, standard, musician, magic standard options.|25|25",
+"primal-warherd|Primal Warherd|Core|7|5,4,2,3,4,1,3,1,6|25 x 25 mm|Regular Infantry|10 Gors + 10 Ungors min|Hand Weapon;Shield|Additional Hand Weapon:0;Thrusting Spears:0;Throwing Spears:0|Bestial Charge;Blood Rage;Close Order;Furious Charge;Horde;Impetuous;Mark of Chaos Undivided;Mixed Unit;Motley Crew;Move Through Cover;Primal Fury;Warband|Mixed unit: 7 pts/Gor and 6 pts/Ungor; minimum ten of each.|0|0",
+"primal-warhounds|Primal Warhounds|Core|6|7,4,0,3,3,1,3,1,5|25 x 50 mm|War Beast|10+|Hand Weapon|Armoured Hide (1):1;Poisoned Attacks:1|Close Order;Horde;Motley Crew;Move Through Cover;Swiftstride;Warband|One Ungor Ravager per three Warhounds (+7 pts each).|0|0",
+"ungor-herd|Ungor Herd|Core|5|5,3,3,3,3,1,3,1,5|25 x 25 mm|Regular Infantry|10+|Hand Weapon;Shield|Thrusting Spears:1;Throwing Spears:1;Shortbow:0|Chariot Runners;Horde;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Skirmishers;Warband|5 pts/model; may replace shields with shortbows for free.|0|0",
+"ungor-ravagers|Ungor Ravagers|Special|7|7,3,3,3,3,1,3,1,7|25 x 25 mm|Regular Infantry|See entry|Hand Weapon;Throwing Spears;Shield||Close Order;Horde;Leader of the Pack (Beastmen);Move Through Cover;Primal Fury;Swiftstride;Warband|7 pts; one Ravager may be included per three Primal Warhounds.|0|0",
+"warped-gors|Warped Gors|Special|16|5,4,2,3,4,1,3,D3,7|30 x 30 mm|Regular Infantry|5+|Hand Weapon|Additional Hand Weapon:0;Shield:0|Blessings of Chaos;Blood Rage;Furious Charge;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Random Attacks;Stubborn;Warband|16 pts/model; unit chooses Additional Hand Weapons or Shields.|0|0",
+"centigor-herd|Centigor Herd|Special|17|8,4,3,4,4,1,2,1,6|30 x 60 mm|Light Cavalry|5+|Hand Weapon;Shield|Cavalry Spear:1;Throwing Spears:1;Great Weapon:1;Throwing Axes:1;Javelins:1|Drunken;Fast Cavalry;Horde;Mark of Chaos Undivided;Move Through Cover;Open Order;Primal Fury;Skirmishers;Stomp Attacks (1);Swiftstride;Warband|17 pts/model; Gorehoof may take magic items up to 25 pts; magic standard option.|25|0",
+"chaos-warhounds|Chaos Warhounds|Core|6|7,4,0,3,3,1,3,1,6|25 x 50 mm|War Beast|5+|Hand Weapon|Armoured Hide (1):1;Poisoned Attacks:1;Vanguard:5|Loner;Move Through Cover;Open Order;Swiftstride|Handler option is Warriors of Chaos only, not Beastmen.|0|0",
+"dragon-ogres|Dragon Ogres|Special|59|7,4,2,5,4,4,2,3,8|50 x 75 mm|Monstrous Cavalry|2-9|Hand Weapon;Light Armour|Additional Hand Weapon:3;Great Weapon:4;Halberd:3;Heavy Armour:3|Armour Bane (1);Armoured Hide (2);Close Order;Fear;Ensorcelled Weapons;Immune to Psychology;Stomp Attacks (2);The Quickening Storm|59 pts/model; unit size 2-9.|0|0",
+"razorgor-herd|Razorgor Herd|Special|52|7,3,0,5,5,3,2,4,6|50 x 75 mm|War Beast|1+|Hand Weapon;Light Armour||Armour Bane (1);Fear;Foe Render;Impact Hits (D3);Loner;Open Order;Primal Fury;Razor Tusks;Swiftstride|Tusk counts as hand weapon; calloused hide counts as light armour.|0|0",
+"razorgor-chariot|Razorgor Chariot|Special|120|-,-,-,5,5,4,-,-,-|50 x 100 mm|Heavy Chariot|1|Hand Weapon;Great Weapon;Cavalry Spear||Armour Bane (1);Close Order;Fear;First Charge;Foe Render;Impact Hits (D6+2);Mark of Chaos Undivided;Primal Fury;Razor Tusks|120 pts; Armour Value 4+; Bestigor/Gor crew with Razorgor.|0|0",
+"tuskgor-chariot|Tuskgor Chariot|Core|85|-,-,-,5,4,4,-,-,-|50 x 100 mm|Heavy Chariot|1|Hand Weapon;Great Weapon;Cavalry Spear||Close Order;First Charge;Impact Hits (D6+1);Mark of Chaos Undivided;Primal Fury;Razor Tusks;Warband|85 pts; Armour Value 4+; may be a character mount.|0|0",
+"chaos-giant|Chaos Giant|Rare|200|6,3,1,6,7,6,2,*,10|50 x 50 mm min; 50 x 75 mm max|Behemoth|1|Giant's Club;Light Armour|Heavy Armour:10;Regeneration (6+):20|Close Order;Giant Attacks;Immune to Psychology;Large Target;Pick Up And...;Stomp Attacks (D6);Terror;Timmm-berrr!;Unbreakable|Giant's Club profile varies with the Giant Attacks result.|0|0",
+"cockatrice|Cockatrice|Special|155|4,4,5,4,5,4,6,6,6|50 x 50 mm|Monstrous Creature|1|Hand Weapon;Petrifying Gaze;Heavy Armour||Close Order;Fly (10);Large Target;Stomp Attacks (1);Stony Stare;Swiftstride;Terror|Claws count as hand weapons; Scaly Skin counts as heavy armour.|0|0",
+"cygor|Cygor|Special|205|7,2,1,6,6,6,3,4,8|60 x 100 mm|Behemoth|1|Hand Weapon;Hurl Attack;Light Armour||Close Order;Ghostsight;Immune to Psychology;Large Target;Soul-eater;Stomp Attacks (D3);Stubborn;Terror;Timmm-berrr!|Claws count as hand weapons; calloused hide counts as light armour.|0|0",
+"dragon-ogre-shaggoth|Dragon Ogre Shaggoth|Rare|225|7,6,2,6,5,6,4,5,9|50 x 75 mm|Monstrous Creature|1|Hand Weapon;Light Armour|Additional Hand Weapon:3;Great Weapon:4;Heavy Armour:6|Armour Bane (2);Armoured Hide (2);Close Order;Ensorcelled Weapons;Immune to Psychology;Large Target;Stomp Attacks (D3+1);Storm Call;Terror;The Quickening Storm|225 pts; mutations up to 50 pts; magic items up to 50 pts.|50|50",
+"ghorgon|Ghorgon|Special|245|7,4,0,6,7,6,4,5,9|60 x 100 mm|Behemoth|1|Cleaver-limbs;Light Armour||Blood Greed;Close Order;Frenzy;Large Target;Primal Fury;Regeneration (6+);Stomp Attacks (D3);Stubborn;Swallow Whole;Terror;Timmm-berrr!|Calloused hide counts as light armour.|0|0",
+"jabberslythe|Jabberslythe|Rare|185|6,5,4,5,5,5,3,5,9|60 x 100 mm|Monstrous Creature|1|Wicked Claws;Slythey Tongue;Heavy Armour||Close Order;Fly (9);Large Target;Maddening Aura;Poisoned Attacks;Spurting Bile Blood;Stomp Attacks (D3);Swiftstride;Terror|Scaly Skin counts as heavy armour.|0|0",
+"preyton|Preyton|Special|160|6,5,0,5,5,5,5,4,6|75 x 50 mm|Monstrous Creature|1|Hand Weapon;Twisted Antlers;Heavy Armour|Ambushers:10;Frenzy:5|Close Order;Crown of Antlers;Endless Malice;Fly (10);Impact Hits (D3);Large Target;Terror|0-1 per 1,000 pts; Ambushers (+10) and/or Frenzy (+5).|0|0",
+"herdstone|Herdstone|Special|100|-,-,-,-,-,-,-,-,-|Up to 6 in at widest point|Terrain Feature|0-1|||Herdstones|Unique impassable terrain feature; 0-1 per Beastmen army.|0|0"
+];
+function makeGear(name){
+const aliases={"hand weapon":"Hand Weapon","additional hand weapon":"Additional Hand Weapon","great weapon":"Great Weapon","light armour":"Light Armour","heavy armour":"Heavy Armour","shield":"Shield","shortbow":"Shortbow","cavalry spear":"Cavalry Spear"};
+const canonical=aliases[String(name||"").toLowerCase()]||name;
+return equipment.find(x=>String(x.name).toLowerCase()===String(canonical).toLowerCase())||factionEquipment.find(x=>String(x.name).toLowerCase()===String(canonical).toLowerCase())||null;
+}
+function resolveRule(label){
+const pool=rules.concat(factionRules.filter(x=>x.factionId===fid));let r=pool.find(x=>String(x.name).toLowerCase()===String(label).toLowerCase()),value="";
+if(!r){const m=String(label).match(/^(.*?)\s*\((.*?)\)$/);if(m){r=pool.find(x=>String(x.name).toLowerCase()===m[1].trim().toLowerCase());value=m[2].trim();}}
+return r?{id:r.id,value}:null;
+}
+rows.forEach(row=>{
+const p=row.split("|"),slug=p[0],name=p[1],category=p[2],points=p[3],stat=p[4].split(","),base=p[5],troop=p[6],size=p[7],gearNames=p[8].split(";").filter(Boolean),optText=p[9].split(";").filter(Boolean),ruleNames=p[10].split(";").filter(Boolean),desc=p[11],magicCap=Number(p[12]),mutationCap=Number(p[13]),id="br_unit_"+slug;
+const existing=units.find(x=>x.sourceKey==="beastmen-brayherds:"+slug)||units.find(x=>x.factionId===fid&&String(x.name).toLowerCase()===name.toLowerCase());
+const baseIds=gearNames.map(x=>makeGear(x)?.id).filter(Boolean),options=new Map();
+optText.forEach(x=>{const i=x.lastIndexOf(":"),g=makeGear(x.slice(0,i));if(g)options.set(g.id,{id:g.id,cost:Number(x.slice(i+1))});});
+Object.keys(mutations).forEach(n=>{if(mutationCap&&mutations[n]<=mutationCap){const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:mutations[n]});}});
+Object.keys(magic).forEach(n=>{if(magicCap&&magic[n]<=magicCap){const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:magic[n]});}});
+const ids=[],values={};
+ruleNames.forEach(label=>{const a=resolveRule(label);if(a){ids.push(a.id);if(a.value)values[a.id]=a.value;}});
+const optionList=[...options.values()],costs={};baseIds.forEach(x=>costs[x]=0);optionList.forEach(x=>costs[x.id]=x.cost);
+const unit={...(existing||{}),id:existing?.id||id,sourceKey:"beastmen-brayherds:"+slug,sourceUrl:"https://tow.whfb.app/unit/"+slug,
+name,factionId:fid,category,points:String(points),
+stats:Object.fromEntries(["M","WS","BS","S","T","W","I","A","Ld"].map((k,i)=>[k,String(stat[i]||"-")])),
+baseSize:base,troopType:troop,unitSize:size,
+ruleIds:[...new Set([...(existing?.ruleIds||[]),...ids])],ruleValues:{...(existing?.ruleValues||{}),...values},
+basicEquipmentIds:[...new Set([...(existing?.basicEquipmentIds||[]),...baseIds])],
+optionEquipment:[...new Map([...(existing?.optionEquipment||[]),...optionList].map(x=>[x.id,x])).values()],
+equipmentIds:[...new Set([...(existing?.equipmentIds||[]),...baseIds,...optionList.map(x=>x.id)])],
+equipmentCosts:{...(existing?.equipmentCosts||{}),...costs},customRules:existing?.customRules||[],desc:existing?.desc||desc};
+units=existing?units.map(x=>x.id===existing.id?unit:x):units.concat(unit);
+});
+}
 function load() {
 try {
 factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
@@ -527,6 +637,9 @@ let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
 equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
+factionRules=JSON.parse(localStorage.getItem("ow_faction_rules"))||[];
+factionEquipment=JSON.parse(localStorage.getItem("ow_faction_equipment"))||[];
+seedBeastmenCatalogue();
 factionRules=JSON.parse(localStorage.getItem("ow_faction_rules"))||[];
 factionEquipment=JSON.parse(localStorage.getItem("ow_faction_equipment"))||[];
 removeUnavailableWeapons();
@@ -1263,9 +1376,12 @@ rules=d.rules;
 equipment=Array.isArray(d.equipment)?d.equipment:defaultEquipment.map(x=>({...x}));
 factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
 factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
+factionRules=Array.isArray(d.factionRules)?d.factionRules:[];
+factionEquipment=Array.isArray(d.factionEquipment)?d.factionEquipment:[];
 armies=Array.isArray(d.armies)?d.armies:[];
 armiesOfInfamy=Array.isArray(d.armiesOfInfamy)?d.armiesOfInfamy:[];
 removeUnavailableWeapons();
+seedBeastmenCatalogue();
 selectedArmyId=null;
 
 save();
