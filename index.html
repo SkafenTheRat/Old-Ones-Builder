@@ -421,6 +421,28 @@ const defaultEquipment = [
 ["Light Armour","Armour"],["Heavy Armour","Armour"],["Full Plate Armour","Armour"],["Shield","Shield"],["Barding","Other Equipment"]
 ].map((x,i)=>({id:"eqbase"+i,name:x[0],category:x[1],desc:"",custom:false}));
 
+function normalizeRenegadeCrownsFaction() {
+const oldNames=new Set(["realms of men","renegade crowns of the realms of man"]);
+const canonicalName="Renegade Crowns";
+const canonicalId="catalogue_renegade_crowns";
+const matching=factions.filter(f=>{
+const name=String(f.name||"").trim().toLowerCase();
+return name===canonicalName.toLowerCase()||oldNames.has(name);
+});
+const legacyIds=new Set(matching.map(f=>f.id).filter(Boolean));
+legacyIds.add("catalogue_realms_of_men");
+legacyIds.add("catalogue_renegade_crowns_of_the_realms_of_man");
+legacyIds.add(canonicalId);
+const existing=matching.find(f=>String(f.name||"").trim().toLowerCase()===canonicalName.toLowerCase())||matching[0]||{};
+const canonical={...existing,id:canonicalId,name:canonicalName,desc:existing.desc||"Faction catalogue entry — unit and army-list data must be verified against its current source."};
+factions=factions.filter(f=>!matching.includes(f));
+factions.push(canonical);
+const remap=id=>legacyIds.has(id)?canonicalId:id;
+units=units.map(u=>({...u,factionId:remap(u.factionId),ruleFactions:Object.fromEntries(Object.entries(u.ruleFactions||{}).map(([key,value])=>[key,remap(value)]))}));
+armies=armies.map(a=>({...a,factionId:remap(a.factionId)}));
+armiesOfInfamy=armiesOfInfamy.map(x=>({...x,factionId:remap(x.factionId)}));
+}
+
 function removeUnavailableWeapons() {
 const names=new Set(["handbow","repeater handbow","brace of repeater handbows"]);
 const ids=new Set([...names].map(name=>"eqx"+name.replace(/[^a-z]/g,"")));
@@ -489,13 +511,14 @@ alert("Unable to save data in the browser.");
 function load() {
 try {
 factions=JSON.parse(localStorage.getItem("ow_factions"))||[];
-const catalogueFactions=["Beastmen Brayherds","Chaos Dwarfs","Daemons of Chaos","Dark Elves","Dwarfen Mountain Holds","Empire of Man","Grand Cathay","High Elf Realms","Kingdom of Bretonnia","Lizardmen","Ogre Kingdoms","Orc & Goblin Tribes","Realms of Men","Skaven","Tomb Kings of Khemri","Vampire Counts","Warriors of Chaos","Wood Elf Realms","Mercenaries","Renegade Crowns of the Realms of Man"];
+const catalogueFactions=["Beastmen Brayherds","Chaos Dwarfs","Daemons of Chaos","Dark Elves","Dwarfen Mountain Holds","Empire of Man","Grand Cathay","High Elf Realms","Kingdom of Bretonnia","Lizardmen","Ogre Kingdoms","Orc & Goblin Tribes","Renegade Crowns","Skaven","Tomb Kings of Khemri","Vampire Counts","Warriors of Chaos","Wood Elf Realms","Mercenaries"];
 catalogueFactions.forEach(name=>{if(!factions.some(f=>f.name.toLowerCase()===name.toLowerCase()))factions.push({id:"catalogue_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"Faction catalogue entry — unit and army-list data must be verified against its current source."});});
 units=(JSON.parse(localStorage.getItem("ow_units"))||[]).map(normalizeUnit);
 armies=JSON.parse(localStorage.getItem("ow_armies"))||[];
 if(!Array.isArray(armies)) armies=[];
 armiesOfInfamy=JSON.parse(localStorage.getItem("ow_armies_of_infamy"))||[];
 if(!Array.isArray(armiesOfInfamy)) armiesOfInfamy=[];
+normalizeRenegadeCrownsFaction();
 let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
