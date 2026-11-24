@@ -941,7 +941,7 @@ const selected=editingRuleIds.includes(r.id);
 const value=editingRuleValues[r.id]||"";
 const needsValue=r.hasParameter||parameterRules.includes(r.name);
 let html='<div class="rule-option">';
-html+='<button type="button" class="choice-button rule-choice '+(selected?"selected":"")+'" aria-pressed="'+selected+'" onclick=\'toggleUnitRule("'+esc(r.id)+'")\'><span class="choice-main"><strong>'+esc(r.name)+'</strong>'+(r.desc?'<small>'+esc(r.desc)+'</small>':'')+'</span><span class="choice-status">'+(selected?"Selected":"Select")+'</span></button>';
+html+='<button type="button" class="choice-button rule-choice '+(selected?"selected":"")+'" aria-pressed="'+selected+'" onclick=\'if(!event.target.closest(".rule-name-link"))toggleUnitRule("'+esc(r.id)+'")\'><span class="choice-main"><strong><a class="rlink rule-name-link" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong></span><span class="choice-status">'+(selected?"Selected":"Select")+'</span></button>';
 if(r.name==="Hatred"){
 html+='<select class="rule-value" aria-label="Hated faction" onchange=\'updateRuleFaction("'+esc(r.id)+'",this.value)\'><option value="">Select hated faction</option>'+factions.map(f=>'<option value="'+esc(f.id)+'" '+(editingRuleFactions[r.id]===f.id?"selected":"")+'>'+esc(f.name)+'</option>').join("")+'</select>';
 }
@@ -1313,12 +1313,13 @@ function renderRules() {
 const q=(document.getElementById("ruleSearch")?.value||"").toLowerCase();
 const list=rules.filter(r=>r.name.toLowerCase().includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 document.getElementById("ruleLibrary").innerHTML=list.map(r=>`
-<div class="item"><div class="item-head"><div><strong>${esc(r.name)}</strong><br><small>${esc(r.desc||"No description provided.")}</small>${r.hasParameter?'<span class="tag">Bracket value</span>':''}</div>${r.id.startsWith("base")?'<span class="muted">Default Rule</span>':`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}</div></div>
+<div class="item"><div class="item-head"><div><strong><a class="rlink" data-name="${esc(r.name)}">${esc(r.name)}</a></strong>${r.hasParameter?'<span class="tag">Bracket value</span>':''}</div>${r.id.startsWith("base")?'<span class="muted">Default Rule</span>':`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}</div></div>
 `).join("")||'<div class="empty">No shared rules found.</div>';
 const privateList=factionRules.filter(r=>r.factionId===beastmenFactionId()&&(r.name+" "+(r.desc||"")).toLowerCase().includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 const privateEl=document.getElementById("beastmenRuleLibrary");
-if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong><a class="rlink" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong><br><small>'+esc(r.desc)+'</small></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
+if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong><a class="rlink" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
 }
+
 
 function exportData() {
 let data={version:8,factions,units,rules,equipment,factionRules,factionEquipment,magicItems,factionMagicItems,armies,armiesOfInfamy};
