@@ -2012,13 +2012,16 @@ overlay.classList.remove("hidden");
 
 function openRuleModal(name){
 const base=ruleBase(name);
-const factionRule=factionRules.find(r=>String(r.name||"").toLowerCase()===base.toLowerCase()||String(r.name||"").toLowerCase()===String(name).toLowerCase());
-const sharedRule=rules.find(r=>String(r.name||"").toLowerCase()===base.toLowerCase());
-const rule=factionRule||sharedRule;
+const exact=(r)=>String(r.name||"").toLowerCase()===String(name||"").toLowerCase();
+const sameBase=(r)=>ruleBase(String(r.name||"")).toLowerCase()===base.toLowerCase();
+const factionRule=factionRules.find(exact)||factionRules.find(sameBase);
+const sharedRule=rules.find(exact)||rules.find(sameBase);
+const customRules=units.flatMap(u=>u.customRules||[]);
+const customRule=customRules.find(exact)||customRules.find(sameBase);
+const rule=factionRule||sharedRule||customRule;
 document.getElementById("mTitle").textContent=name;
-const description=rule?.desc||"Quick reference only. Consult the live index for the current wording and interactions.";
-const slug=base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-const source=rule?.sourceUrl||("https://tow.whfb.app/special-rules/"+slug);
+const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
+const source=rule?.sourceUrl||("https://tow.whfb.app/special-rules/"+base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""));
 document.getElementById("mBody").innerHTML='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
 overlay.classList.remove("hidden");
 }
