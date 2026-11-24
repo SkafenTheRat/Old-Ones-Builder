@@ -94,6 +94,8 @@ color:var(--gold); font-size:12px;
 background:#25201c; padding:10px; border-radius:5px;
 border:1px solid #403329; font-size:13px; min-width:0;
 }
+.rule-option label { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.rule-option input[type=checkbox] { width:auto; }
 .choice-button { width:100%; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; text-align:left; white-space:normal; background:#25201c; border:1px solid #493b2d; border-radius:5px; color:var(--text); cursor:pointer; }
 .choice-button:hover { border-color:var(--gold); color:var(--text); }
 .choice-button.selected, .choice-button[aria-pressed="true"] { background:#493820; border-color:var(--gold); box-shadow:inset 0 0 0 1px rgba(198,161,91,.22); }
@@ -104,9 +106,8 @@ border:1px solid #403329; font-size:13px; min-width:0;
 .equipment-cost { margin-top:9px; }
 .equipment-cost label { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
 .equipment-cost input { width:100%; }
-.equip-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
-.equip-choice { min-height:68px; }
-@media(max-width:600px){.equip-modes{grid-template-columns:1fr;}}
+.equip-modes { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:8px; }
+.equip-modes label { color:var(--muted); font-size:12px; }
 .tag.option { border-style:dashed; }
 .over-limit { color:#e18b7d; }
 .list-scroll { max-height:580px; overflow-y:auto; padding-right:5px; }
@@ -927,10 +928,10 @@ const cards=items.map(e=>{
 const included=editingBasicEquipmentIds.includes(e.id);
 const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
 let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong><div class="equip-modes">';
-html+='<button type="button" class="choice-button equip-choice '+(included?"selected":"")+'" aria-pressed="'+included+'" onclick=\'setEquipmentMode("'+esc(e.id)+'","basic",'+(!included)+')\'><span class="choice-main"><strong>Included</strong><small>'+esc(e.name)+'</small></span><span class="choice-status">'+(included?"Selected":"Select")+'</span></button>';
-html+='<button type="button" class="choice-button equip-choice '+(paid?"selected":"")+'" aria-pressed="'+paid+'" onclick=\'setEquipmentMode("'+esc(e.id)+'","paid",'+(!paid)+')\'><span class="choice-main"><strong>Paid option</strong><small>'+esc(e.name)+'</small></span><span class="choice-status">'+(paid?"Selected":"Select")+'</span></button>';
+html+='<label><input type="checkbox" '+(included?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;basic&quot;,this.checked)"> Included</label>';
+html+='<label><input type="checkbox" '+(paid?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;paid&quot;,this.checked)"> Paid option</label>';
 html+='</div>';
-if(paid) html+='<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="'+esc(editingOptionCosts[e.id]??0)+'" oninput=\'updateOptionCost("'+esc(e.id)+'",this.value)\' placeholder="0"></div>';
+if(paid) html+='<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="'+esc(editingOptionCosts[e.id]??0)+'" oninput="updateOptionCost(&quot;'+esc(e.id)+'&quot;,this.value)" placeholder="0"></div>';
 if(e.desc) html+='<small>'+esc(e.desc)+'</small>';
 html+='</div>';
 return html;
@@ -939,7 +940,6 @@ return '<div class="item" style="grid-column:1/-1"><strong>'+esc(group)+'</stron
 }).join("")||'<p class="muted">No equipment in the library.</p>';
 renderUnitCostSummary();
 }
-
 
 function addLibraryEquipment() {
 const name=document.getElementById("newEquipmentName").value.trim(), category=document.getElementById("newEquipmentCategory").value, desc=document.getElementById("newEquipmentDesc").value.trim();
@@ -1585,7 +1585,7 @@ if(line) line.textContent=armyEntryCost(entry)+" pts";
 renderArmySummary();
 }
 
-function toggleArmyOption(entryId,equipmentId,checked,button) {
+function toggleArmyOption(entryId,equipmentId,checked) {
 const army=armies.find(a=>a.id===selectedArmyId);
 const entry=army?.entries?.find(item=>item.id===entryId);
 if(!entry) return;
@@ -1593,7 +1593,6 @@ const ids=new Set(entry.selectedOptionIds||[]);
 if(checked) ids.add(equipmentId);
 else ids.delete(equipmentId);
 entry.selectedOptionIds=[...ids];
-if(button){button.setAttribute("aria-pressed",String(checked));button.classList.toggle("selected",checked);const status=button.querySelector(".choice-status");if(status)status.textContent=checked?"Selected":"Select";}
 save();
 const line=document.getElementById("entryCost-"+entryId);
 if(line) line.textContent=armyEntryCost(entry)+" pts";
@@ -1681,7 +1680,7 @@ return `<div class="item">
 <div style="margin-top:8px">${options.length?`<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">${options.map(o=>{
 const item=equipmentById(o.id);
 if(!item) return "";
-return '<div class="rule-option"><button type="button" class="choice-button army-option-choice '+(selected.has(o.id)?"selected":"")+'" aria-pressed="'+selected.has(o.id)+'" onclick=\'toggleArmyOption("'+entry.id+'","'+o.id+'",'+(!selected.has(o.id))+',this)\'><span class="choice-main"><strong>'+esc(item.name)+'</strong><small>+'+parsePointCost(o.cost)+' pts</small></span><span class="choice-status">'+(selected.has(o.id)?"Selected":"Select")+"</span></button></div>";
+return '<div class="rule-option"><label><input type="checkbox" '+(selected.has(o.id)?'checked':'')+' onchange="toggleArmyOption(&quot;'+entry.id+'&quot;,&quot;'+o.id+'&quot;,this.checked)"><strong>'+esc(item.name)+'</strong> <span class="muted">+'+parsePointCost(o.cost)+' pts</span></label></div>';
 }).join("")}</div>`:'<span class="muted">No paid options on this unit.</span>'}</div>
 </div>`;
 }).join("")||'<div class="empty">This army has no units yet.</div>'}
