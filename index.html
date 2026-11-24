@@ -420,6 +420,85 @@ const defaultRules = [
 "Ambushers","Armour Bane (X)","Armoured Hide (X)","Breath Weapon","Chariot Runners","Close Order","Counter Charge","Cumbersome","Detachment","Dragged Along","Drilled","Ethereal","Evasive","Extra Attacks (+X)","Fast Cavalry","Fear","Feigned Flight","Fight in Extra Rank","Fire & Flee","First Charge","Flaming Attacks","Flammable","Fly (X)","Frenzy","Furious Charge","Hatred (X)","Horde","Howdah","Ignores Cover","Immune to Psychology","Impact Hits (X)","Impetuous","Killing Blow","Large Target","Levies","Loner","Magical Attacks","Magic Resistance (-X)","Mercenaries","Monster Handlers","Monster Slayer","Motley Crew","Move & Shoot","Move or Shoot","Move Through Cover","Multiple Shots (X)","Multiple Wounds (X)","Open Order","Poisoned Attacks","Ponderous","Quick Shot","Rallying Cry","Random Attacks","Random Movement","Regeneration (X+)","Regimental Unit","Requires Two Hands","Reserve Move","Scouts","Shieldwall","Skirmishers","Stomp Attacks (X)","Strike First","Strike Last","Stubborn","Stupidity","Swiftstride","Terror","Timmm-berrr!","Unbreakable","Unstable","Vanguard","Veteran","Volley Fire","Warband","Warp-spawned"
 ];
 
+const defaultRuleDescriptions = Object.fromEntries([
+["Ambushers","May begin the game in reserve and attempt to enter from a chosen battlefield edge from round two; any still waiting arrive automatically at the start of round five."],
+["Armour Bane (X)","A natural 6 To Wound improves the attack's Armour Piercing by the value shown in brackets."],
+["Armoured Hide (X)","The creature's natural hide improves its Armour Value by the amount shown; the protection also benefits its rider where applicable."],
+["Breath Weapon","Once per round in its Shooting phase, the model can make a breath attack using the flame template; its Strength and additional effects are listed in its profile."],
+["Chariot Runners","Friendly chariots can draw line of sight over or through these accompanying skirmishers and may move through their unit in the specified circumstances."],
+["Close Order","The unit may adopt the Close Order formation."],
+["Counter Charge","When charged in its front by cavalry, a chariot or a monster, an eligible unit may surge forward to meet the charge; both units count as having charged."],
+["Cumbersome","A weapon with this rule cannot be used for a Stand & Shoot charge reaction."],
+["Detachment","The unit is eligible to be fielded as a Detachment, subject to the army list's requirements."],
+["Dragged Along","A model beginning its move near a friendly unit of at least ten Infantry models may use that unit's Movement characteristic instead of its own."],
+["Drilled","The unit may make a free Redress the Ranks manoeuvre before moving and can march within 8 inches of enemies without a Leadership test."],
+["Ethereal","The model moves through terrain as open ground (but cannot finish inside impassable terrain) and can only be wounded by Magical attacks."],
+["Evasive","Once per turn when selected as a shooting target, an eligible unit may Fall Back in Good Order directly away; the shooter then continues its declared shooting."],
+["Extra Attacks (+X)","The model adds the number of Attacks shown in brackets to its Attacks characteristic; roll for the value when required by the rule."],
+["Fast Cavalry","An eligible Open Order unit whose models all have this rule may make a Quick Turn even after marching."],
+["Fear","A unit facing a more powerful Fear-causing enemy may need a Leadership test before charging it and when fighting it; failure can prevent the charge or hinder its attacks."],
+["Feigned Flight","If the unit chooses Flee or Fire & Flee as a charge reaction, it automatically rallies after completing that move."],
+["Fight in Extra Rank","The model can make supporting attacks from a rank behind the fighting rank, as allowed by the combat rules."],
+["Fire & Flee","An eligible missile-armed unit may Stand & Shoot as its charge reaction and then flee; its flee roll uses two dice and discards the lower result."],
+["First Charge","If the unit's first charge of the game succeeds, its target becomes Disrupted until the end of that turn's Combat phase."],
+["Flaming Attacks","The model's attacks count as Flaming; it also causes Fear in War Beasts and Swarms."],
+["Flammable","The model cannot make Regeneration saves against wounds caused by Flaming attacks."],
+["Fly (X)","Instead of moving on the ground, the model may fly using the movement value in brackets, passing over models and terrain subject to the rule's landing restrictions."],
+["Frenzy","Frenzied models gain +1 Attack after charging or following up; the unit is also driven to charge and cannot flee or restrain itself when most of its models are Frenzied. Losing a combat removes Frenzy."],
+["Furious Charge","After making a charge move of at least 3 inches, the model gains +1 Attack for that turn."],
+["Hatred (X)","The model may re-roll failed To Hit rolls against the specified hated enemy during the first round of combat."],
+["Horde","The unit may increase the maximum Rank Bonus allowed by its troop type by one."],
+["Howdah","The Behemoth has a split profile and operates as a Firing Platform for its crew, following the relevant rules for both."],
+["Ignores Cover","Shooting attacks made by the model ignore To Hit modifiers caused by partial or full cover."],
+["Immune to Psychology","If most models in the unit have this rule, it automatically passes Fear, Panic and Terror tests but cannot choose to Flee as a charge reaction."],
+["Impact Hits (X)","The model causes the number of Impact Hits shown in brackets when it charges; the profile or other rules determine their characteristics."],
+["Impetuous","If the unit can declare a charge, it must take a Leadership test; on failure it is required to charge."],
+["Killing Blow","A natural 6 To Wound with a combat attack can slay an Infantry or Cavalry model outright if the wound is unsaved; Armour and Regeneration saves are not allowed, but Ward saves are."],
+["Large Target","The model receives no benefit from cover, can be seen over or through other non-Large Target units, and can be shot at by one additional rank."],
+["Levies","Models with this rule cannot use the General's Inspiring Presence or the Battle Standard's Hold Your Ground; other friendly units do not test Panic when Levies flee from combat."],
+["Loner","A character with this rule cannot be the General or join a unit lacking it; a unit with the rule cannot be joined by a character without it."],
+["Magical Attacks","Attacks made by the model or with a weapon bearing this rule count as Magical attacks; spells and magic-item hits are magical by default."],
+["Magic Resistance (-X)","Enemy spell casting rolls suffer the penalty shown when the spell targets a unit containing a model with this rule."],
+["Mercenaries","Mercenary units cannot use the army General's Inspiring Presence or the Battle Standard's Hold Your Ground, and cannot be joined by characters from another army list."],
+["Monster Handlers","Handlers accompany the Monster, add their attacks in combat, and may be lost instead of the Monster when it suffers an unsaved wound."],
+["Monster Slayer","A natural 6 To Wound with a combat attack can slay a Monster outright if the wound is unsaved; Armour and Regeneration saves are not allowed, but Ward saves are."],
+["Motley Crew","The unit may combine models with different equipment and/or different profiles, as described by the relevant army-list entry."],
+["Move & Shoot","The weapon can be fired in the Shooting phase even if its wielder marched earlier in the turn."],
+["Move or Shoot","The weapon cannot be fired in a turn in which its wielder moved for any reason."],
+["Move Through Cover","The model ignores Movement penalties for difficult and dangerous terrain and can re-roll results of 1 on Dangerous Terrain tests."],
+["Multiple Shots (X)","The weapon may fire one shot normally or the number shown in brackets; choosing multiple shots imposes an additional -1 To Hit, and the unit's models must use the same firing mode."],
+["Multiple Wounds (X)","Each unsaved wound from the attack causes the target to lose the number of Wounds shown in brackets; excess wounds do not spill to other models."],
+["Open Order","The unit may adopt the Open Order formation."],
+["Poisoned Attacks","A natural 6 To Hit grants a +2 modifier to that hit's To Wound roll; this normally applies to shooting and combat attacks, but not spells or magic weapons."],
+["Ponderous","When moving and shooting, the weapon suffers a -2 To Hit modifier instead of the usual -1."],
+["Quick Shot","The weapon ignores the usual -1 To Hit penalty for moving and shooting and may be used for Stand & Shoot regardless of the charging enemy's distance."],
+["Rallying Cry","During the Command sub-phase, an unengaged character may nominate a fleeing friendly unit within Command range to make an immediate Rally test."],
+["Random Attacks","The model has no fixed Attacks value; roll the number shown each time it fights, rolling separately for each model where required."],
+["Random Movement","The model rolls for its movement distance and moves in the Compulsory Moves sub-phase; it cannot march or declare charges, but may contact enemies during that move."],
+["Regeneration (X+)","Immediately after losing a Wound, the model may roll a D6; meeting the value in brackets restores that Wound, though it still counts toward combat result."],
+["Regimental Unit","The unit may be accompanied by a Detachment, subject to the relevant army-list rules."],
+["Requires Two Hands","A model using this weapon in combat cannot also use a shield against combat wounds; the shield can still protect it from shooting and magic in other phases."],
+["Reserve Move","An eligible unit that did not charge, march or flee in the Movement phase may make a normal move at the end of its Shooting phase; it cannot march."],
+["Scouts","The unit deploys after other units, more than 12 inches from enemy models; Scouts deployed this way cannot charge on their first turn."],
+["Shieldwall","Once per game, a Close Order unit that was charged and is using shields may choose to Give Ground instead of Falling Back in Good Order."],
+["Skirmishers","The unit may adopt the Skirmish formation."],
+["Stomp Attacks (X)","The model makes the number of automatic-hit attacks shown in brackets against an enemy in base contact; these attacks are resolved last and use its unmodified Strength."],
+["Strike First","In combat, the model's Initiative is treated as 10 before other modifiers; Strike First cancels Strike Last."],
+["Strike Last","In combat, the model's Initiative is treated as 1 before other modifiers; Strike Last cancels Strike First."],
+["Stubborn","The first time the unit must take a Break test, it may choose to pass it and Fall Back in Good Order instead."],
+["Stupidity","At the start of its turn, an eligible unit tests Leadership; if it fails, it cannot move except to flee, shoot, cast or dispel spells, and must Hold when charged."],
+["Swiftstride","A unit made entirely of models with this rule adds 3 inches to its maximum charge range and may add D6 to Charge, Flee or Pursuit rolls."],
+["Terror","The model causes Fear; its charge target may have to flee after failing a Leadership test, and enemies that lose combat against it suffer -1 Leadership on Break tests."],
+["Timmm-berrr!","When the model is slain, a roll-off determines its fall direction; units in that arc and in base contact suffer D6 hits using its Strength and AP -1."],
+["Unbreakable","The unit never takes Break tests; when it loses combat, it automatically Gives Ground. Characters cannot join units with a different Unbreakable status."],
+["Unstable","When the unit loses combat, it suffers extra Wounds equal to the combat-result deficit; these cannot be saved by Regeneration."],
+["Vanguard","After deployment, the unit may make a Vanguard move; it cannot march during it or charge in its first turn."],
+["Veteran","If most models in the unit have this rule, it may re-roll failed Leadership tests; Break tests are not Leadership tests."],
+["Volley Fire","When shooting, half the models in each eligible rear rank may fire in addition to the front rank; the unit cannot use it after moving or for Stand & Shoot."],
+["Warband","The unit adds its current Rank Bonus to Leadership up to 10 (with listed exceptions) and, if most models have this rule, may re-roll its Charge roll."],
+["Warp-spawned","The model cannot Regenerate wounds caused by Magical attacks, and characters must share this rule to join its unit."]
+]);
+
 const parameterRules = ["Armour Bane (X)","Armoured Hide (X)","Extra Attacks (+X)","Fly (X)","Hatred (X)","Impact Hits (X)","Magic Resistance (-X)","Multiple Shots (X)","Multiple Wounds (X)","Random Attacks","Random Movement","Regeneration (X+)","Stomp Attacks (X)"];
 
 let factions = [];
@@ -427,7 +506,7 @@ let units = [];
 let rules = defaultRules.map((name,i)=>({
 id:"base"+i,
 name,
-desc:"",
+desc:defaultRuleDescriptions[name]||"",
 hasParameter:parameterRules.includes(name)
 }));
 
@@ -731,6 +810,7 @@ if(!Array.isArray(armiesOfInfamy)) armiesOfInfamy=[];
 normalizeRenegadeCrownsFaction();
 let saved=JSON.parse(localStorage.getItem("ow_rules"));
 if(saved) { const known=new Set(saved.map(r=>r.name.toLowerCase())); rules=saved.concat(defaultRules.filter(name=>!known.has(name.toLowerCase())).map(name=>({id:"migrated_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,desc:"",hasParameter:parameterRules.includes(name)}))); }
+rules=rules.map(r=>({...r,desc:String(r.desc||"").trim()?r.desc:(defaultRuleDescriptions[r.name]||r.desc||"")}));
 let savedEquipment=JSON.parse(localStorage.getItem("ow_equipment"));
 equipment=Array.isArray(savedEquipment)?savedEquipment:defaultEquipment.map(x=>({...x}));
 syncCoreEquipmentCatalogue();
