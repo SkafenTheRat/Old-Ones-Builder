@@ -1752,7 +1752,7 @@ document.getElementById("iFaction").value=x.factionId;
 const vals=[x.limits?.charactersMax,x.limits?.coreMin,x.limits?.specialMax,x.limits?.rareMax,x.limits?.mercenariesMax];
 ["iCharacters","iCore","iSpecial","iRare","iMercenaries"].forEach((id,i)=>document.getElementById(id).value=vals[i]??"");
 renderInfamyUnitAccess();
-document.querySelectorAll(".infamy-unit").forEach(c=>c.checked=!x.allowedUnitIds?.length||x.allowedUnitIds.includes(c.value));
+document.querySelectorAll(".infamy-unit").forEach(button=>{const selected=!x.allowedUnitIds?.length||x.allowedUnitIds.includes(button.dataset.unitId);button.setAttribute("aria-pressed",String(selected));button.classList.toggle("selected",selected);const status=button.querySelector(".choice-status");if(status)status.textContent=selected?"Selected":"Select";});
 }
 function deleteInfamy(id) {
 if(armies.some(a=>a.armyOfInfamyId===id)){alert("This list is used by an army. Delete or change that army first.");return;}
