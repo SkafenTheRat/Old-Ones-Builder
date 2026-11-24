@@ -82,6 +82,10 @@ padding:13px; border-radius:6px; margin-bottom:9px;
 display:grid; grid-template-columns:repeat(9,minmax(0,1fr));
 gap:7px; margin:12px 0;
 }
+.unit-stat-table { width:100%; border-collapse:collapse; table-layout:fixed; margin:10px 0; }
+.unit-stat-table th,.unit-stat-table td { border:1px solid var(--line); text-align:center; padding:7px 3px; }
+.unit-stat-table th { color:var(--gold); background:#25201c; font-size:12px; font-weight:700; }
+.unit-stat-table td { background:#201c19; font-size:14px; }
 .stat-grid label { font-size:12px; color:var(--gold); text-align:center; }
 .stat-grid input { text-align:center; padding:9px 2px; }
 .tag {
@@ -1027,12 +1031,13 @@ if(!items.length) return "";
 const cards=items.map(e=>{
 const included=editingBasicEquipmentIds.includes(e.id);
 const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
-let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong><div class="equip-modes">';
+let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong>';
+if(e.desc) html+='<small class="equipment-description">'+esc(e.desc)+'</small>';
+html+='<div class="equip-modes">';
 html+='<label><input type="checkbox" '+(included?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;basic&quot;,this.checked)"> Included</label>';
 html+='<label><input type="checkbox" '+(paid?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;paid&quot;,this.checked)"> Paid option</label>';
 html+='</div>';
 if(paid) html+='<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="'+esc(editingOptionCosts[e.id]??0)+'" oninput="updateOptionCost(&quot;'+esc(e.id)+'&quot;,this.value)" placeholder="0"></div>';
-if(e.desc) html+='<small>'+esc(e.desc)+'</small>';
 html+='</div>';
 return html;
 }).join("");
@@ -1239,8 +1244,8 @@ u.name.toLowerCase().includes(q)
 document.getElementById("unitList").innerHTML=list.map(u=>{
 let f=factions.find(x=>x.id===u.factionId);
 
-let profile=["M","WS","BS","S","T","W","I","A","Ld"]
-.map(k=>k+":"+((u.stats||{})[k]||"-")).join(" · ");
+const unitStatKeys=["M","WS","BS","S","T","W","I","A","Ld"];
+let profile='<table class="unit-stat-table"><tbody><tr>'+unitStatKeys.map(k=>'<th>'+k+'</th>').join("")+'</tr><tr>'+unitStatKeys.map(k=>'<td>'+esc((u.stats||{})[k]||"-")+'</td>').join("")+'</tr></tbody></table>';
 let basePoints=parsePointCost(u.points);
 const profileUnit=normalizeUnit(u);
 
@@ -1265,7 +1270,7 @@ return `
 </div>
 </div>
 
-<div class="statline">${profile}</div>
+<div>${profile}</div>
 <div class="muted"><b>Faction unit</b> · <b>Base:</b> ${esc(u.baseSize||"Not set")} · <b>Troop type:</b> ${esc(u.troopType||"Not set")}</div>
 <div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
 const item=equipmentById(o.id);
