@@ -94,14 +94,19 @@ color:var(--gold); font-size:12px;
 background:#25201c; padding:10px; border-radius:5px;
 border:1px solid #403329; font-size:13px; min-width:0;
 }
-.rule-option label { display:flex; align-items:center; gap:8px; cursor:pointer; }
-.rule-option input[type=checkbox] { width:auto; }
+.choice-button { width:100%; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; text-align:left; white-space:normal; background:#25201c; border:1px solid #493b2d; border-radius:5px; color:var(--text); cursor:pointer; }
+.choice-button:hover { border-color:var(--gold); color:var(--text); }
+.choice-button.selected, .choice-button[aria-pressed="true"] { background:#493820; border-color:var(--gold); box-shadow:inset 0 0 0 1px rgba(198,161,91,.22); }
+.choice-button .choice-main { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.choice-button .choice-main small { color:var(--muted); font-weight:normal; }
+.choice-status { color:var(--gold); font-size:11px; white-space:nowrap; text-transform:uppercase; letter-spacing:.5px; }
 .rule-value { margin-top:9px; padding:8px; font-size:13px; }
 .equipment-cost { margin-top:9px; }
 .equipment-cost label { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
 .equipment-cost input { width:100%; }
-.equip-modes { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:8px; }
-.equip-modes label { color:var(--muted); font-size:12px; }
+.equip-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
+.equip-choice { min-height:68px; }
+@media(max-width:600px){.equip-modes{grid-template-columns:1fr;}}
 .tag.option { border-style:dashed; }
 .over-limit { color:#e18b7d; }
 .list-scroll { max-height:580px; overflow-y:auto; padding-right:5px; }
@@ -840,34 +845,31 @@ editingRuleIds=editingRuleIds.filter(x=>x!==id);
 function updateRuleValue(id,value) { editingRuleValues[id]=value; }
 function updateRuleFaction(id,value) { editingRuleFactions[id]=value; }
 
+function toggleUnitRule(id) {
+toggleRuleValue(id,!editingRuleIds.includes(id));
+renderUnitRulePicker();
+}
+
 function renderUnitRulePicker() {
 const factionId=document.getElementById("uFaction")?.value||"";
 const visibleRules=rulesForFaction(factionId,editingRuleIds);
-document.getElementById("unitRulePicker").innerHTML=visibleRules.map(r=>{
-let selected=editingRuleIds.includes(r.id);
-let value=editingRuleValues[r.id]||"";
-let needsValue=r.hasParameter||parameterRules.includes(r.name);
-
-return `
-<div class="rule-option">
-<label>
-<input type="checkbox"
-value="${esc(r.id)}"
-${selected?"checked":""}
-onchange="toggleRuleValue('${r.id}',this.checked)">
-<strong>${esc(r.name)}</strong>
-</label>
-${r.name==="Hatred"?`
-<select class="rule-value" onchange="updateRuleFaction('${r.id}',this.value)">
-<option value="">Select hated faction</option>
-${factions.map(f=>`<option value="${esc(f.id)}" ${editingRuleFactions[r.id]===f.id?"selected":""}>${esc(f.name)}</option>`).join("")}
-</select>`:''}
-${needsValue?`<input type="text" class="rule-value" placeholder="Value, e.g. 2, D3, 10..." value="${esc(value)}" oninput="updateRuleValue('${r.id}',this.value)">`:''}
-${r.desc?`<small>${esc(r.desc)}</small>`:''}
-</div>
-`;
+const el=document.getElementById("unitRulePicker");
+if(!el) return;
+el.innerHTML=visibleRules.map(r=>{
+const selected=editingRuleIds.includes(r.id);
+const value=editingRuleValues[r.id]||"";
+const needsValue=r.hasParameter||parameterRules.includes(r.name);
+let html='<div class="rule-option">';
+html+='<button type="button" class="choice-button rule-choice '+(selected?"selected":"")+'" aria-pressed="'+selected+'" onclick=\'toggleUnitRule("'+esc(r.id)+'")\'><span class="choice-main"><strong>'+esc(r.name)+'</strong>'+(r.desc?'<small>'+esc(r.desc)+'</small>':'')+'</span><span class="choice-status">'+(selected?"Selected":"Select")+'</span></button>';
+if(r.name==="Hatred"){
+html+='<select class="rule-value" aria-label="Hated faction" onchange=\'updateRuleFaction("'+esc(r.id)+'",this.value)\'><option value="">Select hated faction</option>'+factions.map(f=>'<option value="'+esc(f.id)+'" '+(editingRuleFactions[r.id]===f.id?"selected":"")+'>'+esc(f.name)+'</option>').join("")+'</select>';
+}
+if(needsValue) html+='<input type="text" class="rule-value" placeholder="Value, e.g. 2, D3, 10..." value="'+esc(value)+'" oninput=\'updateRuleValue("'+esc(r.id)+'",this.value)\'>';
+html+='</div>';
+return html;
 }).join("")||'<p class="muted">The library is empty.</p>';
 }
+
 
 function parsePointCost(value) {
 const n=Number(value);
@@ -882,7 +884,7 @@ return rules.find(r=>r.id===id)||factionRules.find(r=>r.id===id)||null;
 }
 function rulesForFaction(factionId,selectedIds) {
 const selected=new Set(selectedIds||[]);
-return rules.concat(factionRules.filter(r=>r.factionId===factionId||selected.has(r.id)));
+return rules.concat(factionRules.filter(r=>r.factionId===factionId||selected.has(r.id))).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 }
 
 function renderUnitCostSummary() {
@@ -916,27 +918,29 @@ function renderUnitEquipmentPicker() {
 const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
 const factionId=document.getElementById("uFaction")?.value||"";
 const visibleEquipment=equipment.concat(factionEquipment.filter(e=>e.factionId===factionId));
-document.getElementById("unitEquipmentPicker").innerHTML=groups.map(group=>{
+const el=document.getElementById("unitEquipmentPicker");
+if(!el) return;
+el.innerHTML=groups.map(group=>{
 const items=visibleEquipment.filter(e=>equipmentGroup(e)===group);
 if(!items.length) return "";
-return `<div class="item" style="grid-column:1/-1"><strong>${esc(group)}</strong><div class="rule-grid" style="margin-top:8px">${
-items.map(e=>{
+const cards=items.map(e=>{
 const included=editingBasicEquipmentIds.includes(e.id);
 const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
-return `<div class="rule-option">
-<strong>${esc(e.name)}</strong>
-<div class="equip-modes">
-<label><input type="checkbox" ${included?"checked":""} onchange="setEquipmentMode('${e.id}','basic',this.checked)"> Included</label>
-<label><input type="checkbox" ${paid?"checked":""} onchange="setEquipmentMode('${e.id}','paid',this.checked)"> Paid option</label>
-</div>
-${paid?`<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="${esc(editingOptionCosts[e.id]??0)}" oninput="updateOptionCost('${e.id}',this.value)" placeholder="0"></div>`:""}
-${e.desc?`<small>${esc(e.desc)}</small>`:""}
-</div>`;
-}).join("")
-}</div></div>`;
+let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong><div class="equip-modes">';
+html+='<button type="button" class="choice-button equip-choice '+(included?"selected":"")+'" aria-pressed="'+included+'" onclick=\'setEquipmentMode("'+esc(e.id)+'","basic",'+(!included)+')\'><span class="choice-main"><strong>Included</strong><small>'+esc(e.name)+'</small></span><span class="choice-status">'+(included?"Selected":"Select")+'</span></button>';
+html+='<button type="button" class="choice-button equip-choice '+(paid?"selected":"")+'" aria-pressed="'+paid+'" onclick=\'setEquipmentMode("'+esc(e.id)+'","paid",'+(!paid)+')\'><span class="choice-main"><strong>Paid option</strong><small>'+esc(e.name)+'</small></span><span class="choice-status">'+(paid?"Selected":"Select")+'</span></button>';
+html+='</div>';
+if(paid) html+='<div class="equipment-cost"><label>Cost in the army list (pts)</label><input type="number" min="0" step="1" value="'+esc(editingOptionCosts[e.id]??0)+'" oninput=\'updateOptionCost("'+esc(e.id)+'",this.value)\' placeholder="0"></div>';
+if(e.desc) html+='<small>'+esc(e.desc)+'</small>';
+html+='</div>';
+return html;
+}).join("");
+return '<div class="item" style="grid-column:1/-1"><strong>'+esc(group)+'</strong><div class="rule-grid" style="margin-top:8px">'+cards+'</div></div>';
 }).join("")||'<p class="muted">No equipment in the library.</p>';
 renderUnitCostSummary();
 }
+
+
 function addLibraryEquipment() {
 const name=document.getElementById("newEquipmentName").value.trim(), category=document.getElementById("newEquipmentCategory").value, desc=document.getElementById("newEquipmentDesc").value.trim();
 if(!name) { alert("Enter an equipment name."); return; }
@@ -1024,7 +1028,7 @@ points:document.getElementById("uPoints").value,
 stats,
 baseSize:document.getElementById("uBaseSize").value.trim(),
 troopType:document.getElementById("uTroopType").value,
-ruleIds:[...editingRuleIds],
+ruleIds:[...editingRuleIds].sort((a,b)=>String(ruleById(a)?.name||a).localeCompare(String(ruleById(b)?.name||b),undefined,{sensitivity:"base"})),
 ruleValues:{...editingRuleValues},
 ruleFactions:{...editingRuleFactions},
 basicEquipmentIds,
@@ -1227,11 +1231,11 @@ renderUnits();
 
 function renderRules() {
 const q=(document.getElementById("ruleSearch")?.value||"").toLowerCase();
-const list=rules.filter(r=>r.name.toLowerCase().includes(q));
+const list=rules.filter(r=>r.name.toLowerCase().includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 document.getElementById("ruleLibrary").innerHTML=list.map(r=>`
 <div class="item"><div class="item-head"><div><strong>${esc(r.name)}</strong><br><small>${esc(r.desc||"No description provided.")}</small>${r.hasParameter?'<span class="tag">Bracket value</span>':''}</div>${r.id.startsWith("base")?'<span class="muted">Default Rule</span>':`<button class="danger" onclick="deleteLibraryRule('${r.id}')">Delete</button>`}</div></div>
 `).join("")||'<div class="empty">No shared rules found.</div>';
-const privateList=factionRules.filter(r=>r.factionId===beastmenFactionId()&&(r.name+" "+(r.desc||"")).toLowerCase().includes(q));
+const privateList=factionRules.filter(r=>r.factionId===beastmenFactionId()&&(r.name+" "+(r.desc||"")).toLowerCase().includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 const privateEl=document.getElementById("beastmenRuleLibrary");
 if(privateEl) privateEl.innerHTML=privateList.map(r=>'<div class="item"><div class="item-head"><div><strong><a class="rlink" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong><br><small>'+esc(r.desc)+'</small></div><a href="'+esc(r.sourceUrl)+'" target="_blank" rel="noopener">Source</a></div></div>').join("")||'<div class="empty">No Beastmen rules found.</div>';
 }
@@ -1268,7 +1272,7 @@ if(!rule) return null;
 const label=formatUnitRuleLabel(u,id);
 const desc=rule.desc||"";
 return {label,desc:desc||""};
-}).filter(Boolean);
+}).filter(Boolean).sort((a,b)=>String(a.label||"").localeCompare(String(b.label||""),undefined,{sensitivity:"base"}));
 }
 
 function buildPdfUnitCard(u,compact) {
@@ -1581,7 +1585,7 @@ if(line) line.textContent=armyEntryCost(entry)+" pts";
 renderArmySummary();
 }
 
-function toggleArmyOption(entryId,equipmentId,checked) {
+function toggleArmyOption(entryId,equipmentId,checked,button) {
 const army=armies.find(a=>a.id===selectedArmyId);
 const entry=army?.entries?.find(item=>item.id===entryId);
 if(!entry) return;
@@ -1589,6 +1593,7 @@ const ids=new Set(entry.selectedOptionIds||[]);
 if(checked) ids.add(equipmentId);
 else ids.delete(equipmentId);
 entry.selectedOptionIds=[...ids];
+if(button){button.setAttribute("aria-pressed",String(checked));button.classList.toggle("selected",checked);const status=button.querySelector(".choice-status");if(status)status.textContent=checked?"Selected":"Select";}
 save();
 const line=document.getElementById("entryCost-"+entryId);
 if(line) line.textContent=armyEntryCost(entry)+" pts";
@@ -1676,7 +1681,7 @@ return `<div class="item">
 <div style="margin-top:8px">${options.length?`<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">${options.map(o=>{
 const item=equipmentById(o.id);
 if(!item) return "";
-return `<div class="rule-option"><label><input type="checkbox" ${selected.has(o.id)?"checked":""} onchange="toggleArmyOption('${entry.id}','${o.id}',this.checked)"><strong>${esc(item.name)}</strong> <span class="muted">+${parsePointCost(o.cost)} pts</span></label></div>`;
+return '<div class="rule-option"><button type="button" class="choice-button army-option-choice '+(selected.has(o.id)?"selected":"")+'" aria-pressed="'+selected.has(o.id)+'" onclick=\'toggleArmyOption("'+entry.id+'","'+o.id+'",'+(!selected.has(o.id))+',this)\'><span class="choice-main"><strong>'+esc(item.name)+'</strong><small>+'+parsePointCost(o.cost)+' pts</small></span><span class="choice-status">'+(selected.has(o.id)?"Selected":"Select")+"</span></button></div>";
 }).join("")}</div>`:'<span class="muted">No paid options on this unit.</span>'}</div>
 </div>`;
 }).join("")||'<div class="empty">This army has no units yet.</div>'}
@@ -1698,6 +1703,14 @@ if(!el) return;
 const chosen=armiesOfInfamy.find(x=>x.id===document.getElementById("aInfamy")?.value);
 el.textContent=chosen?"Selected list: "+chosen.name+". Unit access is filtered to the units enabled in its definition.":"Choose a faction first; an Army of Infamy can then be selected if one has been created for it.";
 }
+function toggleInfamyUnit(button) {
+const selected=button.getAttribute("aria-pressed")==="true";
+button.setAttribute("aria-pressed",String(!selected));
+button.classList.toggle("selected",!selected);
+const status=button.querySelector(".choice-status");
+if(status) status.textContent=!selected?"Selected":"Select";
+}
+
 function renderInfamyUnitAccess() {
 const factionId=document.getElementById("iFaction")?.value||"";
 const el=document.getElementById("iUnitAccess");
@@ -1705,12 +1718,14 @@ if(!el) return;
 const current=armiesOfInfamy.find(x=>x.id===document.getElementById("editInfamyId")?.value);
 const allowed=new Set(current?.allowedUnitIds||[]);
 const isChecked=u=>!current||!current.allowedUnitIds?.length||allowed.has(u.id);
-const renderGroup=(title,list)=>list.length?'<div class="muted" style="grid-column:1/-1;margin-top:8px"><strong>'+esc(title)+'</strong></div>'+list.map(u=>'<div class="rule-option"><label><input type="checkbox" class="infamy-unit" value="'+esc(u.id)+'" '+(isChecked(u)?"checked":"")+'> '+esc(u.name)+' <small>('+esc(u.category||"Unit")+')</small></label></div>').join(""):"";
-const factionUnits=units.filter(u=>u.factionId===factionId);
-const mercenaryUnits=units.filter(isMercenaryUnit);
+const renderGroup=(title,list)=>list.length?'<div class="muted" style="grid-column:1/-1;margin-top:8px"><strong>'+esc(title)+'</strong></div>'+list.map(u=>'<div class="rule-option"><button type="button" class="choice-button infamy-unit '+(isChecked(u)?"selected":"")+'" data-unit-id="'+esc(u.id)+'" aria-pressed="'+isChecked(u)+'" onclick="toggleInfamyUnit(this)"><span class="choice-main"><strong>'+esc(u.name)+'</strong><small>'+esc(u.category||"Unit")+'</small></span><span class="choice-status">'+(isChecked(u)?"Selected":"Select")+'</span></button></div>').join(""):"";
+const factionUnits=units.filter(u=>u.factionId===factionId).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
+const mercenaryUnits=units.filter(isMercenaryUnit).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 const content=renderGroup("Faction units",factionUnits)+renderGroup("Mercenaries",mercenaryUnits);
 el.innerHTML=content||'<div class="empty">No units exist for this faction or in the Mercenaries pool yet. You can save the list and add units later.</div>';
 }
+
+
 function resetInfamyForm() {
 ["iName","iDesc","iSource","iCharacters","iCore","iSpecial","iRare","iMercenaries","iRules","editInfamyId"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
 renderInfamyUnitAccess();
@@ -1722,7 +1737,7 @@ const parentFaction=factions.find(f=>f.id===factionId);
 if(!parentFaction||isMercenaryFaction(parentFaction)){alert("Choose a main game faction. Mercenaries can only be added as units.");return;}
 if(!name){alert("Enter an Army of Infamy name.");return;}
 const num=id=>{const v=document.getElementById(id).value;return v===""?null:Math.max(0,Math.min(100,Number(v)));};
-const allowedUnitIds=[...document.querySelectorAll(".infamy-unit:checked")].map(x=>x.value);
+const allowedUnitIds=[...document.querySelectorAll(".infamy-unit[aria-pressed=\"true\"]")].map(x=>x.dataset.unitId);
 const id=document.getElementById("editInfamyId").value;
 const record={id:id||uid(),factionId,name,description:document.getElementById("iDesc").value.trim(),source:document.getElementById("iSource").value.trim(),limits:{charactersMax:num("iCharacters"),coreMin:num("iCore"),specialMax:num("iSpecial"),rareMax:num("iRare"),mercenariesMax:num("iMercenaries")},rulesText:document.getElementById("iRules").value.trim(),allowedUnitIds};
 const index=armiesOfInfamy.findIndex(x=>x.id===record.id);
@@ -1779,15 +1794,15 @@ renderArmies();
 // entries marked * : completed from the TOW rulebook, verify against the site
 const weaponDetails={
 "Hand Weapon":{cat:"Melee Weapon",desc:"Even the most poorly prepared warrior will arm themselves with a hand weapon, such as a simple sword or axe. It may even be that the model's natural weapons, such as teeth and claws, fulfil this role.",stats:[["Combat","S","-","-"]],notes:"Unless specified otherwise, all models are assumed to be equipped with a hand weapon."},
-"Additional Hand Weapon":{cat:"Melee Weapon",desc:"Not content with a single hand weapon, some warriors carry two - one in each hand - the better to rain blows down upon their foes.",stats:[["Combat","S","-","-"]],notes:"A model armed with two hand weapons gains Extra Attacks (+1), but may choose to fight with only one hand weapon instead."},
-"Flail":{cat:"Melee Weapon",desc:"A flail is a cumbersome, heavy weapon used with both hands. It consists of heavy weights, often spiked, attached to a pole or handle by heavy chains.",stats:[["Combat","S+2","-2","Armour Bane (1),Requires Two Hands"]],notes:"A flail's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn."},notes:"A flail's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn.",
+"Additional Hand Weapon":{cat:"Melee Weapon",desc:"Not content with a single hand weapon, some warriors carry two - one in each hand - the better to rain blows down upon their foes.",stats:[["Combat","S","-","Extra Attacks (+1),Requires Two Hands"]],notes:"A model armed with two hand weapons gains Extra Attacks (+1)."},
+"Flail":{cat:"Melee Weapon",desc:"A flail is a cumbersome, heavy weapon used with both hands. It consists of heavy weights, often spiked, attached to a pole or handle by heavy chains.",stats:[["Combat","S+2","-2","Armour Bane (1),Requires Two Hands"]],notes:"A flail's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn."},
 "Great Weapon":{cat:"Melee Weapon",desc:"Great weapons are especially large and heavy weapons wielded with both hands: great hammers, great axes, two-handed swords and so forth. A blow from a great weapon can cut a foe in half and shatter the thickest armour.",stats:[["Combat","S+2","-2","Armour Bane (1),Requires Two Hands,Strike Last"]]},
-"Halberd":{cat:"Melee Weapon",desc:"The halberd is a heavy bladed weapon mounted on a sturdy shaft, with a point like a spear and a heavy cutting edge like an axe. It is held in both hands and used to chop as well as thrust.",stats:[["Combat","S+1","-1 (-2)","Armour Bane (1)"]],notes:"A halberd has an AP of -2 against enemy models the wielder charged this turn."},notes:"A halberd has an AP of -2 against enemy models the wielder charged this turn.",
+"Halberd":{cat:"Melee Weapon",desc:"The halberd is a heavy bladed weapon mounted on a sturdy shaft, with a point like a spear and a heavy cutting edge like an axe. It is held in both hands and used to chop as well as thrust.",stats:[["Combat","S+1","-1 (-2)","Armour Bane (1)"]],notes:"A halberd has an AP of -2 against enemy models the wielder charged this turn."},
 "Morning Star":{cat:"Melee Weapon",desc:"A morning star is a single-handed weapon consisting of one or more spiked balls on a chain. Its advantage lies in the initial flurry of combat.",stats:[["Combat","S+1","-1","Armour Bane (1)"]],notes:"A morning star's Strength modifier and Armour Bane (1) special rule apply only against enemy models the wielder charged this turn."},
 "Whip":{cat:"Melee Weapon",desc:"One or more long lengths of braided leather fitted to a stout handle; when sharpened blades and hooked spikes are added, it can inflict devastating injuries.",stats:[["Combat","S","-","Fight in Extra Rank,Strike First"]]},
 "Thrusting Spear":{cat:"Melee Weapon",desc:"Thrusting spear - the favoured weapon of massed infantry regiments. Their length enables their wielders to fight in multiple ranks.",stats:[["Combat","S","-","Fight in Extra Rank"]],notes:"Infantry only. Cannot make supporting attacks in a turn in which it charged. If charged in its front arc, the wielder gains +1 Initiative against the charging unit(s). Thrusting spears allow supporting attacks from behind the fighting rank (Fight in Extra Rank)."},
-"Lance":{cat:"Melee Weapon",desc:"A lance is a long, heavy spear, wielded to devastating effect by charging cavalry. Couched under the arm of its wielder, the point is driven into the foe with the full weight and momentum of the charge.",stats:[["Combat","S+2","-2","Armour Bane (1)"]],notes:"Cavalry or monsters only. A lance can only be used during a turn in which the wielder charged; its modifiers apply only against models it charged."},notes:"Cavalry or monsters only. A lance can only be used during a turn in which the wielder charged; its modifiers apply only against models it charged.",
-"Cavalry Spear":{cat:"Melee Weapon",desc:"Lighter than a lance, cavalry spears lack shuddering impact on the charge but more than make up for it in versatility.",stats:[["Combat","S+1","-1","Fight in Extra Rank"]],notes:"Cavalry, monsters or chariots only. Modifiers apply only during a turn in which the wielder charged. Cannot make supporting attacks on a turn it charged."},notes:"Cavalry, monsters or chariots only. Modifiers apply only during a turn in which the wielder charged. Fight in Extra Rank applies only in a turn in which the wielder did not charge.",
+"Lance":{cat:"Melee Weapon",desc:"A lance is a long, heavy spear, wielded to devastating effect by charging cavalry. Couched under the arm of its wielder, the point is driven into the foe with the full weight and momentum of the charge.",stats:[["Combat","S+2","-2","Armour Bane (1)"]],notes:"Cavalry or monsters only. A lance can only be used during a turn in which the wielder charged; its modifiers apply only against models it charged."},
+"Cavalry Spear":{cat:"Melee Weapon",desc:"Lighter than a lance, cavalry spears lack shuddering impact on the charge but more than make up for it in versatility.",stats:[["Combat","S+1","-1","Fight in Extra Rank"]],notes:"Cavalry, monsters or chariots only. Modifiers apply only during a turn in which the wielder charged. Cannot make supporting attacks on a turn it charged. Fight in Extra Rank applies only in a turn in which the wielder did not charge."},
 "Throwing Spear":{cat:"Melee Weapon",desc:"Short, heavy throwing spears favoured by hunters, on foot or mounted.",stats:[["Combat","S","-","Fight in Extra Rank"]],notes:"Can only be used during a turn in which the wielder charged; otherwise the model must use its hand weapon. Throwing spears allow supporting attacks from behind the fighting rank (Fight in Extra Rank)."},
 "Longbow":{cat:"Ranged Weapon",desc:"A longbow is capable of firing at an incredible range and with quite alarming power, only increasing in deadliness as the range shortens.",stats:[["30\"","3","-","Armour Bane (1),Volley Fire"]]},
 "Shortbow":{cat:"Ranged Weapon",desc:"Small, short-ranged bows favoured by light troops and cavalry. A skilled archer can load, draw and loose a shortbow without breaking stride.",stats:[["18\"","3","-","Quick Shot,Volley Fire"]]},
@@ -1941,7 +1956,7 @@ const names=Object.keys(weaponDetails).concat(rules.map(r=>r.name),factionRules.
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const re=new RegExp("("+names.slice().sort((a,b)=>b.length-a.length).map(escRe).join("|")+")","gi");
 const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
-let n; while(n=walker.nextNode()){ if(!n.parentElement.closest("a,script,style")) nodes.push(n); }
+let n; while(n=walker.nextNode()){ if(!n.parentElement.closest("a,button,input,textarea,select,script,style")) nodes.push(n); }
 nodes.forEach(node=>{
 const text=node.nodeValue; re.lastIndex=0; if(!re.test(text))return; re.lastIndex=0;
 const frag=document.createDocumentFragment(); let last=0,m;
