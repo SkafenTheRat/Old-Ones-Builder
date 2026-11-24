@@ -1868,6 +1868,7 @@ renderArmies();
 .muted a:hover{color:var(--gold);border:0}
 .wlink:hover,.rlink:hover{color:#eee5d5}
 .wnote{color:#a99c89;font-size:13px;font-style:italic}
+.detachment-related{margin-top:16px;padding-top:12px;border-top:1px solid #493b2d}.detachment-related h4{color:#c6a15b;margin:12px 0 8px}.detachment-related .related-rule{padding:9px 10px;margin:7px 0;background:#25201c;border:1px solid #493b2d;border-radius:5px}.detachment-related .related-rule strong{color:#eee5d5}.detachment-related .related-rule small{display:block;color:#a99c89;margin-top:4px;line-height:1.45}.detachment-related .related-rule p{margin:7px 0 0}.detachment-related .related-child{margin-left:16px;border-left:2px solid #72552c}
 </style>
 <script>
 // ---------- WEAPON DATA (source: tow.whfb.app / Rulebook) ----------
@@ -2284,16 +2285,35 @@ function openWeaponModal(name){
 }
 function openRuleModal(name){
  const base=ruleBase(name);
- const factionRule=findNamed(factionRules,base)||findNamed(factionRules,name);
- const sharedRule=findNamed(rules,base)||findNamed(rules,name);
- const unitRule=units.flatMap(u=>u.customRules||[]).find(r=>String(r.name||"").toLowerCase()===base.toLowerCase()||String(r.name||"").toLowerCase()===String(name).toLowerCase());
- const rule=factionRule||sharedRule||unitRule;
+ const exact=r=>String(r.name||"").toLowerCase()===String(name||"").toLowerCase();
+ const sameBase=r=>ruleBase(String(r.name||"")).toLowerCase()===base.toLowerCase();
+ const factionRule=factionRules.find(exact)||factionRules.find(sameBase);
+ const sharedRule=rules.find(exact)||rules.find(sameBase);
+ const customRules=units.flatMap(u=>u.customRules||[]);
+ const customRule=customRules.find(exact)||customRules.find(sameBase);
+ const rule=factionRule||sharedRule||customRule;
  document.getElementById("mTitle").textContent=name;
  const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
  const source=specialRuleUrl(rule,name);
- document.getElementById("mBody").innerHTML='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open the full rule in the online index</a></p>';
+ let html='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
+ if(base.toLowerCase()==="detachment"){
+  const blocks=[
+   {title:"Regimental Units & Detachments",text:"Niektóre jednostki oznaczone zasadą Regimental Unit mogą mieć do dwóch mniejszych oddziałów wspierających — Detachments. Jednostka z obiema zasadami może pełnić jedną z tych ról, ale nie obie jednocześnie.",url:"https://tow.whfb.app/warhammer-armies/using-regiments-and-detachments"},
+   {title:"Creating a Detachment",text:"Detachment musi liczyć co najmniej 5 modeli i najwyżej połowę liczby modeli w przypisanym Regimental Unit (zaokrąglając w dół). Może kupować dostępne ulepszenia, ale nie może zawierać command group ani command models. Musi być przypisany do jednego Regimental Unit i nie może być przypisany do więcej niż jednego. Poza szczególnymi zasadami detachments pozostają oddzielnymi, niezależnymi jednostkami.",url:"https://tow.whfb.app/warhammer-armies/creating-a-detachment"},
+   {title:"Detachment Special Rules",text:"Poniższe zasady określają sposób rozmieszczania, dowodzenia i działania detachments.",url:"https://tow.whfb.app/warhammer-armies/detachment-special-rules"},
+   {title:"Regimental Deployment",text:"Detachment wystawia się w tym samym czasie co swój Regimental Unit i w odległości do 3″ od niego. Jeżeli Regimental Unit pozostaje w rezerwie jako posiłki, jego detachments również pozostają w rezerwie i przybywają razem z nim.",url:"https://tow.whfb.app/warhammer-armies/regimental-deployment"},
+   {title:"Regimental Leadership",text:"Dopóki Detachment znajduje się w odległości do 3″ od swojego Regimental Unit, a ten nie ucieka, może korzystać z jego Leadership. Jeżeli Leadership Detachmentu jest wyższe, może zamiast tego użyć własnej wartości.",url:"https://tow.whfb.app/warhammer-armies/regimental-leadership"},
+   {title:"Regimental Psychology",text:"Gdy Detachment znajduje się w odległości do 3″ od Regimental Unit, otrzymuje od niego następujące zasady psychologiczne, jeżeli Regimental Unit je posiada: Frenzy, Hatred (X), Immune to Psychology oraz Stubborn.",url:"https://tow.whfb.app/warhammer-armies/regimental-psychology"},
+   {title:"Supporting Actions",text:"Gdy wróg deklaruje szarżę na Regimental Unit, a ten nie wybiera reakcji Flee, każdy jego Detachment znajdujący się w odległości do 3″, niezwiązany walką i nieuciekający może zadeklarować Supporting Action. Każdy Detachment może wykonać tylko jedną Supporting Action na turę.",url:"https://tow.whfb.app/warhammer-armies/supporting-actions"},
+   {title:"Supporting Fire",text:"Detachment uzbrojony w broń strzelecką może natychmiast wykonać reakcję Stand & Shoot, tak jakby to on był celem szarży. Jeżeli nie może wykonać Stand & Shoot (na przykład przeciwnik jest zbyt blisko), nie strzela i nie może wykonać innej Supporting Action w tej turze.",url:"https://tow.whfb.app/warhammer-armies/supporting-fire",child:true},
+   {title:"Supporting Charge",text:"Na końcu Charge Moves sub-phase Detachment, który zadeklarował tę akcję i nie jest związany walką ani nie ucieka, wykonuje dodatkową, poza kolejnością szarżę na jedną jednostkę wroga, która w tej turze zaszarżowała na jego Regimental Unit.",url:"https://tow.whfb.app/warhammer-armies/supporting-charge",child:true}
+  ];
+  html+='<section class="detachment-related"><h4>Rules connected with Detachment</h4>'+blocks.map(b=>'<div class="related-rule '+(b.child?"related-child":"")+'"><strong>'+esc(b.title)+'</strong><small>'+esc(b.text)+'</small><p><a href="'+esc(b.url)+'" target="_blank" rel="noopener">Open '+esc(b.title)+' in the TOW index</a></p></div>').join("")+'</section>';
+ }
+ document.getElementById("mBody").innerHTML=html;
  overlay.classList.remove("hidden");
 }
+
 function linkifyNames(){
  const root=document.querySelector("main");if(!root)return;
  const registry=new Map();
