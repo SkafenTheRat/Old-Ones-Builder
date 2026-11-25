@@ -1188,7 +1188,8 @@ if(privateEl) privateEl.innerHTML=renderEquipmentGroup(privateList,true);
 function unitItemList(u,key,legacyCategory){
 const current=Array.isArray(u&&u[key])?u[key]:[];
 if(current.length)return current.map((x,i)=>typeof x==="string"?{id:"legacy_"+key+"_"+i,name:x,desc:""}:{...x});
-return (u&&u.customEquipment||[]).filter(x=>String(x.category||"").toLowerCase()===legacyCategory).map(x=>({...x}));
+const aliases=legacyCategory==="magic item"?["magic item","magic items"]:["chaos mutation","chaos mutations"];
+return (u&&u.customEquipment||[]).filter(x=>aliases.includes(String(x.category||"").toLowerCase())).map(x=>({...x}));
 }
 function addUnitListItem(key){
 const magic=key==="magicItems",prefix=magic?"unitMagicItem":"unitChaosMutation";
