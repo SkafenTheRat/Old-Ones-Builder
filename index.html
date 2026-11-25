@@ -2338,11 +2338,456 @@ show();
 </script>
 
 <script>
+const commonMagicItemDetails = {
+  "Ogre Blade": {
+    "desc": "Combat weapon. The wielder attacks at Strength +2 and AP -2; the weapon has Armour Bane (1), Magical Attacks and Multiple Wounds (D3).",
+    "profile": [
+      "Combat",
+      "S+2",
+      "-2",
+      "Armour Bane (1), Magical Attacks, Multiple Wounds (D3)"
+    ]
+  },
+  "Cackling Blade": {
+    "desc": "Combat weapon. The wielder attacks at Strength +1 and AP -1, with Extra Attacks (+D6) and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Extra Attacks (+D6), Magical Attacks"
+    ],
+    "notes": "If the D6 rolled for Extra Attacks is a natural 6, the wielder immediately loses one Wound."
+  },
+  "Sword of Battle": {
+    "desc": "Combat weapon. The wielder attacks at Strength +1 and AP -1; the weapon has Armour Bane (1), Extra Attacks (+1) and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Armour Bane (1), Extra Attacks (+1), Magical Attacks"
+    ]
+  },
+  "Duellist's Blades": {
+    "desc": "Paired combat weapons. They attack at the wielder's Strength with AP -1 and have Extra Attacks (+2), Magical Attacks and Requires Two Hands.",
+    "profile": [
+      "Combat",
+      "S",
+      "-1",
+      "Extra Attacks (+2), Magical Attacks, Requires Two Hands"
+    ]
+  },
+  "Dragon Slaying Sword": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength and has Magical Attacks and Monster Slayer.",
+    "profile": [
+      "Combat",
+      "S",
+      "-",
+      "Magical Attacks, Monster Slayer"
+    ]
+  },
+  "Meteor Hammer": {
+    "desc": "Two-handed combat weapon. It attacks at the wielder's Strength with AP -3 and has Magical Attacks and Requires Two Hands.",
+    "profile": [
+      "Combat",
+      "S",
+      "-3",
+      "Magical Attacks, Requires Two Hands"
+    ],
+    "notes": "When rolling To Wound with this weapon, a result of 3+ always wounds, regardless of the target's Toughness."
+  },
+  "Sword of Reaving": {
+    "desc": "Combat weapon. It attacks at Strength +1 and AP -1, with Extra Attacks (+D3) and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Extra Attacks (+D3), Magical Attacks"
+    ],
+    "notes": "After resolving its attacks, if the wielder caused no Wounds, the wielder suffers D3 Strength 4 hits with AP -1."
+  },
+  "Flail of Wrecks": {
+    "desc": "Combat weapon. It attacks at Strength +2 and AP -2, with Armour Bane (1), Magical Attacks and Multiple Wounds (2).",
+    "profile": [
+      "Combat",
+      "S+2",
+      "-2",
+      "Armour Bane (1), Magical Attacks, Multiple Wounds (2)"
+    ],
+    "notes": "The Strength bonus and Armour Bane (1) apply only against enemy models charged by the wielder that turn. Each natural 1 rolled To Wound by the wielder during the Combat phase permanently reduces their Initiative by 1 (to a minimum of 1) for the rest of the battle."
+  },
+  "Headsman's Axe": {
+    "desc": "Two-handed combat weapon. It attacks at Strength +1 and AP -1, with Killing Blow, Magical Attacks and Requires Two Hands.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Killing Blow, Magical Attacks, Requires Two Hands"
+    ]
+  },
+  "Grim Verdict": {
+    "desc": "Two-handed combat weapon. It attacks at Strength +3 and AP -1, with Armour Bane (2), Furious Charge, Impetuous, Magical Attacks, Requires Two Hands and Strike Last.",
+    "profile": [
+      "Combat",
+      "S+3",
+      "-1",
+      "Armour Bane (2), Furious Charge, Impetuous, Magical Attacks, Requires Two Hands, Strike Last"
+    ],
+    "notes": "If the wielder loses a round of combat, they suffer one Wound. No Armour Save is permitted against this Wound, but Ward and Regeneration saves may be taken normally."
+  },
+  "Spelleater Axe": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength with AP -1 and has Magical Attacks and Magic Resistance (-2).",
+    "profile": [
+      "Combat",
+      "S",
+      "-1",
+      "Magical Attacks, Magic Resistance (-2)"
+    ]
+  },
+  "Giant Blade": {
+    "desc": "Combat weapon. It attacks at Strength +1 and has Armour Bane (2), Magical Attacks and Multiple Wounds (2).",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-",
+      "Armour Bane (2), Magical Attacks, Multiple Wounds (2)"
+    ]
+  },
+  "Hell-forged Axe": {
+    "desc": "Combat weapon. It attacks at Strength +1 and AP -1, with Armour Bane (3), Flaming Attacks and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Armour Bane (3), Flaming Attacks, Magical Attacks"
+    ]
+  },
+  "Sword of Sorrow": {
+    "desc": "Missile weapon with a 30-inch range. It attacks at Strength 5 and AP -1, with Armour Bane (2), Magical Attacks and Multiple Wounds (2).",
+    "profile": [
+      "30\"",
+      "5",
+      "-1",
+      "Armour Bane (2), Magical Attacks, Multiple Wounds (2)"
+    ],
+    "notes": "This is a missile weapon and cannot be used in combat. Wounds caused by it cannot be saved by Ward or Regeneration saves."
+  },
+  "Sword of Swiftness": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength and has Magical Attacks and Strike First.",
+    "profile": [
+      "Combat",
+      "S",
+      "-",
+      "Magical Attacks, Strike First"
+    ]
+  },
+  "Berserker Blade": {
+    "desc": "Combat weapon. It attacks at Strength +1, with Extra Attacks (+1), Impetuous and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-",
+      "Extra Attacks (+1), Impetuous, Magical Attacks"
+    ],
+    "notes": "The wielder has the Impetuous special rule."
+  },
+  "Hunter's Scorn": {
+    "desc": "Missile weapon with a 30-inch range. It attacks at Strength 5 and AP -1, with Armour Bane (1), Magical Attacks and Multiple Shots (2).",
+    "profile": [
+      "30\"",
+      "5",
+      "-1",
+      "Armour Bane (1), Magical Attacks, Multiple Shots (2)"
+    ],
+    "notes": "If an enemy model with at least 2 Wounds suffers one or more unsaved Wounds from this weapon, that model and its unit suffer -1 Initiative for the rest of the battle (to a minimum of 1). If the wielder fails to wound the target, this effect is not applied."
+  },
+  "Sword of Might": {
+    "desc": "Combat weapon. It attacks at Strength +1 and AP -1, with Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S+1",
+      "-1",
+      "Magical Attacks"
+    ]
+  },
+  "Biting Blade": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength and AP -2, with Armour Bane (1) and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S",
+      "-2",
+      "Armour Bane (1), Magical Attacks"
+    ]
+  },
+  "Sword of Striking": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength and has Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S",
+      "-",
+      "Magical Attacks"
+    ],
+    "notes": "The wielder has a +1 modifier to rolls To Hit during the Combat phase."
+  },
+  "Burning Blade": {
+    "desc": "Combat weapon. It attacks at the wielder's Strength, with Flaming Attacks and Magical Attacks.",
+    "profile": [
+      "Combat",
+      "S",
+      "-",
+      "Flaming Attacks, Magical Attacks"
+    ]
+  },
+  "Armour of Destiny": {
+    "desc": "Heavy armour. In addition, the wearer has a 4+ Ward save against any Wounds suffered."
+  },
+  "Bedazzling Helm": {
+    "desc": "Infantry or Cavalry only; may be worn in addition to other armour. It improves the wearer's Armour Value by 1, to a maximum of 2+. Enemy models that direct attacks against the wearer in the Combat phase suffer -1 To Hit."
+  },
+  "Armour of Dark Faith": {
+    "desc": "Infantry or Cavalry only. This is Light Armour. The wearer may re-roll failed Armour Saves. As soon as the wearer loses a Wound, this re-roll ability is lost and the item counts as ordinary Light Armour for the rest of the battle."
+  },
+  "Armour of Silvered Steel": {
+    "desc": "Armour that grants its wearer an Armour Value of 3+. This value cannot be improved."
+  },
+  "Glittering Scales": {
+    "desc": "Light Armour. Once per turn, you may force an opponent to re-roll one roll To Hit made against the wearer."
+  },
+  "Scale of False Promise": {
+    "desc": "Infantry or Cavalry only. This is Heavy Armour. The wearer gains +1 Toughness and +1 Wound, but becomes subject to Stupidity. If already subject to Stupidity, apply an additional +1 modifier to the dice roll for each Stupidity test."
+  },
+  "Shield of the Warrior True": {
+    "desc": "Shield. The bearer has a 5+ Ward save against Wounds suffered during the Shooting phase."
+  },
+  "Levitating Shield": {
+    "desc": "Infantry only. Counts as a shield and may be used alongside a weapon with Requires Two Hands during combat."
+  },
+  "Spellshield": {
+    "desc": "Shield. The bearer has a 5+ Ward save against Wounds caused by Magic Missile, Magical Vortex or Assailment spells."
+  },
+  "Armour of Meteoric Iron": {
+    "desc": "Grants an Armour Value of 5+. This value can neither be improved nor reduced."
+  },
+  "Mantle of Drifting Shadow": {
+    "desc": "Infantry only. This is Light Armour. The wearer cannot be chosen as the target of shooting attacks or spells made from more than 6 inches away. The wearer also gains +1 Movement and the Loner special rule."
+  },
+  "Trailblazer's Hauberk": {
+    "desc": "Infantry only. This is Heavy Armour. The wearer gains Move Through Cover and Scouts."
+  },
+  "Enchanted Shield": {
+    "desc": "Shield. The bearer has a 6+ Ward save against Wounds caused by non-magical enemy attacks."
+  },
+  "Charmed Shield": {
+    "desc": "Shield. Once per game, it grants a 5+ Ward save against one Wound. After this Ward save has been used, it becomes an ordinary non-magical shield."
+  },
+  "Dawnstone": {
+    "desc": "The bearer may re-roll Armour Save rolls of a natural 1."
+  },
+  "Icon of Fortitude": {
+    "desc": "Infantry or Cavalry only. The bearer is unaffected by Multiple Wounds (X): an attack with that special rule can inflict only one Wound on the bearer."
+  },
+  "Ironhide Talisman": {
+    "desc": "Infantry only. When an enemy model successfully hits the bearer in the Shooting or Combat phase, that enemy must re-roll To Wound rolls of a natural 6. This has no effect on attacks that hit automatically."
+  },
+  "Talisman of Protection": {
+    "desc": "The bearer has a 5+ Ward save against any Wounds suffered."
+  },
+  "Amulet of Spell Attraction": {
+    "desc": "Once per turn, when a friendly unit within the bearer's Command range is targeted by a Magic Missile or Hex, the bearer may take a Leadership test. If passed, the bearer may redirect the spell to themselves instead, even if they are out of range or would not normally be a legal target; resolve the spell against the bearer."
+  },
+  "Paymaster's Coin": {
+    "desc": "Single use. The bearer may re-roll failed rolls To Hit during the Combat phase."
+  },
+  "Obsidian Lodestone": {
+    "desc": "A model may carry up to three. One grants Magic Resistance (-1), two grant Magic Resistance (-2), and three grant Magic Resistance (-3)."
+  },
+  "Periapt of Soul Exchange": {
+    "desc": "Single use. During the bearer's Command sub-phase, remove D3 friendly models within their Command range as casualties. The bearer immediately recovers the same number of lost Wounds."
+  },
+  "Luckstone": {
+    "desc": "Single use. The bearer may re-roll one failed Armour Save."
+  },
+  "Banner of Iron Resolve": {
+    "desc": "The unit carrying this standard gains Stubborn."
+  },
+  "Banner of the Dark Heart": {
+    "desc": "When required to take a Fear, Panic or Terror test, the unit may roll one additional D6 and discard the highest result. The unit cannot benefit from the General's Inspiring Presence."
+  },
+  "Banner of the Steadfast": {
+    "desc": "Infantry only. If the unit loses a round of combat, it may Fall Back in Good Order even when the winning side has more than twice its Unit Strength."
+  },
+  "Totem of Wrath": {
+    "desc": "During a turn in which the unit charged, its models improve the Armour Piercing of their weapons by 1 and may re-roll To Wound rolls of a natural 1."
+  },
+  "Razor Standard": {
+    "desc": "The unit gains Armour Bane (2)."
+  },
+  "Banner of Swirling Wind": {
+    "desc": "Enemy models shooting at the unit suffer an additional -1 modifier to their rolls To Hit."
+  },
+  "Rampaging Banner": {
+    "desc": "When the unit declares a charge, it may re-roll its Charge roll."
+  },
+  "The Blazing Banner": {
+    "desc": "The unit gains Flaming Attacks."
+  },
+  "Monster Hunter's Tapestry": {
+    "desc": "Enemy units cannot make Stomp Attacks against the unit carrying this standard."
+  },
+  "War Banner": {
+    "desc": "The unit adds +1 to its combat result."
+  },
+  "Standard of the Fell Warrior": {
+    "desc": "Single use. During the Remaining Moves sub-phase, the unit may make a free redress the ranks manoeuvre immediately before moving. It then moves normally, but cannot turn or make a quick turn."
+  },
+  "Wizarding Hat": {
+    "desc": "The wearer becomes a Level 1 Wizard and knows one randomly generated spell from a Lore of Magic chosen by the owning player. The wearer also becomes subject to Stupidity."
+  },
+  "Arch-Lightning Rod": {
+    "desc": "Single use. During their Command sub-phase, if the bearer is not engaged in combat, they may take a Leadership test using their unmodified Leadership. If passed, enemy units cannot use Fly (X) until the bearer's next Start of Turn sub-phase."
+  },
+  "Flying Carpet": {
+    "desc": "Regular Infantry or Heavy Infantry only. The bearer gains Fly (8) and Swiftstride, but cannot join a unit."
+  },
+  "Healing Potion": {
+    "desc": "Single use. The bearer may consume it during their Command sub-phase to immediately recover D3 lost Wounds."
+  },
+  "Ruby Ring of Ruin": {
+    "desc": "The bearer may cast Fireball from Battle Magic as a Bound spell with Power Level 1.",
+    "table": {
+      "headers": [
+        "Spell",
+        "Lore",
+        "Casting method",
+        "Power Level"
+      ],
+      "rows": [
+        [
+          "Fireball",
+          "Battle Magic",
+          "Bound spell",
+          "1"
+        ]
+      ]
+    }
+  },
+  "Potion of Fervour": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it to gain +D3 Attacks (to a maximum of 10) until the end of the turn."
+  },
+  "Potion of Strength": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it to gain +D3 Strength (to a maximum of 10) until the end of the turn."
+  },
+  "Ring of Doom": {
+    "desc": "The bearer may cast Doombolt from Dark Magic as a Bound spell with Power Level 2. Each time it is successfully cast, the opponent rolls a D6; on 4+, the bearer's Toughness is reduced by 1 (to a minimum of 1).",
+    "table": {
+      "headers": [
+        "Spell",
+        "Lore",
+        "Casting method",
+        "Power Level"
+      ],
+      "rows": [
+        [
+          "Doombolt",
+          "Dark Magic",
+          "Bound spell",
+          "2"
+        ]
+      ]
+    }
+  },
+  "Becalming Orb": {
+    "desc": "Single use. The bearer casts this Power Level 1 Bound spell. Until the next Start of Turn sub-phase, enemy Wizards within 15 inches of the caster when they attempt to cast must increase that spell's Casting Value by 2.",
+    "table": {
+      "headers": [
+        "Spell type",
+        "Casting Value",
+        "Range",
+        "Power Level"
+      ],
+      "rows": [
+        [
+          "Hex",
+          "8+",
+          "Self",
+          "1"
+        ]
+      ]
+    }
+  },
+  "Potion of Toughness": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it to gain +D3 Toughness (to a maximum of 10) until the end of the turn."
+  },
+  "Daemon-Blooded Steed": {
+    "desc": "Cavalry models only. The bearer's mount gains +1 Movement, +1 Strength and +1 Attacks (each to a maximum of 10), and also gains Impetuous."
+  },
+  "Elixir of Power": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it. Until their next Start of Turn sub-phase, they gain +1 Strength, +1 Attacks and +1 Initiative (each to a maximum of 10). When the effect ends, the bearer loses one Wound; this Wound cannot be recovered by Regeneration."
+  },
+  "Potion of Speed": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it to gain +D3 Initiative (to a maximum of 10) until the end of the turn."
+  },
+  "Potion of Foolhardiness": {
+    "desc": "Single use. During the bearer's Command sub-phase, they may consume it to gain Immune to Psychology until the end of the turn."
+  },
+  "Feedback Scroll": {
+    "desc": "Single use. Instead of making a Wizardly Dispel attempt, the bearer may use the scroll. Resolve the spell normally, then roll 2D6; for each result of 4+, the casting Wizard loses one Wound."
+  },
+  "Rod of Might": {
+    "desc": "The bearer adds +1 to Casting results. However, a natural double 1 or double 2 on a Casting roll causes a Miscast instead of only a natural double 1."
+  },
+  "Scroll of Transmogrification": {
+    "desc": "Single use. Instead of making a Wizardly Dispel attempt, the bearer may use this scroll; resolve the spell normally. The casting player then rolls a D6: if the result is higher than the casting Wizard's Level of Wizardry, that Wizard is transformed into a frog. While transformed, the Wizard cannot cast or dispel spells or use equipment, and all characteristics except Wounds become 1. At the start of each turn, roll a D6 for each transformed Wizard; on 4+, they return to normal."
+  },
+  "Wand of Jet": {
+    "desc": "The bearer adds +1 to Casting and Dispel rolls. If any natural double is rolled on either type of roll, the wand is destroyed and cannot be used again. The +1 modifies the result and does not cancel a natural double 1."
+  },
+  "Staff of Quietude": {
+    "desc": "During their Command sub-phase, the bearer may take a Leadership test. If passed, all Remains in Play spells currently in play are dispelled, including friendly spells."
+  },
+  "Lore Familiar": {
+    "desc": "The Wizard does not randomly generate spells. Instead, they choose which spells they know from their chosen Lore, including that Lore's signature spell."
+  },
+  "Scroll of Disruption": {
+    "desc": "Once per turn, the bearer may re-roll a Dispel roll. Re-roll all dice involved, including bonus or discard dice from special rules or magic items."
+  },
+  "Scroll of Invocation": {
+    "desc": "0-1 per Wizard. Single use. The bearer uses it instead of making a Casting roll; the spell is cast as though the caster had rolled the minimum Casting Value. The opponent may still attempt to dispel it."
+  },
+  "Tome of Spellcraft": {
+    "desc": "Once per turn, the bearer may re-roll a Casting roll. Re-roll all dice involved, including bonus or discard dice from special rules or magic items."
+  },
+  "Infernal Familiar": {
+    "desc": "The Wizard may choose Doombolt or Winds of Chaos in addition to their other spells. If they suffer a Miscast while casting the chosen spell, they cannot cast that spell again for the rest of the game, in addition to resolving the Miscast table's effects."
+  },
+  "Dispel Scroll": {
+    "desc": "Single use. When attempting a Wizardly Dispel, the Wizard may use this scroll to roll one additional D6 and discard the lowest die. If any two dice show a natural double 1, the Wizard is Outclassed in the Art."
+  },
+  "Power Scroll": {
+    "desc": "Single use. When casting a spell, the Wizard may use this scroll to roll one additional D6 and discard the lowest die. If any two dice show a natural double 1, the spell is Miscast."
+  },
+  "Arcane Familiar": {
+    "desc": "The Wizard knows spells from two Lores of Magic instead of one. Generate spells separately for each Lore and re-roll duplicates normally. The Wizard may replace one randomly generated spell with the signature spell from the same Lore."
+  },
+  "Earthing Rod": {
+    "desc": "Single use. When the bearer suffers a Miscast, they may re-roll the result on the Miscast table."
+  }
+};
+const commonMagicItemCategoryRules = {
+  "Magic Weapon": "A magic weapon cannot be used with an additional hand weapon to gain an extra attack, and cannot be set aside in favour of a mundane equivalent. If the wielder has multiple magic combat weapons, choose one when their combat is selected and keep using it for that combat unless the weapon says otherwise. If they have multiple magic missile weapons, choose one when selected to shoot.",
+  "Magic Armour": "A model may buy a magical equivalent only if it is equipped, or may be equipped, with the relevant armour, shield or barding. A model may wear only one suit of armour and carry one shield; a mount may wear only one barding. Magic armour replaces the mundane equivalent.",
+  "Magic Standard": "A unit must include a standard bearer to purchase a magic standard. The only character allowed to carry a magic standard is the army's Battle Standard Bearer.",
+  "Enchanted Item": "A model can consume only one potion (of any type) per Command sub-phase.",
+  "Arcane Item": "Only Wizards may purchase Arcane Items."
+};
+
 function seedMagicItemCatalogue(){
- const common=[["Ogre Blade","Magic Weapon",75],["Cackling Blade","Magic Weapon",65],["Sword of Battle","Magic Weapon",60],["Duellist's Blades","Magic Weapon",55],["Dragon Slaying Sword","Magic Weapon",50],["Meteor Hammer","Magic Weapon",50],["Headsman's Axe","Magic Weapon",45],["Spelleater Axe","Magic Weapon",35],["Giant Blade","Magic Weapon",30],["Hell-forged Axe","Magic Weapon",30],["Sword of Sorrow","Magic Weapon",30],["Sword of Swiftness","Magic Weapon",25],["Berserker Blade","Magic Weapon",20],["Sword of Might","Magic Weapon",20,true],["Biting Blade","Magic Weapon",15],["Sword of Striking","Magic Weapon",15,true],["Burning Blade","Magic Weapon",5,true],["Armour of Destiny","Magic Armour",70],["Bedazzling Helm","Magic Armour",60],["Armour of Silvered Steel","Magic Armour",40],["Glittering Scales","Magic Armour",35],["Shield of the Warrior True","Magic Armour",30],["Levitating Shield","Magic Armour",25],["Spellshield","Magic Armour",25,true],["Armour of Meteoric Iron","Magic Armour",20],["Trailblazer's Hauberk","Magic Armour",20],["Enchanted Shield","Magic Armour",10,true],["Charmed Shield","Magic Armour",5,true],["Dawnstone","Talisman",35],["Icon of Fortitude","Talisman",35],["Ironhide Talisman","Talisman",30],["Talisman of Protection","Talisman",30],["Paymaster's Coin","Talisman",25,true],["Obsidian Lodestone","Talisman",20,true],["Luckstone","Talisman",15,true],["Banner of Iron Resolve","Magic Standard",50],["Banner of the Steadfast","Magic Standard",50],["Totem of Wrath","Magic Standard",50],["Razor Standard","Magic Standard",40],["Banner of Swirling Wind","Magic Standard",30],["Rampaging Banner","Magic Standard",30],["The Blazing Banner","Magic Standard",25],["Monster Hunter's Tapestry","Magic Standard",25],["War Banner","Magic Standard",25],["Wizarding Hat","Enchanted Item",45],["Arch-Lightning Rod","Enchanted Item",40],["Flying Carpet","Enchanted Item",40],["Healing Potion","Enchanted Item",35,true],["Ruby Ring of Ruin","Enchanted Item",35],["Potion of Fervour","Enchanted Item",30],["Potion of Strength","Enchanted Item",25,true],["Becalming Orb","Enchanted Item",20],["Potion of Toughness","Enchanted Item",20,true],["Potion of Speed","Enchanted Item",10,true],["Potion of Foolhardiness","Enchanted Item",5,true],["Feedback Scroll","Arcane Item",60],["Scroll of Transmogrification","Arcane Item",50,true],["Wand of Jet","Arcane Item",45],["Staff of Quietude","Arcane Item",35],["Lore Familiar","Arcane Item",30],["Scroll of Disruption","Arcane Item",30],["Tome of Spellcraft","Arcane Item",30],["Dispel Scroll","Arcane Item",20,true],["Power Scroll","Arcane Item",20,true],["Arcane Familiar","Arcane Item",15],["Earthing Rod","Arcane Item",5]];
+ const common=[["Ogre Blade","Magic Weapon",75],["Cackling Blade","Magic Weapon",65],["Sword of Battle","Magic Weapon",60],["Duellist's Blades","Magic Weapon",55],["Dragon Slaying Sword","Magic Weapon",50],["Meteor Hammer","Magic Weapon",50],["Headsman's Axe","Magic Weapon",45],["Spelleater Axe","Magic Weapon",35],["Giant Blade","Magic Weapon",30],["Hell-forged Axe","Magic Weapon",30],["Sword of Sorrow","Magic Weapon",30],["Sword of Swiftness","Magic Weapon",25],["Berserker Blade","Magic Weapon",20],["Sword of Might","Magic Weapon",20,true],["Biting Blade","Magic Weapon",15],["Sword of Striking","Magic Weapon",15,true],["Burning Blade","Magic Weapon",5,true],["Armour of Destiny","Magic Armour",70],["Bedazzling Helm","Magic Armour",60],["Armour of Silvered Steel","Magic Armour",40],["Glittering Scales","Magic Armour",35],["Shield of the Warrior True","Magic Armour",30],["Levitating Shield","Magic Armour",25],["Spellshield","Magic Armour",25,true],["Armour of Meteoric Iron","Magic Armour",20],["Trailblazer's Hauberk","Magic Armour",20],["Enchanted Shield","Magic Armour",10,true],["Charmed Shield","Magic Armour",5,true],["Dawnstone","Talisman",35],["Icon of Fortitude","Talisman",35],["Ironhide Talisman","Talisman",30],["Talisman of Protection","Talisman",30],["Paymaster's Coin","Talisman",25,true],["Obsidian Lodestone","Talisman",20,true],["Luckstone","Talisman",15,true],["Banner of Iron Resolve","Magic Standard",50],["Banner of the Steadfast","Magic Standard",50],["Totem of Wrath","Magic Standard",50],["Razor Standard","Magic Standard",40],["Banner of Swirling Wind","Magic Standard",30],["Rampaging Banner","Magic Standard",30],["The Blazing Banner","Magic Standard",25],["Monster Hunter's Tapestry","Magic Standard",25],["War Banner","Magic Standard",25],["Wizarding Hat","Enchanted Item",45],["Arch-Lightning Rod","Enchanted Item",40],["Flying Carpet","Enchanted Item",40],["Healing Potion","Enchanted Item",35,true],["Ruby Ring of Ruin","Enchanted Item",35],["Potion of Fervour","Enchanted Item",30],["Potion of Strength","Enchanted Item",25,true],["Becalming Orb","Enchanted Item",20],["Potion of Toughness","Enchanted Item",20,true],["Potion of Speed","Enchanted Item",10,true],["Potion of Foolhardiness","Enchanted Item",5,true],["Feedback Scroll","Arcane Item",60],["Scroll of Transmogrification","Arcane Item",50,true],["Wand of Jet","Arcane Item",45],["Staff of Quietude","Arcane Item",35],["Lore Familiar","Arcane Item",30],["Scroll of Disruption","Arcane Item",30],["Tome of Spellcraft","Arcane Item",30],["Dispel Scroll","Arcane Item",20,true],["Power Scroll","Arcane Item",20,true],["Arcane Familiar","Arcane Item",15],["Earthing Rod","Arcane Item",5], ["Sword of Reaving","Magic Weapon",50], ["Flail of Wrecks","Magic Weapon",45], ["Grim Verdict","Magic Weapon",40], ["Hunter's Scorn","Magic Weapon",20], ["Armour of Dark Faith","Magic Armour",40], ["Scale of False Promise","Magic Armour",35], ["Mantle of Drifting Shadow","Magic Armour",20], ["Amulet of Spell Attraction","Talisman",25], ["Periapt of Soul Exchange","Talisman",20], ["Banner of the Dark Heart","Magic Standard",50], ["Standard of the Fell Warrior","Magic Standard",15], ["Ring of Doom","Enchanted Item",25], ["Daemon-Blooded Steed","Enchanted Item",15], ["Elixir of Power","Enchanted Item",15], ["Rod of Might","Arcane Item",50], ["Scroll of Invocation","Arcane Item",30,true], ["Infernal Familiar","Arcane Item",25]];
  magicItems=magicItems.filter(x=>!String(x.id||"").startsWith("mi_"));
  const sources={"Magic Weapon":"magic-weapons","Magic Armour":"magic-armour","Talisman":"talismans","Magic Standard":"magic-standards","Enchanted Item":"enchanted-items","Arcane Item":"arcane-items"};
- common.forEach(([name,type,points,extremelyCommon])=>magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]}));
+ common.forEach(([name,type,points,extremelyCommon])=>{
+  const detail=commonMagicItemDetails[name]||{};
+  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||"",categoryRules:commonMagicItemCategoryRules[type]||"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
+ });
  const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");if(!f)return;
  const beastmen=[
  ["The Black Maul","Magic Weapon",80],["Primeval Club","Magic Weapon",60],["Axe of Men","Magic Weapon",50],["The Axes of Khorgor","Magic Weapon",40],["Mangelder","Magic Weapon",40],["Hunter's Spear","Magic Weapon",35],["The Brass Cleaver","Magic Weapon",30],["Scimitar of Skultar","Magic Weapon",25],
