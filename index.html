@@ -173,7 +173,8 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <main>
 
 <div class="tabs">
-<button class="active" onclick="showTab('units',this)">Units</button>
+<button class="active" onclick="showTab('units',this)">Unit Creator</button>
+<button onclick="showTab('catalogue',this)">Unit Catalogue</button>
 <button onclick="showTab('army',this)">Army</button>
 <button onclick="showTab('infamy',this)">Army of Infamy</button>
 <button onclick="showTab('equipment',this)">Equipment Library</button>
@@ -284,17 +285,12 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <input type="hidden" id="editUnitId">
 </div>
 
+<section id="catalogue" class="tab hidden">
 <div class="panel">
 <h2>Unit Catalogue</h2>
 <div class="grid">
-<div class="field">
-<label>Faction Filter</label>
-<select id="filterFaction" onchange="renderUnits()"></select>
-</div>
-<div class="field">
-<label>Search Units</label>
-<input id="unitSearch" oninput="renderUnits()" placeholder="Enter unit name...">
-</div>
+<div class="field"><label>Faction</label><select id="filterFaction" onchange="renderUnits()"></select></div>
+<div class="field"><label>Unit</label><select id="catalogueUnitSelect" onchange="renderUnits()"><option value="">Select a faction first</option></select></div>
 </div>
 <div id="unitList" class="list-scroll" style="margin-top:15px"></div>
 </div>
@@ -903,9 +899,8 @@ playableArmyFactions().map(f=>`<option value="${f.id}">${esc(f.name)}</option>`)
 
 document.getElementById("uFaction").innerHTML=allFactionOptions;
 
-document.getElementById("filterFaction").innerHTML=
-'<option value="all">All Factions</option>'+
-factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+const catalogueFaction=document.getElementById("filterFaction");
+if(catalogueFaction){const current=catalogueFaction.value;catalogueFaction.innerHTML='<option value="">Select faction</option>'+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");if(factions.some(f=>f.id===current))catalogueFaction.value=current;renderUnits();}
 
 const aFaction=document.getElementById("aFaction");
 if(aFaction) {
@@ -1301,14 +1296,14 @@ return html+'</div>';
 }
 function renderUnits() {
 let faction=document.getElementById("filterFaction").value;
-let q=document.getElementById("unitSearch").value.toLowerCase();
+let unitSelect=document.getElementById("catalogueUnitSelect");
+let previousUnit=unitSelect.value;
+let factionUnits=faction?units.filter(u=>u.factionId===faction).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"})):[];
+unitSelect.innerHTML=faction?'<option value="">Select a unit</option>'+factionUnits.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join(""):'<option value="">Select a faction first</option>';
+if(factionUnits.some(u=>u.id===previousUnit))unitSelect.value=previousUnit;
+let list=factionUnits.filter(u=>u.id===unitSelect.value);
 
-let list=units.filter(u=>
-(faction==="all"||u.factionId===faction)&&
-u.name.toLowerCase().includes(q)
-);
-
-document.getElementById("unitList").innerHTML=list.map(u=>{
+document.getElementById("unitList").innerHTML=!faction?'<div class="empty">Select a faction to browse its units.</div>':!factionUnits.length?'<div class="empty">No units have been created for this faction yet.</div>':!unitSelect.value?'<div class="empty">Select a unit to view its profile.</div>':list.map(u=>{
 let f=factions.find(x=>x.id===u.factionId);
 
 const unitStatKeys=["M","WS","BS","S","T","W","I","A","Ld"];
@@ -1358,7 +1353,7 @@ ${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
 ${u.sourceUrl?`<p class="muted"><a href="${esc(u.sourceUrl)}" target="_blank" rel="noopener">Source profile</a></p>`:""}
 </div>
 `;
-}).join("")||'<div class="empty">No units found. Create your first unit above.</div>';
+}).join("")||'';
 }
 
 function addLibraryRule() {
