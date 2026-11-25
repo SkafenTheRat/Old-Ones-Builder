@@ -1377,7 +1377,9 @@ const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
 }).join("")}</div>
 
-${(u.customEquipment||[]).length?`<div><b>Custom Unit Equipment</b>${renderUnitCustomEquipment(u.customEquipment)}</div>`:""}
+${(u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?`<div><b>Normal Equipment</b>${renderUnitCustomEquipment((u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())))}</div>`:""}
+${unitItemList(u,"magicItems","magic item").length?`<div><b>Magic Items</b>${renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))}</div>`:""}
+${unitItemList(u,"chaosMutations","chaos mutation").length?`<div><b>Chaos Mutations</b>${renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))}</div>`:""}
 
 <div>
 ${assigned.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}
@@ -1519,7 +1521,9 @@ return `<article class="unit-card compact">
 </header>
 <table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table><p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <p class="compact-line"><strong>Included:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
-<p class="compact-line"><strong>Custom equipment:</strong> ${customEquipment.length?customEquipment.map(e=>esc(e.name)).join(", "):"—"}</p>
+<p class="compact-line"><strong>Normal equipment:</strong> ${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).map(e=>esc(e.name)).join(", ")||"—"}</p>
+<p class="compact-line"><strong>Magic Items:</strong> ${unitItemList(profile,"magicItems","magic item").map(e=>esc(e.name)).join(", ")||"—"}</p>
+<p class="compact-line"><strong>Chaos Mutations:</strong> ${unitItemList(profile,"chaosMutations","chaos mutation").map(e=>esc(e.name)).join(", ")||"—"}</p>
 <p class="compact-line"><strong>Options:</strong> ${options.length?options.map(o=>{
 const item=equipmentById(o.id);
 return item?`${esc(item.name)} (+${parsePointCost(o.cost)} pts)`:"";
@@ -1554,10 +1558,9 @@ if(!item) return "";
 return `<li><strong>${esc(item.name)}</strong> <span class="pts">+${parsePointCost(o.cost)} pts</span>${item.desc?` — ${esc(item.desc)}`:""}</li>`;
 }).join("")}</ul>`:'<p class="empty-line">No paid options.</p>'}
 </section>
-<section>
-<h3>Custom Unit Equipment</h3>
-${customEquipment.length?renderPdfUnitCustomEquipment(customEquipment):'<p class="empty-line">No custom equipment.</p>'}
-</section>
+<section><h3>Normal Equipment</h3>${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?renderPdfUnitCustomEquipment(customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase()))):'<p class="empty-line">No custom equipment.</p>'}</section>
+<section><h3>Magic Items</h3>${unitItemList(profile,"magicItems","magic item").length?renderUnitSimpleItems(unitItemList(profile,"magicItems","magic item")):'<p class="empty-line">No magic items.</p>'}</section>
+<section><h3>Chaos Mutations</h3>${unitItemList(profile,"chaosMutations","chaos mutation").length?renderUnitSimpleItems(unitItemList(profile,"chaosMutations","chaos mutation")):'<p class="empty-line">No Chaos Mutations.</p>'}</section>
 <section>
 <h3>Special Rules</h3>
 ${assigned.length||custom.length?`<ul class="plain">${assigned.map(r=>`<li><strong>${esc(r.label)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}${custom.map(r=>`<li><strong>${esc(r.name)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No special rules.</p>'}
