@@ -1941,7 +1941,13 @@ function ensureArmyEntryProfileState(entry,unit){
  entry.selectedOptionIds.slice().forEach(id=>{const gear=equipmentById(id);if(!gear)return;const name=String(gear.name||"").toLowerCase(),m=magic.find(x=>String(x.name).toLowerCase()===name),c=mutations.find(x=>String(x.name).toLowerCase()===name);if(m){if(!entry.selectedMagicItemIds.includes(m.id))entry.selectedMagicItemIds.push(m.id);entry.selectedOptionIds=entry.selectedOptionIds.filter(x=>x!==id);}else if(c){if(!entry.selectedChaosMutationIds.includes(c.id))entry.selectedChaosMutationIds.push(c.id);entry.selectedOptionIds=entry.selectedOptionIds.filter(x=>x!==id);}});
  const all=armyProfileEquipmentItems(unit),defaults=defaultArmyEquipmentChoices(unit,entry.selectedOptionIds);
  if(!entry.selectedEquipmentChoices||typeof entry.selectedEquipmentChoices!=="object")entry.selectedEquipmentChoices={};
- ["Weapons","Ranged Weapons","Armour"].forEach(group=>{const v=entry.selectedEquipmentChoices[group],valid=(v==="__none__"&&group==="Armour")||all.some(x=>x.id===v&&armyEquipmentGroup(x)===group);if(!valid)entry.selectedEquipmentChoices[group]=defaults[group]||"";});
+ ["Weapons","Ranged Weapons","Armour"].forEach(group=>{
+  const v=entry.selectedEquipmentChoices[group],valid=(v==="__none__"&&group==="Armour")||all.some(x=>x.id===v&&armyEquipmentGroup(x)===group);
+  if(!valid)entry.selectedEquipmentChoices[group]=defaults[group]||"";
+  const chosen=entry.selectedEquipmentChoices[group];
+  const radioOptionIds=new Set((profile.optionEquipment||[]).filter(o=>{const item=equipmentById(o.id);return item&&armyEquipmentGroup(item)===group;}).map(o=>o.id));
+  entry.selectedOptionIds=entry.selectedOptionIds.filter(id=>!radioOptionIds.has(id)||id===chosen);
+ });
  const base=(profile.basicEquipmentIds||[]).filter(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Options";});
  const existing=Array.isArray(entry.selectedAdditionalEquipmentIds)?entry.selectedAdditionalEquipmentIds:[];
  const optional=entry.selectedOptionIds.filter(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Options";});
@@ -2115,7 +2121,7 @@ function renderArmyEntriesByCategory(entries){
    const additionalHtml=additional.length?'<section class="army-unit-profile-section"><h4>Options:</h4><div class="army-profile-control-list">'+additional.map(x=>{const checked=(entry.selectedAdditionalEquipmentIds||[]).includes(x.id);return '<label class="army-profile-control"><input type="checkbox" '+(checked?'checked':'')+(x.included?' disabled':'')+' onchange="toggleArmyEntryAdditionalEquipment(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(x.id)+'&quot;,this.checked)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+(x.included?'free':parsePointCost(x.cost)+' pts')+'</em></label>';}).join("")+'</div></section>':"";
    const keys=["M","WS","BS","S","T","W","I","A","Ld"],statHead=keys.map(x=>'<th>'+x+'</th>').join(""),statBody=keys.map(x=>'<td>'+esc((profile.stats||{})[x]||"-")+'</td>').join("");
    const points=armyEntryUnitCost(entry),hero=String(unit.category||"").toLowerCase()==="hero";
-   const general=hero?'<label class="army-profile-general"><input type="checkbox" '+(armyEntriesGeneral(armies.find(a=>a.id===selectedArmyId),entry.id)?'checked':'')+' onchange="setArmyEntryGeneral(&quot;'+esc(entry.id)+'&quot;,this.checked)"> General</label>':"";
+   const general=hero?'<label class="army-profile-general"><input type="checkbox" '+(armyEntriesGeneral(armies.find(a=>a.id===selectedArmyId),entry.id)?'checked':'')+' onchange="setArmyEntryGeneral(&quot;'+esc(entry.id)+'&quot;,this.checked)"> General <em class="army-profile-cost">free</em></label>':"";
    const rules=unitRuleDetails(profile).map(x=>'<a class="rlink" data-name="'+esc(x.label)+'" title="'+esc(x.desc||x.label)+'">'+esc(x.label)+'</a>');
    (profile.customRules||[]).forEach(x=>rules.push('<span title="'+esc(x.desc||"")+'">'+esc(x.name)+'</span>'));
    const rulesHtml='<section class="army-unit-profile-section army-profile-rules"><h4>Special Rules</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
