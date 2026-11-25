@@ -56,6 +56,18 @@ overflow-wrap:anywhere;
 }
 .tabs button.active { box-shadow:inset 3px 0 0 #17120d; }
 
+.tabs button { display:flex; align-items:center; justify-content:flex-start; gap:8px; cursor:grab; user-select:none; }
+.tabs button:active { cursor:grabbing; }
+.tabs .tab-drag-handle {
+display:inline-flex; align-items:center; justify-content:center;
+flex:0 0 14px; width:14px; height:18px; cursor:grab;
+touch-action:none; color:var(--muted); opacity:.8;
+}
+.tabs .tab-drag-handle::before { content:"⠿"; font-size:16px; line-height:1; }
+.tabs button.tab-dragging { opacity:.45; border-color:var(--gold); cursor:grabbing; }
+.tabs.is-reordering { border-color:var(--gold); }
+
+
 .tabs button.active { background:var(--gold); color:#17120d; }
 .panel {
 background:var(--panel); border:1px solid var(--line);
@@ -196,14 +208,14 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <main>
 
 <div class="tabs">
-<button class="active" onclick="showTab('units',this)">Unit Creator</button>
-<button onclick="showTab('catalogue',this)">Unit Catalogue</button>
-<button onclick="showTab('army',this)">Army</button>
-<button onclick="showTab('infamy',this)">Army of Infamy</button>
-<button onclick="showTab('equipment',this)">Equipment Library</button>
-<button onclick="showTab('rules',this)">Special Rules Library</button>
-<button onclick="showTab('data',this)">Data Management</button>
-<button onclick="showTab('workshop',this)">Builder Workshop</button>
+<button class="active" onclick="showTab('units',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Unit Creator</button>
+<button onclick="showTab('catalogue',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Unit Catalogue</button>
+<button onclick="showTab('army',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Army</button>
+<button onclick="showTab('infamy',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Army of Infamy</button>
+<button onclick="showTab('equipment',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Equipment Library</button>
+<button onclick="showTab('rules',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Special Rules Library</button>
+<button onclick="showTab('data',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Data Management</button>
+<button onclick="showTab('workshop',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Builder Workshop</button>
 </div>
 
 <section id="units" class="tab">
@@ -3076,6 +3088,95 @@ magicItems.forEach(x=>{x.sourceUrl=magicItemRuleUrl(x);});
 factionMagicItems.forEach(x=>{x.sourceUrl=magicItemRuleUrl(x);});
 save();
 linkifyNames();
+</script>
+
+
+<script>
+(function initDraggableTabs(){
+ const nav=document.querySelector(".tabs");
+ if(!nav)return;
+ const orderKey="ow_tab_navigation_order_v1";
+ const getButtons=()=>Array.from(nav.querySelectorAll("button"));
+ getButtons().forEach(button=>{
+  const match=String(button.getAttribute("onclick")||"").match(/showTab\('([^']+)'/);
+  if(match)button.dataset.tabId=match[1];
+  button.draggable=false;
+  if(!button.querySelector(".tab-drag-handle")){
+   const handle=document.createElement("span");
+   handle.className="tab-drag-handle";
+   handle.setAttribute("aria-hidden","true");
+   handle.title="Drag to reorder";
+   button.insertBefore(handle,button.firstChild);
+  }
+  button.title=(button.title?button.title+" · ":"")+"Drag to reorder; use Alt + Arrow keys";
+ });
+ function saveOrder(){
+  try{localStorage.setItem(orderKey,JSON.stringify(getButtons().map(b=>b.dataset.tabId).filter(Boolean)));}catch(e){}
+ }
+ function restoreOrder(){
+  try{
+   const saved=JSON.parse(localStorage.getItem(orderKey)||"[]");
+   if(!Array.isArray(saved))return;
+   const byId=new Map(getButtons().map(b=>[b.dataset.tabId,b]));
+   saved.forEach(id=>{const button=byId.get(id);if(button){nav.appendChild(button);byId.delete(id);}});
+  }catch(e){}
+ }
+ restoreOrder();
+ getButtons().forEach(button=>{
+  button.addEventListener("keydown",event=>{
+   if(!event.altKey||!["ArrowUp","ArrowDown"].includes(event.key))return;
+   const buttons=getButtons(),index=buttons.indexOf(button),direction=event.key==="ArrowUp"?-1:1;
+   const next=index+direction;
+   if(next<0||next>=buttons.length)return;
+   event.preventDefault();
+   if(direction<0)nav.insertBefore(button,buttons[next]);
+   else nav.insertBefore(button,buttons[next+1]||null);
+   saveOrder();
+   button.focus();
+  });
+ });
+ let drag=null,suppressClickUntil=0;
+ nav.addEventListener("pointerdown",event=>{
+  const button=event.target.closest(".tabs button");
+  if(!button)return;
+  if(event.pointerType==="mouse"&&event.button!==0)return;
+  // On touch screens use the small grip so ordinary swipes on the menu can still scroll it.
+  if(event.pointerType==="touch"&&!event.target.closest(".tab-drag-handle"))return;
+  drag={button,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,moved:false};
+ });
+ document.addEventListener("pointermove",event=>{
+  if(!drag||event.pointerId!==drag.pointerId)return;
+  if(!drag.moved&&Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY)<5)return;
+  drag.moved=true;
+  drag.button.classList.add("tab-dragging");
+  nav.classList.add("is-reordering");
+  const others=getButtons().filter(button=>button!==drag.button);
+  let before=null;
+  for(const candidate of others){
+   const rect=candidate.getBoundingClientRect();
+   if(event.clientY<rect.top+rect.height/2){before=candidate;break;}
+  }
+  if(before)nav.insertBefore(drag.button,before);
+  else nav.appendChild(drag.button);
+ });
+ function finishDrag(event){
+  if(!drag||(event&&event.pointerId!==drag.pointerId))return;
+  const moved=drag.moved;
+  drag.button.classList.remove("tab-dragging");
+  nav.classList.remove("is-reordering");
+  drag=null;
+  if(moved){saveOrder();suppressClickUntil=Date.now()+500;}
+ }
+ document.addEventListener("pointerup",finishDrag);
+ document.addEventListener("pointercancel",finishDrag);
+ document.addEventListener("click",event=>{
+  if(Date.now()>suppressClickUntil)return;
+  if(!event.target.closest(".tabs button"))return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  suppressClickUntil=0;
+ },true);
+})();
 </script>
 
 </body>
