@@ -2815,8 +2815,8 @@ function renderMagicItems(){
  const categoryLabels={"Magic Weapon":"Magic Weapons","Magic Armour":"Magic Armour","Talisman":"Talismans","Magic Standard":"Magic Standards","Enchanted Item":"Enchanted Items","Arcane Item":"Arcane Items"};
  const a=document.getElementById("magicItemLibrary"),b=document.getElementById("factionMagicItemLibrary");
  const sharedHtml=categories.map(type=>{
-  const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type).toLowerCase().includes(q));
-  const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small></div>').join("");
+  const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q));
+  const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No items match this search.</p>')+'</section>';
  }).join("");
  const priv=factionMagicItems.filter(x=>(x.name+" "+x.type+" "+(x.factionName||"")).toLowerCase().includes(q));
@@ -2864,10 +2864,21 @@ function openMagicItemModal(idOrName){
  if(!item)return;
  document.getElementById("mTitle").textContent=item.name;
  const points=item.points==null?"No points value listed":esc(item.points)+" pts";
- const faction=item.factionName?'<p><strong>Faction:</strong> '+esc(item.factionName)+'</p>':"";
- const common=item.extremelyCommon?'<p><strong>Extremely Common</strong></p>':"";
- const desc=item.desc?'<p>'+esc(item.desc)+'</p>':'<p>Open the individual index entry to read this item’s complete rules, restrictions and interactions.</p>';
- document.getElementById("mBody").innerHTML='<p><strong>Type:</strong> '+esc(item.type)+'</p><p><strong>Points:</strong> '+points+'</p>'+faction+common+desc+'<p><a href="'+esc(magicItemRuleUrl(item))+'" target="_blank" rel="noopener">Open the full rules for '+esc(item.name)+' in the online index</a></p>';
+ let html='<p><strong>Type:</strong> '+esc(item.type||"Magic Item")+'</p><p><strong>Points:</strong> '+points+'</p>';
+ if(item.factionName)html+='<p><strong>Faction:</strong> '+esc(item.factionName)+'</p>';
+ if(item.extremelyCommon)html+='<p><strong>Extremely Common</strong></p>';
+ if(item.categoryRules)html+='<p class="muted"><strong>Category rules:</strong> '+esc(item.categoryRules)+'</p>';
+ if(item.desc)html+='<p>'+esc(item.desc)+'</p>';
+ if(item.profile){
+  const p=item.profile;
+  html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+esc(p.specialRules||"-")+'</td></tr></tbody></table>';
+ }
+ if(item.table&&Array.isArray(item.table.headers)&&Array.isArray(item.table.rows)){
+  html+='<table class="wstats"><thead><tr>'+item.table.headers.map(h=>'<th>'+esc(h)+'</th>').join("")+'</tr></thead><tbody>'+item.table.rows.map(row=>'<tr>'+row.map(cell=>'<td>'+esc(cell)+'</td>').join("")+'</tr>').join("")+'</tbody></table>';
+ }
+ if(item.notes)html+='<p class="wnote"><strong>Notes:</strong> '+esc(item.notes)+'</p>';
+ html+='<p><a href="'+esc(magicItemRuleUrl(item))+'" target="_blank" rel="noopener">Open the full rules for '+esc(item.name)+' in the online index</a></p>';
+ document.getElementById("mBody").innerHTML=html;
  overlay.classList.remove("hidden");
 }
 function openEquipmentModal(idOrName){
