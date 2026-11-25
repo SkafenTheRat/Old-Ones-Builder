@@ -339,7 +339,11 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <section id="catalogue" class="tab hidden">
 <div class="panel">
 <h2>Unit Catalogue</h2>
+<div class="grid">
 <div class="field"><label>Faction</label><select id="filterFaction" onchange="renderUnits()"></select></div>
+<div class="field"><label>Unit Search</label><select id="catalogueUnitSelect" onchange="renderUnits()" disabled><option value="" disabled selected hidden>Select a faction first</option></select></div>
+</div>
+<p class="muted">Choose a faction to display all its units, or select a unit to show only its profile.</p>
 <div id="unitList" class="list-scroll" style="margin-top:15px"></div>
 </div>
 </section>
@@ -1396,9 +1400,19 @@ return html+'</div>';
 }).join("");
 }
 function renderUnits() {
-let faction=document.getElementById("filterFaction").value;
-let factionUnits=faction?units.filter(u=>u.factionId===faction).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"})):[];
-let list=factionUnits;
+const faction=document.getElementById("filterFaction")?.value||"";
+const unitSelect=document.getElementById("catalogueUnitSelect");
+const previousUnit=unitSelect?.value||"";
+const factionUnits=faction?units.filter(u=>u.factionId===faction).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"})):[];
+if(unitSelect){
+ unitSelect.innerHTML=!faction
+  ?'<option value="" disabled selected hidden>Select a faction first</option>'
+  :'<option value="">All units in this faction ('+factionUnits.length+')</option>'+factionUnits.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
+ unitSelect.disabled=!faction||!factionUnits.length;
+ unitSelect.value=factionUnits.some(u=>u.id===previousUnit)?previousUnit:"";
+}
+const selectedUnitId=unitSelect?.value||"";
+const list=selectedUnitId?factionUnits.filter(u=>u.id===selectedUnitId):factionUnits;
 
 document.getElementById("unitList").innerHTML=!faction?'<div class="empty">Select a faction to browse its units.</div>':!factionUnits.length?'<div class="empty">No units have been created for this faction yet.</div>':list.map(u=>{
 let f=factions.find(x=>x.id===u.factionId);
