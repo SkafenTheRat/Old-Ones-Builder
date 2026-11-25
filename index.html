@@ -1600,134 +1600,152 @@ ${profile.desc?`<section><h3>Notes</h3><p class="notes">${esc(profile.desc)}</p>
 </article>`;
 }
 
+let pdfSelectedUnitIds=[];
+try { const stored=JSON.parse(localStorage.getItem("ow_pdf_selected_units")||"[]"); if(Array.isArray(stored))pdfSelectedUnitIds=stored.filter(id=>typeof id==="string"); } catch(e) {}
+function savePdfSelectedUnitIds(){try{localStorage.setItem("ow_pdf_selected_units",JSON.stringify(pdfSelectedUnitIds));}catch(e){}}
+function renderPdfExportControls(){
+ const mode=document.getElementById("pdfExportMode")?.value||"army";
+ const armyControls=document.getElementById("pdfArmyExportControls"),unitControls=document.getElementById("pdfUnitExportControls");
+ if(armyControls)armyControls.classList.toggle("hidden",mode!=="army");
+ if(unitControls)unitControls.classList.toggle("hidden",mode!=="selected");
+ const select=document.getElementById("pdfArmySelect");
+ if(select){
+  const previous=select.value;
+  select.innerHTML='<option value="" disabled>Select an army</option>'+armies.map(army=>{
+   const faction=factions.find(f=>f.id===army.factionId);
+   return '<option value="'+esc(army.id)+'">'+esc(army.name)+' · '+esc(faction?.name||"Unknown faction")+'</option>';
+  }).join("");
+  if(armies.some(x=>x.id===previous))select.value=previous;
+  else if(armies.length)select.value=armies[0].id;
+  if(!armies.length)select.innerHTML='<option value="" disabled selected>No saved armies yet</option>';
+ }
+ renderPdfSelectedUnits();
+}
+function openPdfUnitPicker(){
+ const modal=document.getElementById("pdfUnitPickerModal"),select=document.getElementById("pdfUnitChoice");
+ if(!modal||!select)return;
+ const groups=new Map();
+ units.forEach(unit=>{
+  const label=factions.find(f=>f.id===unit.factionId)?.name||"Other Units";
+  if(!groups.has(label))groups.set(label,[]);
+  groups.get(label).push(unit);
+ });
+ select.innerHTML='<option value="" disabled selected hidden>Select a unit</option>'+[...groups.keys()].sort((a,b)=>a.localeCompare(b)).map(label=>{
+  const options=groups.get(label).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}))
+   .map(unit=>'<option value="'+esc(unit.id)+'">'+esc(unit.name)+' · '+esc(unit.category||"Unit")+'</option>').join("");
+  return '<optgroup label="'+esc(label)+'">'+options+'</optgroup>';
+ }).join("");
+ if(!units.length)select.innerHTML='<option value="" disabled selected>No units available — create units first</option>';
+ modal.classList.remove("hidden");
+}
+function closePdfUnitPicker(){document.getElementById("pdfUnitPickerModal")?.classList.add("hidden");}
+function confirmPdfUnitAdd(){
+ const id=document.getElementById("pdfUnitChoice")?.value||"";
+ if(!id){alert("Choose a unit first.");return;}
+ if(!units.some(unit=>unit.id===id)){alert("This unit is no longer available.");return;}
+ pdfSelectedUnitIds.push(id);savePdfSelectedUnitIds();renderPdfSelectedUnits();closePdfUnitPicker();
+}
+function removePdfSelectedUnit(index){
+ if(index<0||index>=pdfSelectedUnitIds.length)return;
+ pdfSelectedUnitIds.splice(index,1);savePdfSelectedUnitIds();renderPdfSelectedUnits();
+}
+function movePdfSelectedUnit(index,direction){
+ const target=index+direction;
+ if(index<0||target<0||index>=pdfSelectedUnitIds.length||target>=pdfSelectedUnitIds.length)return;
+ [pdfSelectedUnitIds[index],pdfSelectedUnitIds[target]]=[pdfSelectedUnitIds[target],pdfSelectedUnitIds[index]];
+ savePdfSelectedUnitIds();renderPdfSelectedUnits();
+}
+function clearPdfUnitSelection(){
+ if(!pdfSelectedUnitIds.length)return;
+ if(!confirm("Clear the selected unit print list?"))return;
+ pdfSelectedUnitIds=[];savePdfSelectedUnitIds();renderPdfSelectedUnits();
+}
+function renderPdfSelectedUnits(){
+ const el=document.getElementById("pdfSelectedUnits");if(!el)return;
+ const valid=pdfSelectedUnitIds.map((id,index)=>({id,index,unit:units.find(u=>u.id===id)})).filter(x=>x.unit);
+ if(valid.length!==pdfSelectedUnitIds.length){pdfSelectedUnitIds=valid.map(x=>x.id);savePdfSelectedUnitIds();}
+ el.innerHTML=valid.map(({unit,index})=>{
+  const faction=factions.find(f=>f.id===unit.factionId);
+  return '<div class="item"><div class="item-head"><div><strong>'+(index+1)+'. '+esc(unit.name)+'</strong><br><small class="muted">'+esc(faction?.name||"Unknown faction")+' · '+esc(unit.category||"Unit")+'</small></div><span class="actions"><button type="button" onclick="movePdfSelectedUnit('+index+',-1)" '+(index===0?"disabled":"")+' aria-label="Move up">↑</button><button type="button" onclick="movePdfSelectedUnit('+index+',1)" '+(index===valid.length-1?"disabled":"")+' aria-label="Move down">↓</button><button type="button" class="danger" onclick="removePdfSelectedUnit('+index+')">Remove</button></span></div></div>';
+ }).join("")||'<p class="muted">No units added yet. Select Add Unit to build your print list.</p>';
+}
 function exportUnitsPdf() {
-const factionId=document.getElementById("pdfFaction")?.value||"all";
-const compact=(document.getElementById("pdfLayout")?.value||"cards")==="compact";
-const list=units
-.filter(u=>factionId==="all"||u.factionId===factionId)
-.map(normalizeUnit)
-.sort((a,b)=>{
-const fa=factions.find(f=>f.id===a.factionId)?.name||"";
-const fb=factions.find(f=>f.id===b.factionId)?.name||"";
-return fa.localeCompare(fb)||String(a.category||"").localeCompare(String(b.category||""))||String(a.name||"").localeCompare(String(b.name||""));
-});
-
-if(!list.length) {
-alert("No units to export. Create units first.");
-return;
-}
-
-const factionLabel=factionId==="all"?"All Factions":(factions.find(f=>f.id===factionId)?.name||"Faction");
-const stamp=new Date().toLocaleDateString();
-const body=list.map(u=>buildPdfUnitCard(u,compact)).join("");
-const html=`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Unit Catalogue — ${esc(factionLabel)}</title>
+ const mode=document.getElementById("pdfExportMode")?.value||"army";
+ const compact=(document.getElementById("pdfLayout")?.value||"cards")==="compact";
+ let title="",subtitle="",body="",fileName="unit_export",entryCount=0;
+ if(mode==="army"){
+  renderPdfExportControls();
+  const armyId=document.getElementById("pdfArmySelect")?.value||"",army=armies.find(x=>x.id===armyId);
+  if(!army){alert("Choose a saved army to export.");return;}
+  const faction=factions.find(f=>f.id===army.factionId),infamy=armiesOfInfamy.find(x=>x.id===army.armyOfInfamyId);
+  const resolved=(army.entries||[]).map(entry=>{
+   const unit=units.find(x=>x.id===entry.unitId);if(!unit)return null;
+   const profile=normalizeUnit(unit),selectedIds=new Set(entry.selectedOptionIds||[]);
+   const selectedOptions=(profile.optionEquipment||[]).filter(option=>selectedIds.has(option.id));
+   const extras=selectedOptions.reduce((sum,option)=>sum+parsePointCost(option.cost),0);
+   const qty=Math.max(1,parseInt(entry.qty,10)||1);
+   return {unit,qty,entryCost:armyEntryCost(entry),profile:{...profile,points:parsePointCost(profile.points)+extras,optionEquipment:selectedOptions}};
+  }).filter(Boolean);
+  if(!resolved.length){alert("This army has no units to export yet.");return;}
+  const totalModels=resolved.reduce((sum,x)=>sum+x.qty,0),points=armyTotal(army);
+  title="Army List";
+  subtitle=esc(army.name)+" · "+esc(faction?.name||"Unknown faction")+" · "+esc(infamy?.name||"Grand Army")+" · "+totalModels+" model entr"+(totalModels===1?"y":"ies")+" · "+points+(army.pointsLimit?" / "+parsePointCost(army.pointsLimit):"")+" pts";
+  entryCount=resolved.length;
+  body=resolved.map(({unit,qty,entryCost,profile})=>'<div class="roster-entry"><div class="roster-entry-heading"><strong>'+qty+' × '+esc(unit.name)+'</strong><span>'+entryCost+' pts total</span></div>'+buildPdfUnitCard(profile,compact)+'</div>').join("");
+  fileName="army_"+String(army.name||"list").replace(/[^a-z0-9]+/gi,"_").toLowerCase();
+ }else{
+  const list=pdfSelectedUnitIds.map(id=>units.find(unit=>unit.id===id)).filter(Boolean);
+  pdfSelectedUnitIds=list.map(unit=>unit.id);savePdfSelectedUnitIds();
+  if(!list.length){alert("Add at least one unit to the Selected Unit List first.");return;}
+  const factionNames=[...new Set(list.map(unit=>factions.find(f=>f.id===unit.factionId)?.name||"Unknown faction"))];
+  title="Selected Unit List";subtitle=list.length+" selected unit"+(list.length===1?"":" entries")+" · "+esc(factionNames.join(", "));
+  entryCount=list.length;body=list.map(unit=>buildPdfUnitCard(normalizeUnit(unit),compact)).join("");
+  fileName="selected_units";
+ }
+ const stamp=new Date().toLocaleDateString();
+ const html=`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>${esc(title)}</title>
 <style>
-@page { size:A4; margin:14mm; }
-*{box-sizing:border-box;}
-body{
-margin:0; color:#1c1712;
-font-family:Georgia,"Times New Roman",serif;
-background:#f4ebe0;
-}
-.sheet{
-max-width:860px; margin:0 auto; padding:18px 20px 28px;
-}
-.cover{
-border:2px solid #8a6b38; background:linear-gradient(180deg,#fff8ef,#f0e2cf);
-padding:18px 20px; margin-bottom:18px;
-}
-.cover h1{
-margin:0; font-size:28px; letter-spacing:2px; color:#6f5428; text-transform:uppercase;
-}
-.cover p{margin:8px 0 0; color:#5d5348; font-size:14px;}
-.unit-card{
-background:#fffaf3; border:1px solid #b79a64; padding:16px 18px;
-margin:0 0 16px; page-break-inside:avoid; break-inside:avoid;
-box-shadow:inset 0 0 0 1px rgba(255,255,255,.65);
-}
-.unit-head{display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:12px;}
-.eyebrow{margin:0 0 4px; color:#7a6a55; font-size:12px; letter-spacing:.8px; text-transform:uppercase;}
-.unit-card h2{margin:0; font-size:24px; color:#2a2218;}
-.points-badge{
-min-width:64px; text-align:center; background:#6f5428; color:#fff8ef;
-padding:8px 10px; border:1px solid #4f3b1d; font-size:22px; line-height:1;
-}
-.points-badge span{display:block; font-size:11px; letter-spacing:1px; margin-top:3px;}
-.stat-table{width:100%; border-collapse:collapse; margin:0 0 14px; table-layout:fixed;}
-.stat-table th,.stat-table td{
-border:1px solid #c4a66a; padding:7px 4px; text-align:center; font-size:13px;
-}
-.stat-table th{background:#efe1c8; color:#6f5428; font-weight:700;}
-.stat-table td{background:#fff; font-size:15px;}
-.unit-sections{display:grid; gap:12px;}
-.unit-sections h3{
-margin:0 0 6px; font-size:13px; letter-spacing:1px; text-transform:uppercase;
-color:#6f5428; border-bottom:1px solid #d7c19a; padding-bottom:4px;
-}
-.plain{margin:0; padding-left:18px;}
-.plain li{margin:0 0 5px; line-height:1.35; font-size:13px;}
-.pts{color:#6f5428; font-weight:700;}
-.empty-line,.notes,.compact-line,.meta{margin:0; color:#4d453c; font-size:13px; line-height:1.4;}
-.custom-unit-equipment{margin:0 0 10px;page-break-inside:avoid;}
-.custom-unit-equipment .stat-table{margin:6px 0;}
-.meta{margin-top:4px;}
-.compact .unit-head{margin-bottom:8px;}
-.compact h2{font-size:18px;}
-.toolbar{
-position:sticky; top:0; z-index:5; display:flex; gap:8px; flex-wrap:wrap;
-background:rgba(244,235,224,.96); border-bottom:1px solid #cbb48a; padding:10px 0 12px; margin-bottom:12px;
-}
-.toolbar button{
-font:inherit; cursor:pointer; border:1px solid #8a6b38; background:#6f5428; color:#fff8ef; padding:10px 14px;
-}
-.toolbar button.secondary{background:#fff8ef; color:#4f3b1d;}
-@media print{
-body{background:#fff;}
-.sheet{max-width:none; padding:0;}
-.toolbar{display:none!important;}
-.cover{box-shadow:none;}
-.unit-card{box-shadow:none; margin-bottom:12px;}
-}
-</style>
-</head>
-<body>
-<div class="sheet">
-<div class="toolbar">
-<button onclick="window.print()">Print / Save as PDF</button>
-<button class="secondary" onclick="window.close()">Close</button>
-</div>
-<div class="cover">
-<h1>Unit Catalogue</h1>
-<p>${esc(factionLabel)} · ${list.length} unit${list.length===1?"":"s"} · Exported ${esc(stamp)}</p>
-<p>Warhammer: The Old World — Custom Army Builder</p>
-</div>
-${body}
-</div>
-<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250));<\/script>
-
-
-</body>
-</html>`;
-
-const win=window.open("","_blank");
-if(!win) {
-const blob=new Blob([html],{type:"text/html"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;
-a.download=`unit_catalogue_${factionLabel.replace(/[^a-z0-9]+/gi,"_").toLowerCase()}.html`;
-a.click();
-setTimeout(()=>URL.revokeObjectURL(url),1500);
-alert("Pop-up blocked. Downloaded an HTML catalogue — open it, then use Print → Save as PDF.");
-return;
-}
-win.document.open();
-win.document.write(html);
-win.document.close();
+@page{size:A4;margin:14mm}*{box-sizing:border-box}
+body{margin:0;color:#1c1712;font-family:Georgia,"Times New Roman",serif;background:#f4ebe0}
+.sheet{max-width:860px;margin:0 auto;padding:18px 20px 28px}
+.cover{border:2px solid #8a6b38;background:linear-gradient(180deg,#fff8ef,#f0e2cf);padding:18px 20px;margin-bottom:18px}
+.cover h1{margin:0;font-size:28px;letter-spacing:2px;color:#6f5428;text-transform:uppercase}
+.cover p{margin:8px 0 0;color:#5d5348;font-size:14px}
+.unit-card{background:#fffaf3;border:1px solid #b79a64;padding:16px 18px;margin:0 0 16px;page-break-inside:avoid;break-inside:avoid;box-shadow:inset 0 0 0 1px rgba(255,255,255,.65)}
+.unit-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:12px}
+.eyebrow{margin:0 0 4px;color:#7a6a55;font-size:12px;letter-spacing:.8px;text-transform:uppercase}
+.unit-card h2{margin:0;font-size:24px;color:#2a2218}
+.points-badge{min-width:64px;text-align:center;background:#6f5428;color:#fff8ef;padding:8px 10px;border:1px solid #4f3b1d;font-size:22px;line-height:1}
+.points-badge span{display:block;font-size:11px;letter-spacing:1px;margin-top:3px}
+.stat-table{width:100%;border-collapse:collapse;margin:0 0 14px;table-layout:fixed}
+.stat-table th,.stat-table td{border:1px solid #c4a66a;padding:7px 4px;text-align:center;font-size:13px}
+.stat-table th{background:#efe1c8;color:#6f5428;font-weight:700}.stat-table td{background:#fff;font-size:15px}
+.unit-sections{display:grid;gap:12px}
+.unit-sections h3{margin:0 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#6f5428;border-bottom:1px solid #d7c19a;padding-bottom:4px}
+.plain{margin:0;padding-left:18px}.plain li{margin:0 0 5px;line-height:1.35;font-size:13px}
+.pts{color:#6f5428;font-weight:700}
+.empty-line,.notes,.compact-line,.meta{margin:0;color:#4d453c;font-size:13px;line-height:1.4}
+.custom-unit-equipment{margin:0 0 10px;page-break-inside:avoid}.custom-unit-equipment .stat-table{margin:6px 0}
+.meta{margin-top:4px}.compact .unit-head{margin-bottom:8px}.compact h2{font-size:18px}
+.roster-entry{margin:0 0 18px;page-break-inside:avoid;break-inside:avoid}
+.roster-entry-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 12px;background:#efe1c8;border:1px solid #b79a64;border-bottom:0;color:#493820;font-size:14px}
+.roster-entry-heading span{white-space:nowrap;font-size:12px}.roster-entry .unit-card{margin-bottom:0}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;background:rgba(244,235,224,.96);border-bottom:1px solid #cbb48a;padding:10px 0 12px;margin-bottom:12px}
+.toolbar button{font:inherit;cursor:pointer;border:1px solid #8a6b38;background:#6f5428;color:#fff8ef;padding:10px 14px}
+.toolbar button.secondary{background:#fff8ef;color:#4f3b1d}
+@media print{body{background:#fff}.sheet{max-width:none;padding:0}.toolbar{display:none!important}.cover{box-shadow:none}.unit-card{box-shadow:none;margin-bottom:12px}}
+</style></head><body><div class="sheet">
+<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button><button class="secondary" onclick="window.close()">Close</button></div>
+<div class="cover"><h1>${esc(title)}</h1><p>${subtitle} · ${entryCount} entry${entryCount===1?"":"ies"} · Exported ${esc(stamp)}</p><p>Warhammer: The Old World — Custom Army Builder</p></div>
+${body}</div><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),250));<\/script></body></html>`;
+ const win=window.open("","_blank");
+ if(!win){
+  const blob=new Blob([html],{type:"text/html"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=fileName+".html";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  alert("Pop-up blocked. Downloaded an HTML document — open it, then use Print → Save as PDF.");return;
+ }
+ win.document.open();win.document.write(html);win.document.close();
 }
 
 function importData(event) {
