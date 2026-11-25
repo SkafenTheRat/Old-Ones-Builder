@@ -215,7 +215,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <button onclick="showTab('equipment',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Equipment Library</button>
 <button onclick="showTab('rules',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Special Rules Library</button>
 <button onclick="showTab('data',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Data Management</button>
-<button onclick="showTab('workshop',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Builder Workshop</button>
+
 </div>
 
 <section id="units" class="tab">
@@ -488,13 +488,7 @@ Always check official rules and descriptions in your own rulebooks.
 </p>
 </div>
 </section>
-<section id="workshop" class="tab hidden">
-<div class="panel"><h2>Builder Workshop — edit content</h2><p class="muted">Edytuj dane bezpośrednio w aplikacji. Armie korzystają z wbudowanych frakcji gry. Jednostki, wyposażenie i zasady edytujesz w odpowiednich zakładkach.</p>
-<div class="grid"><div class="field"><label>Weapon / equipment</label><select id="wEquipment"></select></div><div class="field"><label>Special rule</label><select id="wRule"></select></div></div>
-<div class="actions"><button onclick="workshopEditEquipment()">Edit weapon / equipment</button><button onclick="workshopEditRule()">Edit special rule</button></div></div>
-<div class="panel"><h2>Army management</h2><div class="grid"><div class="field"><label>Army</label><select id="wArmy"></select></div><div class="field"><label>Name</label><input id="wArmyName"></div><div class="field"><label>Points limit</label><input id="wArmyLimit" type="number" min="0"></div></div><div class="actions"><button class="primary" onclick="workshopSaveArmy()">Save army details</button><button onclick="workshopOpenArmy()">Open army builder</button></div></div>
-</div>
-</section>
+
 </main>
 <script>
 const defaultRules = [
@@ -2274,37 +2268,7 @@ linkifyNames();
 </script>
 
 
-<script>
-function workshopRefreshSelectors(){
- const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="" disabled selected hidden>Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
- fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');
-}
-function workshopEditEquipment(){
- const e=equipment.find(x=>x.id===document.getElementById('wEquipment').value);if(!e){alert('Choose equipment.');return;}
- const n=prompt('Name:',e.name);if(n===null||!n.trim())return;
- const c=prompt('Category:',e.category)||e.category;
- const d=prompt('Description:',e.desc||'');if(d===null)return;
- let profile=null,notes=e.notes||"";
- if(isWeaponEquipment(c)){
-  const existing=e.weaponProfile||weaponDetails[e.name]?.stats?.[0]||["","S","-","-"];
-  const range=prompt('Range:',e.weaponProfile?.range??existing[0]??"");if(range===null)return;
-  const strength=prompt('Strength:',e.weaponProfile?.strength??existing[1]??"S");if(strength===null)return;
-  const ap=prompt('Armour Piercing (AP):',e.weaponProfile?.ap??existing[2]??"-");if(ap===null)return;
-  const special=prompt('Special Rules:',e.weaponProfile?.specialRules??existing[3]??"-");if(special===null)return;
-  const note=prompt('Optional note shown below the table:',notes);if(note===null)return;
-  profile={range:range.trim(),strength:strength.trim(),ap:ap.trim(),specialRules:special.trim()||"-"};notes=note.trim();
- }
- e.name=n.trim();e.category=c;e.desc=d;
- if(profile){e.weaponProfile=profile;e.notes=notes;}else{delete e.weaponProfile;delete e.notes;}
- save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();
-}function workshopEditRule(){const r=rules.find(x=>x.id===document.getElementById('wRule').value);if(!r){alert('Choose a rule.');return;}const n=prompt('Rule name:',r.name);if(n===null||!n.trim())return;const d=prompt('Rule description:',r.desc||'');if(d===null)return;r.name=n.trim();r.desc=d;r.hasParameter=confirm('Does this rule require a bracket value?');save();renderRules();renderUnitRulePicker();renderUnits();workshopRefreshSelectors();}
-function workshopLoadArmy(id){const a=armies.find(x=>x.id===id);if(!a)return;document.getElementById('wArmy').value=id;document.getElementById('wArmyName').value=a.name;document.getElementById('wArmyLimit').value=a.pointsLimit??'';}
-function workshopSaveArmy(){const a=armies.find(x=>x.id===document.getElementById('wArmy').value);if(!a){alert('Choose an army.');return;}const n=document.getElementById('wArmyName').value.trim();if(!n){alert('Enter a name.');return;}a.name=n;a.pointsLimit=parsePointCost(document.getElementById('wArmyLimit').value);save();renderArmies();workshopRefreshSelectors();alert('Army saved.');}
-function workshopOpenArmy(){const id=document.getElementById('wArmy').value;if(!id){alert('Choose an army.');return;}selectedArmyId=id;document.querySelectorAll('.tabs button').forEach(b=>{if(b.textContent.trim()==='Army')b.click();});renderArmies();}
-const oldShowTab=window.showTab;window.showTab=function(id,btn){oldShowTab(id,btn);if(id==='workshop'){workshopRefreshSelectors();}};
-const oldRefreshAll=window.refreshAll;window.refreshAll=function(){oldRefreshAll();workshopRefreshSelectors();};
-workshopRefreshSelectors();
-</script>
+
 
 <div id="installBanner" class="install-banner hidden" role="dialog" aria-labelledby="installTitle">
 <strong id="installTitle">Install Army Builder</strong>
