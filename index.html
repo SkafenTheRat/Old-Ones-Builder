@@ -1773,7 +1773,7 @@ function exportUnitsPdf() {
   title="Army List";
   subtitle=esc(army.name)+" · "+esc(faction?.name||"Unknown faction")+" · "+esc(infamy?.name||"Grand Army")+" · "+totalModels+" model entr"+(totalModels===1?"y":"ies")+" · "+points+(army.pointsLimit?" / "+parsePointCost(army.pointsLimit):"")+" pts";
   entryCount=resolved.length;
-  body=resolved.map(({unit,qty,entryCost,profile})=>'<div class="roster-entry"><div class="roster-entry-heading"><strong>'+qty+' × '+esc(unit.name)+'</strong><span>'+entryCost+' pts total</span></div>'+buildPdfUnitCard(profile,compact)+'</div>').join("");
+  body=unitCategoryGroups(resolved,item=>item.unit).map(group=>'<section class="unit-category-group"><h2 class="pdf-category-heading">'+esc(group.name)+'</h2>'+group.items.map(({unit,qty,entryCost,profile})=>'<div class="roster-entry"><div class="roster-entry-heading"><strong>'+qty+' × '+esc(unit.name)+'</strong><span>'+entryCost+' pts total</span></div>'+buildPdfUnitCard(profile,compact)+'</div>').join("")+'</section>').join("");
   fileName="army_"+String(army.name||"list").replace(/[^a-z0-9]+/gi,"_").toLowerCase();
  }else{
   const list=pdfSelectedUnitIds.map(id=>units.find(unit=>unit.id===id)).filter(Boolean);
@@ -1803,7 +1803,7 @@ body{margin:0;color:#1c1712;font-family:Georgia,"Times New Roman",serif;backgrou
 .stat-table{width:100%;border-collapse:collapse;margin:0 0 14px;table-layout:fixed}
 .stat-table th,.stat-table td{border:1px solid #c4a66a;padding:7px 4px;text-align:center;font-size:13px}
 .stat-table th{background:#efe1c8;color:#6f5428;font-weight:700}.stat-table td{background:#fff;font-size:15px}
-.unit-sections{display:grid;gap:12px}
+.unit-sections{display:grid;gap:12px}.pdf-category-heading{margin:18px 0 10px;padding:0 0 7px;border-bottom:1px solid #b79a64;color:#6f5428;font-size:18px;letter-spacing:1px;text-transform:uppercase}
 .unit-sections h3{margin:0 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#6f5428;border-bottom:1px solid #d7c19a;padding-bottom:4px}
 .plain{margin:0;padding-left:18px}.plain li{margin:0 0 5px;line-height:1.35;font-size:13px}
 .pts{color:#6f5428;font-weight:700}
@@ -1983,6 +1983,28 @@ const allowed=Array.isArray(armyList.allowedUnitIds)?armyList.allowedUnitIds:[];
 return allowed.length===0||allowed.includes(unit.id);
 }
 
+function renderArmyEntriesByCategory(entries){
+ if(!entries.length)return '<div class="empty">This army has no units yet.</div>';
+ return unitCategoryGroups(entries,entry=>units.find(u=>u.id===entry.unitId)||{name:"Missing unit",category:"Other"}).map(group=>{
+  const cards=group.items.map(entry=>{
+   const unit=units.find(u=>u.id===entry.unitId);
+   if(!unit)return '<div class="item"><div class="item-head"><div><strong>Missing unit</strong></div><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
+   const profile=normalizeUnit(unit);
+   const included=(profile.basicEquipmentIds||[]).map(equipmentById).filter(Boolean);
+   const options=profile.optionEquipment||[];
+   const selected=new Set(entry.selectedOptionIds||[]);
+   let html='<div class="item"><div class="item-head"><div><strong>'+esc(unit.name)+'</strong><br><small>'+esc(unit.category)+' · base '+parsePointCost(unit.points)+' pts · line <span id="entryCost-'+esc(entry.id)+'">'+armyEntryCost(entry)+' pts</span></small></div>';
+   html+='<div class="actions"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" style="width:80px" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
+   html+='<div style="margin-top:8px">'+(included.length?'<span class="muted">Included: </span>'+included.map(e=>'<span class="tag">'+esc(e.name)+'</span>').join(""):'<span class="muted">No included equipment.</span>')+'</div>';
+   html+='<div style="margin-top:8px">'+(options.length?'<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">'+options.map(o=>{
+    const item=equipmentById(o.id);if(!item)return "";
+    return '<div class="rule-option"><label><input type="checkbox" '+(selected.has(o.id)?'checked':'')+' onchange="toggleArmyOption(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(o.id)+'&quot;,this.checked)"><strong>'+esc(item.name)+'</strong> <span class="muted">+'+parsePointCost(o.cost)+' pts</span></label></div>';
+   }).join("")+'</div>':'<span class="muted">No paid options on this unit.</span>')+'</div></div>';
+   return html;
+  }).join("");
+  return '<section class="unit-category-group"><h3 class="unit-category-heading">'+esc(group.name)+'</h3>'+cards+'</section>';
+ }).join("");
+}
 function renderArmies() {
 const list=document.getElementById("armyList");
 const builder=document.getElementById("armyBuilder");
@@ -2026,26 +2048,7 @@ ${infamy?.rulesText?'<div class="notice">'+esc(infamy.rulesText)+'</div>':''}
 </div>
 <div class="actions"><button class="primary" onclick="addArmyEntry()">Add to Army</button></div>
 <div style="margin-top:14px">
-${(army.entries||[]).map(entry=>{
-const unit=units.find(u=>u.id===entry.unitId);
-if(!unit) return `<div class="item"><div class="item-head"><div><strong>Missing unit</strong></div><button class="danger" onclick="removeArmyEntry('${entry.id}')">Remove</button></div></div>`;
-const profile=normalizeUnit(unit);
-const included=(profile.basicEquipmentIds||[]).map(equipmentById).filter(Boolean);
-const options=profile.optionEquipment||[];
-const selected=new Set(entry.selectedOptionIds||[]);
-return `<div class="item">
-<div class="item-head">
-<div><strong>${esc(unit.name)}</strong><br><small>${esc(unit.category)} · base ${parsePointCost(unit.points)} pts · line <span id="entryCost-${entry.id}">${armyEntryCost(entry)} pts</span></small></div>
-<div class="actions"><input type="number" min="1" step="1" value="${Math.max(1,parseInt(entry.qty,10)||1)}" style="width:80px" onchange="updateArmyQty('${entry.id}',this.value)"><button class="danger" onclick="removeArmyEntry('${entry.id}')">Remove</button></div>
-</div>
-<div style="margin-top:8px">${included.length?`<span class="muted">Included: </span>${included.map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}`:'<span class="muted">No included equipment.</span>'}</div>
-<div style="margin-top:8px">${options.length?`<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">${options.map(o=>{
-const item=equipmentById(o.id);
-if(!item) return "";
-return '<div class="rule-option"><label><input type="checkbox" '+(selected.has(o.id)?'checked':'')+' onchange="toggleArmyOption(&quot;'+entry.id+'&quot;,&quot;'+o.id+'&quot;,this.checked)"><strong>'+esc(item.name)+'</strong> <span class="muted">+'+parsePointCost(o.cost)+' pts</span></label></div>';
-}).join("")}</div>`:'<span class="muted">No paid options on this unit.</span>'}</div>
-</div>`;
-}).join("")||'<div class="empty">This army has no units yet.</div>'}
+${renderArmyEntriesByCategory(army.entries||[])}
 </div>`;
 }
 
