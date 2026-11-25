@@ -672,7 +672,7 @@ const fid=beastmenFactionId();
 const specialRules="Ancient Sorcery|Belly Flop|Bestial Charge|Blessings of Chaos|Blood Greed|Blood Rage|Bloodshed & Butchery|Brayhorn|Bull-gors|Champions of Slaughter|Crown of Antlers|Dark Coven|Drunken|'Eadbutt (Giant)|Endless Malice|Ensorcelled Weapons|Father of Beasts|Foe Render|Future Sight|Gaze of the Gods|Ghostsight|Giant Attacks|Gifts from the Dark Gods|Guardians of the Herdstones|Herdstones|Jump Up & Down|Leader of the Pack (Beastmen)|Leering Spirit|Maddening Aura|Magics of the Dark Gods|Mighty Swing (Giant)|Mixed Unit|Pick Up And...|Primal Fury|The Quickening Storm|Razor Tusks|Roaming Warbands|Slaughterer's Call|The Sons of Ghorros|Soul-eater|Spurting Bile Blood|Stony Stare|Storm Call|Swallow Whole|Thump with Club".split("|");
 const ruleDescriptions={
 "Ancient Sorcery":"In a Wild Herd, Beastmen Shamans may also use Lore of Primal Magic.",
-"Belly Flop":"Giant attack: a 3-inch template produces Strength-based hits, AP -2.",
+"Belly Flop":"See the Giant Attacks table.",
 "Bestial Charge":"Gors gain +1 Strength after charging at least 3 inches.",
 "Blessings of Chaos":"Warped Gors roll for a temporary combat mutation each fight.",
 "Blood Greed":"While Frenzied, gain +2 Attacks but roll one pursuit die.",
@@ -684,24 +684,24 @@ const ruleDescriptions={
 "Crown of Antlers":"Preyton Impact Hits gain Armour Bane (1) and AP -1.",
 "Dark Coven":"Wild Herd Shamans can draw nearby Wizards' power; double 1 risks shared miscast.",
 "Drunken":"Centigors roll each turn for random movement, no effect or Frenzy.",
-"'Eadbutt (Giant)":"Giant attack: a chosen fighting-rank model suffers D3+1 wounds.",
+"'Eadbutt (Giant)":"See the Giant Attacks table.",
 "Endless Malice":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
 "Ensorcelled Weapons":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
-"Father of Beasts":"Ghorros Warhoof's faction rule; consult the linked source for its full effect.",
+"Father of Beasts":"Whilst within Ghorros Warhoof’s Command range, friendly Centigor Herds may re-roll the D6 when rolling on the Drunken table.",
 "Foe Render":"Beastmen Brayherds faction rule; consult the linked source for its full effect.",
 "Future Sight":"Kralmaw's faction rule; consult the linked source for its full effect.",
 "Gaze of the Gods":"Beastmen character rule; consult the linked source for its full effect.",
 "Ghostsight":"Cygor faction rule; consult the linked source for its full effect.",
-"Giant Attacks":"The Giant selects attacks from its dedicated attack table.",
+"Giant Attacks":"Instead of making its normal attacks or a Pick Up And... attack, the Giant may choose one enemy unit it is engaged with and roll on the Giant Attacks table below.",
 "Gifts from the Dark Gods":"Wild Herd characters gain extra allowances for magic items and mutations.",
 "Guardians of the Herdstones":"In a Minotaur Blood Herd, Doombulls and Gorebulls gain special mutation options.",
 "Herdstones":"Rules for the unique Beastmen terrain feature and its battlefield auras.",
-"Jump Up & Down":"Giant attack: inflicts D6+1 Strength-based hits without armour saves.",
+"Jump Up & Down":"See the Giant Attacks table.",
 "Leader of the Pack (Beastmen)":"Ungor Ravagers can join Primal Warhound units and occupy rear ranks.",
 "Leering Spirit":"Kralmaw's marker can cast Devolve as a bound spell.",
 "Maddening Aura":"Nearby enemy units test Leadership or suffer D3 Strength 3 hits.",
 "Magics of the Dark Gods":"Minotaur Blood Herd Doombull or Gorebull Generals may become Wizards.",
-"Mighty Swing (Giant)":"Giant club attack: D6+1 attacks at Strength +1 and AP -2.",
+"Mighty Swing (Giant)":"See the Giant Attacks table.",
 "Mixed Unit":"Primal Warherds divide incoming shooting hits between Gors and Ungors.",
 "Pick Up And...":"Giant attack selected from its attack table; see the linked source.",
 "Primal Fury":"Core Beastmen Brayherds rule; see the linked source for its test and effects.",
@@ -715,7 +715,7 @@ const ruleDescriptions={
 "Stony Stare":"Cockatrice faction rule; consult the linked source for its full effect.",
 "Storm Call":"Dragon Ogre Shaggoth faction rule; consult the linked source for its full effect.",
 "Swallow Whole":"Ghorgon faction rule; consult the linked source for its full effect.",
-"Thump with Club":"Giant attack selected from its attack table; see the linked source."
+"Thump with Club":"See the Giant Attacks table."
 };
 specialRules.forEach(name=>{
 const id="br_rule_"+beastmenSlug(name);
