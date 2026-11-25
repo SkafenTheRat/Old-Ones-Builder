@@ -2144,7 +2144,19 @@ const rule=factionRule||sharedRule||customRule;
 document.getElementById("mTitle").textContent=name;
 const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
 const source=rule?.sourceUrl||("https://tow.whfb.app/special-rules/"+base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""));
+if(String(name||"").toLowerCase()==="giant attacks"){
+const attacks=[
+{roll:"1",name:"'Eadbutt",url:"https://tow.whfb.app/special-rules/eadbutt-giant",effect:"Choose one model in the enemy unit's fighting rank. It suffers D3+1 wounds; no Armour or Regeneration saves, Ward saves allowed."},
+{roll:"2",name:"Belly Flop",url:"https://tow.whfb.app/special-rules/belly-flop",effect:"Place a 3-inch blast template centred on the target unit. Each model (friend or foe, except the Giant) under it risks one hit at the Giant's Strength, AP -2."},
+{roll:"3–4",name:"Mighty Swing",url:"https://tow.whfb.app/special-rules/mighty-swing-giant",effect:"The Giant has Random Attacks and makes D6+1 attacks. Its club has Strength S+1 and AP -2."},
+{roll:"5",name:"Thump with Club",url:"https://tow.whfb.app/special-rules/thump-with-club",effect:"Choose one model in the enemy unit's fighting rank. The club has Strength S+4, AP -4 and Multiple Wounds (D6)."},
+{roll:"6",name:"Jump Up & Down",url:"https://tow.whfb.app/special-rules/jump-up-and-down",effect:"The Giant does not use its club. The target unit suffers D6+1 hits at the Giant's Strength, with no Armour saves; Ward and Regeneration saves are allowed."}
+];
+const rows=attacks.map(a=>'<tr><td>'+a.roll+'</td><td><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.name)+'</a></td><td>'+esc(a.effect)+'</td></tr>').join("");
+document.getElementById("mBody").innerHTML='<p>Instead of making its normal attacks or a Pick Up And... attack, the Giant may choose one enemy unit it is engaged with and roll a D6:</p><table class="stat-table"><thead><tr><th>D6</th><th>Attack</th><th>Effect</th></tr></thead><tbody>'+rows+'</tbody></table><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open Giant Attacks on tow.whfb.app</a></p>';
+}else{
 document.getElementById("mBody").innerHTML='<p>'+esc(description)+'</p><p><a href="'+esc(source)+'" target="_blank" rel="noopener">Open this rule on tow.whfb.app</a></p>';
+}
 overlay.classList.remove("hidden");
 }
 
