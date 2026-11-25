@@ -91,6 +91,35 @@ margin:18px 0 10px; padding:0 0 7px;
 border-bottom:1px solid var(--line);
 }
 .unit-category-group:first-child .unit-category-heading { margin-top:4px; }
+.army-unit-profile{background:linear-gradient(145deg,#4b4b4b,#393939);border:1px solid #252525;border-radius:3px;color:#f3f3f3;margin:0 0 14px;padding:0 10px 12px;box-shadow:0 2px 7px rgba(0,0,0,.22)}
+.army-unit-profile-header{position:relative;display:flex;justify-content:center;align-items:center;min-height:58px;padding:7px 72px;text-align:center;border-bottom:1px solid rgba(0,0,0,.35)}
+.army-unit-profile-title{font-size:19px;font-weight:700;line-height:1.15}.army-unit-profile-points{font-size:13px;margin-top:3px;color:#f0f0f0}
+.army-unit-profile-close{position:absolute;left:0;top:7px;width:30px;height:30px;padding:0;background:transparent;border:0;color:#f2f2f2;font-size:23px;line-height:1}
+.army-unit-profile-qty{position:absolute;right:0;top:10px;width:56px}.army-unit-profile-qty input{padding:5px;text-align:center;background:#292929;color:#fff;border-color:#666}
+.army-unit-note{margin:8px 0;font-size:13px;font-style:italic;color:#f0f0f0}
+.army-unit-stats{width:auto;max-width:100%;border-collapse:collapse;margin:8px 0 13px}
+.army-unit-stats th{color:#f2f2f2;font-size:12px;font-style:italic;font-weight:700;padding:3px 5px;text-align:center}
+.army-unit-stats td{background:#222;color:#fff;border:1px solid #111;font-size:13px;padding:3px 5px;text-align:center}
+.army-unit-stats th:first-child,.army-unit-stats td:first-child{text-align:left}
+.army-unit-profile-section{margin:0 -10px;padding:9px 10px;border-top:1px solid rgba(0,0,0,.38)}
+.army-unit-profile-section h4{color:#fff;font-size:14px;margin:0 0 7px}
+.army-profile-control-list{display:grid;gap:4px}
+.army-profile-control{display:flex;align-items:center;gap:8px;min-height:30px;font-size:13px;line-height:1.25;cursor:pointer}
+.army-profile-control input{width:auto;margin:0;accent-color:#c6a15b;flex:0 0 auto}
+.army-profile-control .army-profile-cost{margin-left:auto;color:#fff;font-style:italic;white-space:nowrap}
+.army-profile-general{display:flex;align-items:center;gap:8px;padding:5px 0 8px;font-size:13px}.army-profile-general input{width:auto;margin:0;accent-color:#c6a15b}
+.army-profile-accordion{margin:0 -10px;border-top:1px solid rgba(0,0,0,.4)}
+.army-profile-accordion summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 10px;cursor:pointer;list-style:none;font-size:13px;font-weight:700}
+.army-profile-accordion summary::-webkit-details-marker{display:none}.army-profile-accordion summary::after{content:"＋";margin-left:7px;color:#ddd}.army-profile-accordion[open] summary::after{content:"−"}
+.army-profile-accordion .army-profile-limit{margin-left:auto;font-style:italic;font-weight:400;white-space:nowrap}
+.army-profile-accordion-body{padding:0 10px 11px}
+.army-profile-add-row{display:flex;gap:7px;align-items:center;margin:3px 0 8px}
+.army-profile-add-row select{min-width:0;padding:7px;background:#292929;color:#fff;border-color:#666}
+.army-profile-add-row button,.army-profile-selected button{padding:6px 9px;white-space:nowrap}
+.army-profile-selected{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(0,0,0,.2);font-size:12px}
+.army-profile-selected span:first-child{min-width:0}.army-profile-selected .army-profile-cost{margin-left:auto;white-space:nowrap;font-style:italic}
+.army-profile-empty{font-size:12px;color:#ddd;font-style:italic}.army-profile-rules{padding:10px 0 2px;font-size:13px;line-height:1.55}.army-profile-rules a{text-decoration:underline}
+@media(max-width:560px){.army-unit-profile{padding-left:8px;padding-right:8px}.army-unit-profile-header{padding-left:40px;padding-right:54px}.army-unit-profile-title{font-size:17px}.army-unit-stats th,.army-unit-stats td{padding:3px 4px;font-size:11px}.army-unit-profile-section h4{font-size:13px}}
 
 h2 {
 color:var(--gold); font-size:21px; margin:0 0 16px;
@@ -307,7 +336,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 </div>
 <div class="actions"><button type="button" id="addUnitCustomEquipmentButton" onclick="addCustomEquipmentToUnit()">Add Custom Equipment</button><button type="button" id="cancelUnitCustomEquipmentEdit" class="hidden" onclick="resetUnitCustomEquipmentForm()">Cancel</button></div>
 <div id="pendingCustomEquipment"></div>
-<h3>Magic Items</h3><p class="muted">Record magic items separately from normal equipment.</p>
+<h3>Magic Items</h3><div class="grid"><div class="field"><label>Magic Items Allowance (pts)</label><input id="unitMagicItemLimit" type="number" min="0" step="1" placeholder="0"></div><div class="field"><label>Chaos Mutations Allowance (pts)</label><input id="unitChaosMutationLimit" type="number" min="0" step="1" placeholder="0"></div></div><p class="muted">Record magic items separately from normal equipment.</p>
 <div class="grid"><div class="field"><label>Magic Item Name</label><input id="unitMagicItemName" placeholder="Magic item name"></div><div class="field"><label>Description / Notes</label><input id="unitMagicItemDesc" placeholder="Optional description"></div></div>
 <div class="actions"><button type="button" onclick="addUnitListItem('magicItems')">Add Magic Item</button></div><div id="pendingUnitMagicItems"></div>
 <h3>Chaos Mutations</h3><p class="muted">Record Chaos Mutations in their own list.</p>
@@ -903,7 +932,7 @@ const optionList=[...options.values()],costs={};baseIds.forEach(x=>costs[x]=0);o
 const unit={...(existing||{}),id:existing?.id||id,sourceKey:"beastmen-brayherds:"+slug,sourceUrl:"https://tow.whfb.app/unit/"+slug,
 name,factionId:fid,category,points:String(points),
 stats:Object.fromEntries(["M","WS","BS","S","T","W","I","A","Ld"].map((k,i)=>[k,String(stat[i]||"-")])),
-baseSize:base,troopType:troop,unitSize:size,
+baseSize:base,troopType:troop,unitSize:size,magicItemLimit:magicCap,chaosMutationLimit:mutationCap,
 ruleIds:[...new Set([...(existing?.ruleIds||[]).filter(ruleId=>slug!=="chaos-giant"||!new Set(["Belly Flop","'Eadbutt (Giant)","Jump Up & Down","Mighty Swing (Giant)","Thump with Club"]).has(ruleById(ruleId)?.name)),...ids])],ruleValues:{...(existing?.ruleValues||{}),...values},
 basicEquipmentIds:[...new Set([...(existing?.basicEquipmentIds||[]),...baseIds])],
 optionEquipment:[...new Map([...(existing?.optionEquipment||[]),...optionList].map(x=>[x.id,x])).values()],
@@ -1331,6 +1360,8 @@ customRules:pendingCustomRules.filter(r=>!r.libraryId).map(r=>({...r})),
 customEquipment:pendingCustomEquipment.map(e=>({...e,weaponProfile:e.weaponProfile?{...e.weaponProfile}:undefined})),
 magicItems:pendingMagicItems.map(e=>({...e})),
 chaosMutations:pendingChaosMutations.map(e=>({...e})),
+magicItemLimit:parsePointCost(document.getElementById("unitMagicItemLimit").value),
+chaosMutationLimit:parsePointCost(document.getElementById("unitChaosMutationLimit").value),
 desc:document.getElementById("uDesc").value
 };
 
@@ -1358,7 +1389,7 @@ alert("Unit saved successfully.");
 }
 
 function resetUnitForm() {
-["uName","uPoints","uDesc","editUnitId","uBaseSize","sM","sWS","sBS","sS","sT","sW","sI","sA","sLd","customRuleName","customRuleDesc","unitCustomEquipmentEditId","unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>document.getElementById(id).value="");
+["uName","uPoints","uDesc","editUnitId","uBaseSize","unitMagicItemLimit","unitChaosMutationLimit","sM","sWS","sBS","sS","sT","sW","sI","sA","sLd","customRuleName","customRuleDesc","unitCustomEquipmentEditId","unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>document.getElementById(id).value="");
 document.getElementById("uCategory").value="Core";
 document.getElementById("uTroopType").value="";
 pendingCustomRules=[];pendingCustomEquipment=[];pendingMagicItems=[];pendingChaosMutations=[];resetUnitCustomEquipmentForm();
@@ -1377,6 +1408,8 @@ document.getElementById("uPoints").value=u.points||"";
 document.getElementById("uDesc").value=u.desc||"";
 document.getElementById("uBaseSize").value=u.baseSize||"";
 document.getElementById("uTroopType").value=u.troopType||"";
+document.getElementById("unitMagicItemLimit").value=u.magicItemLimit??"";
+document.getElementById("unitChaosMutationLimit").value=u.chaosMutationLimit??"";
 ["M","WS","BS","S","T","W","I","A","Ld"].forEach(k=>{document.getElementById("s"+k).value=u.stats?.[k]||"";});
 editingRuleIds=u.ruleIds||[];editingRuleValues=u.ruleValues||{};editingRuleFactions=u.ruleFactions||{};
 const normalized=normalizeUnit(u);
@@ -1636,8 +1669,8 @@ return `<article class="unit-card compact">
 <table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table><p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <p class="compact-line"><strong>Included:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
 <p class="compact-line"><strong>Normal equipment:</strong> ${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).map(e=>esc(e.name)).join(", ")||"—"}</p>
-<p class="compact-line"><strong>Magic Items:</strong> ${unitItemList(profile,"magicItems","magic item").map(e=>esc(e.name)).join(", ")||"—"}</p>
-<p class="compact-line"><strong>Chaos Mutations:</strong> ${unitItemList(profile,"chaosMutations","chaos mutation").map(e=>esc(e.name)).join(", ")||"—"}</p>
+<p class="compact-line"><strong>Magic Items:</strong> ${(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")).map(e=>esc(e.name)).join(", ")||"—"}</p>
+<p class="compact-line"><strong>Chaos Mutations:</strong> ${(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")).map(e=>esc(e.name)).join(", ")||"—"}</p>
 <p class="compact-line"><strong>Options:</strong> ${options.length?options.map(o=>{
 const item=equipmentById(o.id);
 return item?`${esc(item.name)} (+${parsePointCost(o.cost)} pts)`:"";
@@ -1673,8 +1706,8 @@ return `<li><strong>${esc(item.name)}</strong> <span class="pts">+${parsePointCo
 }).join("")}</ul>`:'<p class="empty-line">No paid options.</p>'}
 </section>
 <section><h3>Normal Equipment</h3>${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?renderPdfUnitCustomEquipment(customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase()))):'<p class="empty-line">No custom equipment.</p>'}</section>
-<section><h3>Magic Items</h3>${unitItemList(profile,"magicItems","magic item").length?renderUnitSimpleItems(unitItemList(profile,"magicItems","magic item")):'<p class="empty-line">No magic items.</p>'}</section>
-<section><h3>Chaos Mutations</h3>${unitItemList(profile,"chaosMutations","chaos mutation").length?renderUnitSimpleItems(unitItemList(profile,"chaosMutations","chaos mutation")):'<p class="empty-line">No Chaos Mutations.</p>'}</section>
+<section><h3>Magic Items</h3>${(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")).length?renderUnitSimpleItems(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")):'<p class="empty-line">No magic items.</p>'}</section>
+<section><h3>Chaos Mutations</h3>${(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")).length?renderUnitSimpleItems(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")):'<p class="empty-line">No Chaos Mutations.</p>'}</section>
 <section>
 <h3>Special Rules</h3>
 ${assigned.length||custom.length?`<ul class="plain">${assigned.map(r=>`<li><strong>${esc(r.label)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}${custom.map(r=>`<li><strong>${esc(r.name)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No special rules.</p>'}
@@ -1766,7 +1799,7 @@ function exportUnitsPdf() {
    const selectedOptions=(profile.optionEquipment||[]).filter(option=>selectedIds.has(option.id));
    const extras=selectedOptions.reduce((sum,option)=>sum+parsePointCost(option.cost),0);
    const qty=Math.max(1,parseInt(entry.qty,10)||1);
-   return {unit,qty,entryCost:armyEntryCost(entry),profile:{...profile,points:parsePointCost(profile.points)+extras,optionEquipment:selectedOptions}};
+   return {unit,qty,entryCost:armyEntryCost(entry),profile:{...profile,points:armyEntryUnitCost(entry),optionEquipment:selectedOptions,armySelectedMagicItems:armyEntryChosenMagicItems(entry,unit),armySelectedChaosMutations:armyEntryChosenMutations(entry,unit)}};
   }).filter(Boolean);
   if(!resolved.length){alert("This army has no units to export yet.");return;}
   const totalModels=resolved.reduce((sum,x)=>sum+x.qty,0),points=armyTotal(army);
@@ -1871,17 +1904,108 @@ event.target.value="";
 reader.readAsText(file);
 }
 
-function armyEntryCost(entry) {
-const unit=units.find(u=>u.id===entry.unitId);
-if(!unit) return 0;
-const profile=normalizeUnit(unit);
-const qty=Math.max(1,parseInt(entry.qty,10)||1);
-const extras=(entry.selectedOptionIds||[]).reduce((sum,id)=>{
-const opt=(profile.optionEquipment||[]).find(o=>o.id===id);
-return sum+(opt?parsePointCost(opt.cost):0);
-},0);
-return (parsePointCost(profile.points)+extras)*qty;
+const BEASTMEN_CHAOS_MUTATIONS=[{id:"mutation_slug_skin",name:"Slug-skin",points:50},{id:"mutation_crown_of_horns",name:"Crown of Horns (Beastmen)",points:45},{id:"mutation_muscular_monstrosity",name:"Muscular Monstrosity",points:35},{id:"mutation_pelt_of_midnight",name:"Pelt of Midnight",points:35},{id:"mutation_gouge_tusks",name:"Gouge-tusks",points:30},{id:"mutation_rune_of_the_beast_ascendant",name:"Rune of the Beast Ascendant",points:25},{id:"mutation_many_limbed_fiend",name:"Many-limbed Fiend",points:20},{id:"mutation_gnarled_hide",name:"Gnarled Hide",points:15},{id:"mutation_uncanny_senses",name:"Uncanny Senses",points:10}];
+function armyEquipmentGroup(item){const c=String(item?.category||"").trim().toLowerCase();if(c==="melee weapon"||c==="melee weapons")return "Weapons";if(c==="ranged weapon"||c==="ranged weapons")return "Ranged Weapons";if(c==="armour"||c==="armor")return "Armour";return "Options";}
+function armyMagicItemsForUnit(unit){
+ const profile=normalizeUnit(unit),optionNames=new Set((profile.optionEquipment||[]).map(o=>equipmentById(o.id)?.name?.toLowerCase()).filter(Boolean));
+ const all=[...(magicItems||[]),...(factionMagicItems||[]).filter(x=>x.factionId===unit.factionId)],seen=new Set(),items=[];
+ all.forEach(item=>{const key=String(item.name||"").toLowerCase();if(!key||seen.has(key)||(item.type==="Magic Standard"&&!optionNames.has(key)))return;const points=parsePointCost(item.points);if(points>parsePointCost(unit.magicItemLimit))return;seen.add(key);items.push({...item,points});});
+ unitItemList(unit,"magicItems","magic item").forEach((item,i)=>{const key=String(item.name||"").toLowerCase(),points=parsePointCost(item.points??item.cost);if(key&&!seen.has(key)&&points<=parsePointCost(unit.magicItemLimit)){seen.add(key);items.push({...item,id:item.id||"unit_magic_"+i,type:item.type||"Magic Item",points});}});
+ return items.sort((a,b)=>String(a.type||"").localeCompare(String(b.type||""))||String(a.name||"").localeCompare(String(b.name||"")));
 }
+function armyChaosMutationsForUnit(unit){
+ const cap=parsePointCost(unit.chaosMutationLimit);if(!cap)return [];
+ const isBeastmen=String(factions.find(f=>f.id===unit.factionId)?.name||"").toLowerCase()==="beastmen brayherds";
+ const known=isBeastmen?BEASTMEN_CHAOS_MUTATIONS.filter(x=>x.points<=cap):[];
+ const custom=unitItemList(unit,"chaosMutations","chaos mutation").map((x,i)=>({id:x.id||"unit_mutation_"+i,name:x.name||String(x),points:parsePointCost(x.points??x.cost),desc:x.desc||""})).filter(x=>x.name&&x.points<=cap);
+ const map=new Map();[...known,...custom].forEach(x=>{if(!map.has(String(x.name).toLowerCase()))map.set(String(x.name).toLowerCase(),x);});
+ return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name));
+}
+function armyProfileEquipmentItems(unit){
+ const profile=normalizeUnit(unit),items=new Map();
+ (profile.basicEquipmentIds||[]).forEach(id=>{const x=equipmentById(id);if(x)items.set(id,{...x,id,cost:0,included:true});});
+ (profile.optionEquipment||[]).forEach(o=>{const x=equipmentById(o.id);if(x&&!items.has(o.id))items.set(o.id,{...x,id:o.id,cost:parsePointCost(o.cost),included:false});});
+ const magic=new Set(armyMagicItemsForUnit(unit).map(x=>String(x.name).toLowerCase())),mutations=new Set(armyChaosMutationsForUnit(unit).map(x=>String(x.name).toLowerCase()));
+ return [...items.values()].filter(x=>!magic.has(String(x.name).toLowerCase())&&!mutations.has(String(x.name).toLowerCase()));
+}
+function defaultArmyEquipmentChoices(unit,selectedOptionIds=[]){
+ const all=armyProfileEquipmentItems(unit),selected=new Set(selectedOptionIds||[]),choices={};
+ ["Weapons","Ranged Weapons","Armour"].forEach(group=>{const a=all.filter(x=>armyEquipmentGroup(x)===group),opt=a.find(x=>!x.included&&selected.has(x.id)),base=a.find(x=>x.included);choices[group]=opt?.id||base?.id||(group==="Armour"&&a.length?"__none__":"");});
+ return choices;
+}
+function ensureArmyEntryProfileState(entry,unit){
+ const profile=normalizeUnit(unit);entry.selectedOptionIds=Array.isArray(entry.selectedOptionIds)?entry.selectedOptionIds:[];
+ const magic=armyMagicItemsForUnit(unit),mutations=armyChaosMutationsForUnit(unit);
+ if(!Array.isArray(entry.selectedMagicItemIds))entry.selectedMagicItemIds=[];
+ if(!Array.isArray(entry.selectedChaosMutationIds))entry.selectedChaosMutationIds=[];
+ entry.selectedOptionIds.slice().forEach(id=>{const gear=equipmentById(id);if(!gear)return;const name=String(gear.name||"").toLowerCase(),m=magic.find(x=>String(x.name).toLowerCase()===name),c=mutations.find(x=>String(x.name).toLowerCase()===name);if(m){if(!entry.selectedMagicItemIds.includes(m.id))entry.selectedMagicItemIds.push(m.id);entry.selectedOptionIds=entry.selectedOptionIds.filter(x=>x!==id);}else if(c){if(!entry.selectedChaosMutationIds.includes(c.id))entry.selectedChaosMutationIds.push(c.id);entry.selectedOptionIds=entry.selectedOptionIds.filter(x=>x!==id);}});
+ const all=armyProfileEquipmentItems(unit),defaults=defaultArmyEquipmentChoices(unit,entry.selectedOptionIds);
+ if(!entry.selectedEquipmentChoices||typeof entry.selectedEquipmentChoices!=="object")entry.selectedEquipmentChoices={};
+ ["Weapons","Ranged Weapons","Armour"].forEach(group=>{const v=entry.selectedEquipmentChoices[group],valid=(v==="__none__"&&group==="Armour")||all.some(x=>x.id===v&&armyEquipmentGroup(x)===group);if(!valid)entry.selectedEquipmentChoices[group]=defaults[group]||"";});
+ const base=(profile.basicEquipmentIds||[]).filter(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Options";});
+ const existing=Array.isArray(entry.selectedAdditionalEquipmentIds)?entry.selectedAdditionalEquipmentIds:[];
+ const optional=entry.selectedOptionIds.filter(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Options";});
+ const validIds=new Set(all.filter(x=>armyEquipmentGroup(x)==="Options").map(x=>x.id));
+ entry.selectedAdditionalEquipmentIds=[...new Set([...base,...existing,...optional])].filter(id=>validIds.has(id));
+ entry.selectedMagicItemIds=entry.selectedMagicItemIds.filter(id=>magic.some(x=>x.id===id));
+ entry.selectedChaosMutationIds=entry.selectedChaosMutationIds.filter(id=>mutations.some(x=>x.id===id));
+}
+function armyEntryChosenMagicItems(entry,unit){const list=armyMagicItemsForUnit(unit),ids=new Set(entry.selectedMagicItemIds||[]);return list.filter(x=>ids.has(x.id));}
+function armyEntryChosenMutations(entry,unit){const list=armyChaosMutationsForUnit(unit),ids=new Set(entry.selectedChaosMutationIds||[]);return list.filter(x=>ids.has(x.id));}
+function armyEntryUnitCost(entry){
+ const unit=units.find(u=>u.id===entry.unitId);if(!unit)return 0;ensureArmyEntryProfileState(entry,unit);const p=normalizeUnit(unit);
+ const gear=(entry.selectedOptionIds||[]).reduce((sum,id)=>{const x=(p.optionEquipment||[]).find(o=>o.id===id);return sum+(x?parsePointCost(x.cost):0);},0);
+ const magic=armyEntryChosenMagicItems(entry,unit).reduce((sum,x)=>sum+parsePointCost(x.points),0);
+ const mutations=armyEntryChosenMutations(entry,unit).reduce((sum,x)=>sum+parsePointCost(x.points),0);
+ return parsePointCost(p.points)+gear+magic+mutations;
+}
+function armyEntryProfileCost(entry){return armyEntryUnitCost(entry)*Math.max(1,parseInt(entry.qty,10)||1);}
+function setArmyEntryEquipmentChoice(entryId,group,itemId){
+ const army=armies.find(x=>x.id===selectedArmyId),entry=army?.entries?.find(x=>x.id===entryId),unit=units.find(x=>x.id===entry?.unitId);if(!army||!entry||!unit)return;
+ ensureArmyEntryProfileState(entry,unit);entry.selectedEquipmentChoices[group]=itemId;const p=normalizeUnit(unit),ids=new Set(entry.selectedOptionIds||[]);
+ (p.optionEquipment||[]).forEach(o=>{const x=equipmentById(o.id);if(x&&armyEquipmentGroup(x)===group)ids.delete(o.id);});
+ const chosen=p.optionEquipment.find(x=>x.id===itemId);if(chosen&&parsePointCost(chosen.cost)>0)ids.add(itemId);
+ entry.selectedOptionIds=[...ids];save();renderArmies();
+}
+function toggleArmyEntryAdditionalEquipment(entryId,itemId,checked){
+ const army=armies.find(x=>x.id===selectedArmyId),entry=army?.entries?.find(x=>x.id===entryId),unit=units.find(x=>x.id===entry?.unitId);if(!army||!entry||!unit)return;
+ ensureArmyEntryProfileState(entry,unit);const item=armyProfileEquipmentItems(unit).find(x=>x.id===itemId);if(!item||item.included)return;
+ const selected=new Set(entry.selectedAdditionalEquipmentIds||[]),ids=new Set(entry.selectedOptionIds||[]);
+ if(checked){selected.add(itemId);if(item.cost>0)ids.add(itemId);}else{selected.delete(itemId);ids.delete(itemId);}
+ entry.selectedAdditionalEquipmentIds=[...selected];entry.selectedOptionIds=[...ids];save();renderArmies();
+}
+function setArmyEntryGeneral(entryId,checked){
+ const army=armies.find(x=>x.id===selectedArmyId);if(!army)return;army.entries=(army.entries||[]).map(x=>({...x,isGeneral:checked?x.id===entryId:false}));army.generalEntryId=checked?entryId:null;save();renderArmies();
+}
+function addArmyEntrySpecialItem(entryId,kind,selectId){
+ const army=armies.find(x=>x.id===selectedArmyId),entry=army?.entries?.find(x=>x.id===entryId),unit=units.find(x=>x.id===entry?.unitId),select=document.getElementById(selectId);if(!army||!entry||!unit||!select)return;
+ ensureArmyEntryProfileState(entry,unit);const magic=kind==="magicItems",list=magic?armyMagicItemsForUnit(unit):armyChaosMutationsForUnit(unit),item=list.find(x=>String(x.id)===select.value);if(!item){alert("Choose an item first.");return;}
+ const field=magic?"selectedMagicItemIds":"selectedChaosMutationIds";if(entry[field].includes(item.id)){alert("This item is already selected.");return;}
+ const cap=parsePointCost(magic?unit.magicItemLimit:unit.chaosMutationLimit),used=(magic?armyEntryChosenMagicItems(entry,unit):armyEntryChosenMutations(entry,unit)).reduce((sum,x)=>sum+parsePointCost(x.points),0);
+ if(used+parsePointCost(item.points)>cap){alert("This selection would exceed the points allowance.");return;}
+ entry[field].push(item.id);save();renderArmies();
+}
+function removeArmyEntrySpecialItem(entryId,kind,itemId){
+ const army=armies.find(x=>x.id===selectedArmyId),entry=army?.entries?.find(x=>x.id===entryId);if(!army||!entry)return;
+ const field=kind==="magicItems"?"selectedMagicItemIds":"selectedChaosMutationIds";entry[field]=(entry[field]||[]).filter(x=>x!==itemId);save();renderArmies();
+}
+function renderArmyEntrySpecialSection(entry,unit,kind){
+ const magic=kind==="magicItems",label=magic?"Magic Items":"Chaos Mutations",cap=parsePointCost(magic?unit.magicItemLimit:unit.chaosMutationLimit);
+ const list=magic?armyMagicItemsForUnit(unit):armyChaosMutationsForUnit(unit),selected=magic?armyEntryChosenMagicItems(entry,unit):armyEntryChosenMutations(entry,unit);
+ const used=selected.reduce((sum,x)=>sum+parsePointCost(x.points),0);if(!cap&&!selected.length)return "";
+ const selectId="army-"+kind+"-"+entry.id,chosen=new Set(selected.map(x=>String(x.id)));
+ const options=list.filter(x=>!chosen.has(String(x.id))).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' · '+parsePointCost(x.points)+' pts</option>').join("");
+ const chosenHtml=selected.map(x=>'<div class="army-profile-selected"><span>'+esc(x.name)+'</span><span class="army-profile-cost">'+parsePointCost(x.points)+' pts</span><button type="button" class="danger" onclick="removeArmyEntrySpecialItem(&quot;'+esc(entry.id)+'&quot;,&quot;'+kind+'&quot;,&quot;'+esc(x.id)+'&quot;)">Remove</button></div>').join("");
+ return '<details class="army-profile-accordion"><summary><strong>'+label+'</strong><span class="army-profile-limit">'+used+' / '+cap+' pts</span></summary><div class="army-profile-accordion-body"><div class="army-profile-add-row"><select id="'+esc(selectId)+'"><option value="" disabled selected>Select '+(magic?"a magic item":"a mutation")+'</option>'+options+'</select><button type="button" onclick="addArmyEntrySpecialItem(&quot;'+esc(entry.id)+'&quot;,&quot;'+kind+'&quot;,&quot;'+esc(selectId)+'&quot;)" '+(!options?"disabled":"")+'>Add</button></div>'+(chosenHtml||'<p class="army-profile-empty">No '+label.toLowerCase()+' selected.</p>')+'</div></details>';
+}
+function renderArmyEntryRadioGroup(entry,group,label,items,selectedId,allowNone){
+ if(!items.length)return "";
+ const none=allowNone?'<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="__none__" '+(selectedId==="__none__"?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;__none__&quot;)"><span>No armour</span><em class="army-profile-cost">free</em></label>':"";
+ const radios=items.map(x=>{const cost=parsePointCost(x.cost);return '<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="'+esc(x.id)+'" '+(selectedId===x.id?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;'+esc(x.id)+'&quot;)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+(cost?cost+" pts":"free")+'</em></label>';}).join("");
+ return '<section class="army-unit-profile-section"><h4>'+label+':</h4><div class="army-profile-control-list">'+none+radios+'</div></section>';
+}
+
+function armyEntryCost(entry) { return armyEntryProfileCost(entry); }
 
 function armyTotal(army) {
 return (army.entries||[]).reduce((sum,entry)=>sum+armyEntryCost(entry),0);
@@ -1922,7 +2046,10 @@ if(!army) return;
 const unitId=document.getElementById("armyUnit").value;
 const qty=Math.max(1,parseInt(document.getElementById("armyQty").value,10)||1);
 if(!unitId) { alert("Select a unit."); return; }
-army.entries.push({id:uid(),unitId,qty,selectedOptionIds:[]});
+const unit=units.find(x=>x.id===unitId);
+const entry={id:uid(),unitId,qty,selectedOptionIds:[],selectedMagicItemIds:[],selectedChaosMutationIds:[],isGeneral:false};
+if(unit)ensureArmyEntryProfileState(entry,unit);
+army.entries.push(entry);
 save();
 renderArmies();
 }
@@ -1931,6 +2058,7 @@ function removeArmyEntry(entryId) {
 const army=armies.find(a=>a.id===selectedArmyId);
 if(!army) return;
 army.entries=(army.entries||[]).filter(entry=>entry.id!==entryId);
+if(army.generalEntryId===entryId)army.generalEntryId=null;
 save();
 renderArmies();
 }
@@ -1942,23 +2070,11 @@ if(!entry) return;
 entry.qty=Math.max(1,parseInt(value,10)||1);
 save();
 const line=document.getElementById("entryCost-"+entryId);
-if(line) line.textContent=armyEntryCost(entry)+" pts";
+if(line) line.textContent=armyEntryUnitCost(entry)+" pts";
 renderArmySummary();
 }
 
-function toggleArmyOption(entryId,equipmentId,checked) {
-const army=armies.find(a=>a.id===selectedArmyId);
-const entry=army?.entries?.find(item=>item.id===entryId);
-if(!entry) return;
-const ids=new Set(entry.selectedOptionIds||[]);
-if(checked) ids.add(equipmentId);
-else ids.delete(equipmentId);
-entry.selectedOptionIds=[...ids];
-save();
-const line=document.getElementById("entryCost-"+entryId);
-if(line) line.textContent=armyEntryCost(entry)+" pts";
-renderArmySummary();
-}
+function toggleArmyOption(entryId,equipmentId,checked) { toggleArmyEntryAdditionalEquipment(entryId,equipmentId,checked); }
 
 function renderArmySummary() {
 const el=document.getElementById("armyCost");
@@ -1988,23 +2104,35 @@ function renderArmyEntriesByCategory(entries){
  return unitCategoryGroups(entries,entry=>units.find(u=>u.id===entry.unitId)||{name:"Missing unit",category:"Other"}).map(group=>{
   const cards=group.items.map(entry=>{
    const unit=units.find(u=>u.id===entry.unitId);
-   if(!unit)return '<div class="item"><div class="item-head"><div><strong>Missing unit</strong></div><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
-   const profile=normalizeUnit(unit);
-   const included=(profile.basicEquipmentIds||[]).map(equipmentById).filter(Boolean);
-   const options=profile.optionEquipment||[];
-   const selected=new Set(entry.selectedOptionIds||[]);
-   let html='<div class="item"><div class="item-head"><div><strong>'+esc(unit.name)+'</strong><br><small>'+esc(unit.category)+' · base '+parsePointCost(unit.points)+' pts · line <span id="entryCost-'+esc(entry.id)+'">'+armyEntryCost(entry)+' pts</span></small></div>';
-   html+='<div class="actions"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" style="width:80px" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
-   html+='<div style="margin-top:8px">'+(included.length?'<span class="muted">Included: </span>'+included.map(e=>'<span class="tag">'+esc(e.name)+'</span>').join(""):'<span class="muted">No included equipment.</span>')+'</div>';
-   html+='<div style="margin-top:8px">'+(options.length?'<div class="muted">Paid options</div><div class="rule-grid" style="margin-top:8px">'+options.map(o=>{
-    const item=equipmentById(o.id);if(!item)return "";
-    return '<div class="rule-option"><label><input type="checkbox" '+(selected.has(o.id)?'checked':'')+' onchange="toggleArmyOption(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(o.id)+'&quot;,this.checked)"><strong>'+esc(item.name)+'</strong> <span class="muted">+'+parsePointCost(o.cost)+' pts</span></label></div>';
-   }).join("")+'</div>':'<span class="muted">No paid options on this unit.</span>')+'</div></div>';
+   if(!unit)return '<div class="item"><div class="item-head"><strong>Missing unit</strong><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
+   ensureArmyEntryProfileState(entry,unit);
+   const profile=normalizeUnit(unit),gear=armyProfileEquipmentItems(unit),choices=entry.selectedEquipmentChoices||{};
+   const weapon=gear.filter(x=>armyEquipmentGroup(x)==="Weapons"),ranged=gear.filter(x=>armyEquipmentGroup(x)==="Ranged Weapons"),armour=gear.filter(x=>armyEquipmentGroup(x)==="Armour"),additional=gear.filter(x=>armyEquipmentGroup(x)==="Options");
+   const hasBasicArmour=(profile.basicEquipmentIds||[]).some(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Armour";});
+   const weaponsHtml=renderArmyEntryRadioGroup(entry,"Weapons","Weapons",weapon,choices.Weapons,false);
+   const rangedHtml=renderArmyEntryRadioGroup(entry,"Ranged Weapons","Missile Weapons",ranged,choices["Ranged Weapons"],false);
+   const armourHtml=renderArmyEntryRadioGroup(entry,"Armour","Armour",armour,choices.Armour,!hasBasicArmour);
+   const additionalHtml=additional.length?'<section class="army-unit-profile-section"><h4>Options:</h4><div class="army-profile-control-list">'+additional.map(x=>{const checked=(entry.selectedAdditionalEquipmentIds||[]).includes(x.id);return '<label class="army-profile-control"><input type="checkbox" '+(checked?'checked':'')+(x.included?' disabled':'')+' onchange="toggleArmyEntryAdditionalEquipment(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(x.id)+'&quot;,this.checked)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+(x.included?'free':parsePointCost(x.cost)+' pts')+'</em></label>';}).join("")+'</div></section>':"";
+   const keys=["M","WS","BS","S","T","W","I","A","Ld"],statHead=keys.map(x=>'<th>'+x+'</th>').join(""),statBody=keys.map(x=>'<td>'+esc((profile.stats||{})[x]||"-")+'</td>').join("");
+   const points=armyEntryUnitCost(entry),hero=String(unit.category||"").toLowerCase()==="hero";
+   const general=hero?'<label class="army-profile-general"><input type="checkbox" '+(armyEntriesGeneral(armies.find(a=>a.id===selectedArmyId),entry.id)?'checked':'')+' onchange="setArmyEntryGeneral(&quot;'+esc(entry.id)+'&quot;,this.checked)"> General</label>':"";
+   const rules=unitRuleDetails(profile).map(x=>'<a class="rlink" data-name="'+esc(x.label)+'" title="'+esc(x.desc||x.label)+'">'+esc(x.label)+'</a>');
+   (profile.customRules||[]).forEach(x=>rules.push('<span title="'+esc(x.desc||"")+'">'+esc(x.name)+'</span>'));
+   const rulesHtml='<section class="army-unit-profile-section army-profile-rules"><h4>Special Rules</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
+   const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\s*\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
+   const custom=profile.customEquipment||[],customHtml=custom.length?'<section class="army-unit-profile-section"><h4>Unit Equipment</h4>'+renderUnitCustomEquipment(custom)+'</section>':"";
+   const magicHtml=renderArmyEntrySpecialSection(entry,unit,"magicItems"),mutHtml=renderArmyEntrySpecialSection(entry,unit,"chaosMutations");
+   let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div><label class="army-unit-profile-qty"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" aria-label="Unit quantity" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"></label></header>';
+   html+=note+'<table class="army-unit-stats"><thead><tr><th>Model</th>'+statHead+'</tr></thead><tbody><tr><td>'+esc(unit.name)+'</td>'+statBody+'</tr></tbody></table>';
+   if(unit.baseSize||unit.troopType)html+='<div class="muted" style="margin:-5px 0 8px">Base: '+esc(unit.baseSize||"—")+' · '+esc(unit.troopType||"—")+'</div>';
+   html+=general+weaponsHtml+rangedHtml+armourHtml+additionalHtml+customHtml+magicHtml+mutHtml+rulesHtml+'</article>';
    return html;
   }).join("");
   return '<section class="unit-category-group"><h3 class="unit-category-heading">'+esc(group.name)+'</h3>'+cards+'</section>';
  }).join("");
 }
+function armyEntriesGeneral(army,entryId){return !!(army&&(army.generalEntryId===entryId||(army.entries||[]).some(x=>x.id===entryId&&x.isGeneral)));}
+
 function renderArmies() {
 const list=document.getElementById("armyList");
 const builder=document.getElementById("armyBuilder");
