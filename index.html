@@ -30,7 +30,7 @@ border-bottom:1px solid var(--line);
 }
 header h1 { color:var(--gold); letter-spacing:3px; margin:0; font-size:32px; }
 header p { color:var(--muted); margin:8px 0 0; }
-main { max-width:1500px; margin:auto; padding:20px; }
+main { max-width:1500px; margin:auto; padding:20px 236px 20px 20px; }
 button,input,select,textarea {
 font:inherit; color:var(--text); background:var(--panel2);
 border:1px solid var(--line); border-radius:5px; padding:10px;
@@ -39,8 +39,23 @@ button { cursor:pointer; }
 button:hover { border-color:var(--gold); color:var(--gold); }
 input,select,textarea { width:100%; }
 textarea { min-height:80px; resize:vertical; }
-.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
-.tabs button { padding:12px 17px; }
+.tabs {
+position:fixed; top:50%; right:16px; transform:translateY(-50%);
+z-index:1000; display:flex; flex-direction:column; align-items:stretch;
+flex-wrap:nowrap; gap:8px; width:200px; max-height:calc(100vh - 32px);
+overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain;
+padding:10px; margin:0; background:rgba(23,19,16,.97);
+border:1px solid var(--line); border-radius:9px;
+box-shadow:0 12px 32px rgba(0,0,0,.48);
+scrollbar-width:thin; scrollbar-color:var(--line) transparent;
+}
+.tabs button {
+width:100%; flex:0 0 auto; padding:11px 12px;
+text-align:left; white-space:normal; line-height:1.25;
+overflow-wrap:anywhere;
+}
+.tabs button.active { box-shadow:inset 3px 0 0 #17120d; }
+
 .tabs button.active { background:var(--gold); color:#17120d; }
 .panel {
 background:var(--panel); border:1px solid var(--line);
@@ -151,9 +166,17 @@ box-shadow:0 16px 40px rgba(0,0,0,.5);
 .install-banner strong { color:var(--gold); display:block; margin-bottom:8px; letter-spacing:1px; }
 .install-banner p { margin:0 0 8px; }
 @media(max-width:850px) {
+main { padding-right:184px; }
+.tabs { right:8px; width:160px; padding:8px; gap:6px; }
+.tabs button { padding:9px 8px; font-size:12px; }
 .grid { grid-template-columns:1fr; }
 .stat-grid { grid-template-columns:repeat(5,1fr); }
 .rule-grid { grid-template-columns:1fr; }
+}
+@media(max-width:520px) {
+main { padding:16px 138px 16px 10px; }
+.tabs { right:6px; width:120px; max-height:calc(100vh - 16px); padding:6px; gap:5px; }
+.tabs button { padding:8px 6px; font-size:10px; line-height:1.2; }
 }
 </style>
 <style>
