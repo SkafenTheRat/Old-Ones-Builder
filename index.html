@@ -19,10 +19,19 @@
 --line:#493b2d; --red:#a64c40;
 }
 * { box-sizing:border-box; }
+html {
+min-height:100%;
+background:#11100f;
+}
 body {
-margin:0; background:var(--bg); color:var(--text);
+min-height:100vh;
+margin:0; background-color:var(--bg); color:var(--text);
 font-family:Georgia,serif;
-background-image:radial-gradient(ellipse at top,#30251d,#11100f 70%);
+background-image:radial-gradient(ellipse 120% 100% at 50% 0%,#30251d 0%,#241c16 42%,#191512 74%,#11100f 100%);
+background-repeat:no-repeat;
+background-position:center top;
+background-size:100% 100vh;
+background-attachment:fixed;
 }
 header {
 text-align:center; padding:25px 15px; background:#171310;
