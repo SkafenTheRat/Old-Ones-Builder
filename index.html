@@ -235,11 +235,11 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <p class="muted">Create equipment that belongs only to this unit. Weapon profiles use the same table format as other weapons.</p>
 <div class="grid">
 <div class="field"><label>Equipment Name</label><input id="unitCustomEquipmentName" placeholder="Equipment name"></div>
-<div class="field"><label>Category</label><select id="unitCustomEquipmentCategory" onchange="toggleUnitCustomWeaponFields()"><option value="Melee Weapon">Melee Weapon</option><option value="Ranged Weapon">Ranged Weapon</option><option value="Armour">Armour</option><option value="Other Equipment">Other Equipment</option></select></div>
+<div class="field"><label>Category</label><select id="unitCustomEquipmentCategory" onchange="toggleUnitCustomWeaponFields()"><option value="" selected>Select category</option><option value="Melee Weapon">Melee Weapon</option><option value="Ranged Weapon">Ranged Weapon</option><option value="Armour">Armour</option><option value="Other Equipment">Other Equipment</option></select></div>
 <div class="field" style="grid-column:1/-1"><label>Description</label><textarea id="unitCustomEquipmentDesc" rows="2" placeholder="Description shown with this unit's equipment"></textarea></div>
 </div>
 <input id="unitCustomEquipmentEditId" type="hidden">
-<div id="unitCustomWeaponFields" style="margin-top:12px">
+<div id="unitCustomWeaponFields" style="margin-top:12px;display:none">
 <strong>Weapon Profile</strong>
 <p class="muted">Enter the values for this unit's weapon.</p>
 <div style="overflow-x:auto"><table class="wstats custom-weapon-editor"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing (AP)</th><th>Special Rules</th></tr></thead><tbody><tr>
@@ -968,7 +968,7 @@ if(fields)fields.style.display=isWeaponEquipment(category)?"block":"none";
 function resetUnitCustomEquipmentForm(){
 ["unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
 const id=document.getElementById("unitCustomEquipmentEditId");if(id)id.value="";
-const category=document.getElementById("unitCustomEquipmentCategory");if(category)category.value="Melee Weapon";
+const category=document.getElementById("unitCustomEquipmentCategory");if(category)category.value="";
 const cancel=document.getElementById("cancelUnitCustomEquipmentEdit");if(cancel)cancel.classList.add("hidden");
 const button=document.getElementById("addUnitCustomEquipmentButton");if(button)button.textContent="Add Custom Equipment";
 toggleUnitCustomWeaponFields();
