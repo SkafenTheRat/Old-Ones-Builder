@@ -82,6 +82,16 @@ touch-action:none; color:var(--muted); opacity:.8;
 background:var(--panel); border:1px solid var(--line);
 border-radius:8px; padding:18px; margin-bottom:18px; min-width:0;
 }
+
+.unit-category-group { margin:0 0 18px; }
+.unit-category-heading {
+color:var(--gold); font-size:17px; font-weight:700;
+letter-spacing:1px; text-transform:uppercase;
+margin:18px 0 10px; padding:0 0 7px;
+border-bottom:1px solid var(--line);
+}
+.unit-category-group:first-child .unit-category-heading { margin-top:4px; }
+
 h2 {
 color:var(--gold); font-size:21px; margin:0 0 16px;
 border-bottom:1px solid var(--line); padding-bottom:10px;
@@ -1399,6 +1409,37 @@ if(item.notes)html+='<p class="wnote">Notes: '+esc(item.notes)+'</p>';
 return html+'</div>';
 }).join("");
 }
+const UNIT_CATEGORY_ORDER=["Hero","Core","Special","Rare"];
+function unitCategoryLabel(unit){
+ const raw=String(typeof unit==="string"?unit:(unit?.category||"Other")).trim()||"Other";
+ return UNIT_CATEGORY_ORDER.find(name=>name.toLowerCase()===raw.toLowerCase())||raw;
+}
+function unitCategoryGroups(items,getUnit=item=>item){
+ const groups=new Map();
+ (items||[]).forEach(item=>{
+  const unit=getUnit(item)||{category:"Other"};
+  const category=unitCategoryLabel(unit);
+  if(!groups.has(category))groups.set(category,[]);
+  groups.get(category).push(item);
+ });
+ return [...groups.entries()].sort((a,b)=>{
+  const ai=UNIT_CATEGORY_ORDER.indexOf(a[0]),bi=UNIT_CATEGORY_ORDER.indexOf(b[0]);
+  const ao=ai<0?UNIT_CATEGORY_ORDER.length:ai,bo=bi<0?UNIT_CATEGORY_ORDER.length:bi;
+  return ao-bo||(ao===UNIT_CATEGORY_ORDER.length?a[0].localeCompare(b[0]):0);
+ }).map(([name,groupItems])=>({
+  name,items:groupItems.sort((a,b)=>{
+   const au=getUnit(a)||{},bu=getUnit(b)||{};
+   return String(au.name||"").localeCompare(String(bu.name||""),undefined,{sensitivity:"base"});
+  })
+ }));
+}
+function renderUnitOptionGroups(items,prefix,optionRenderer){
+ return unitCategoryGroups(items).map(group=>{
+  const label=[prefix,group.name].filter(Boolean).join(" — ");
+  return '<optgroup label="'+esc(label)+'">'+group.items.map(optionRenderer).join("")+'</optgroup>';
+ }).join("");
+}
+
 function renderUnits() {
 const faction=document.getElementById("filterFaction")?.value||"";
 const unitSelect=document.getElementById("catalogueUnitSelect");
@@ -1407,14 +1448,14 @@ const factionUnits=faction?units.filter(u=>u.factionId===faction).sort((a,b)=>St
 if(unitSelect){
  unitSelect.innerHTML=!faction
   ?'<option value="" disabled selected hidden>Select a faction first</option>'
-  :'<option value="">All units in this faction ('+factionUnits.length+')</option>'+factionUnits.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join("");
+  :'<option value="">All units in this faction ('+factionUnits.length+')</option>'+renderUnitOptionGroups(factionUnits,"",u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>');
  unitSelect.disabled=!faction||!factionUnits.length;
  unitSelect.value=factionUnits.some(u=>u.id===previousUnit)?previousUnit:"";
 }
 const selectedUnitId=unitSelect?.value||"";
 const list=selectedUnitId?factionUnits.filter(u=>u.id===selectedUnitId):factionUnits;
 
-document.getElementById("unitList").innerHTML=!faction?'<div class="empty">Select a faction to browse its units.</div>':!factionUnits.length?'<div class="empty">No units have been created for this faction yet.</div>':list.map(u=>{
+document.getElementById("unitList").innerHTML=!faction?'<div class="empty">Select a faction to browse its units.</div>':!factionUnits.length?'<div class="empty">No units have been created for this faction yet.</div>':unitCategoryGroups(list).map(group=>'<section class="unit-category-group"><h3 class="unit-category-heading">'+esc(group.name)+'</h3>'+group.items.map(u=>{
 let f=factions.find(x=>x.id===u.factionId);
 
 const unitStatKeys=["M","WS","BS","S","T","W","I","A","Ld"];
@@ -1466,7 +1507,7 @@ ${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
 ${u.sourceUrl?`<p class="muted"><a href="${esc(u.sourceUrl)}" target="_blank" rel="noopener">Source profile</a></p>`:""}
 </div>
 `;
-}).join("")||'';
+}).join("")+'</section>').join("")||'';
 }
 
 function addLibraryRule() {
@@ -1673,11 +1714,9 @@ function openPdfUnitPicker(){
   if(!groups.has(label))groups.set(label,[]);
   groups.get(label).push(unit);
  });
- select.innerHTML='<option value="" disabled selected hidden>Select a unit</option>'+[...groups.keys()].sort((a,b)=>a.localeCompare(b)).map(label=>{
-  const options=groups.get(label).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}))
-   .map(unit=>'<option value="'+esc(unit.id)+'">'+esc(unit.name)+' · '+esc(unit.category||"Unit")+'</option>').join("");
-  return '<optgroup label="'+esc(label)+'">'+options+'</optgroup>';
- }).join("");
+ select.innerHTML='<option value="" disabled selected hidden>Select a unit</option>'+[...groups.keys()].sort((a,b)=>a.localeCompare(b)).map(label=>
+  renderUnitOptionGroups(groups.get(label),label,unit=>'<option value="'+esc(unit.id)+'">'+esc(unit.name)+'</option>')
+ ).join("");
  if(!units.length)select.innerHTML='<option value="" disabled selected>No units available — create units first</option>';
  modal.classList.remove("hidden");
 }
@@ -1966,10 +2005,11 @@ const allowed=infamy?.allowedUnitIds||[];
 const factionUnits=units.filter(u=>unitAllowedInArmyList(u,army,infamy));
 const ownFactionUnits=factionUnits.filter(u=>u.factionId===army.factionId);
 const mercenaryUnits=factionUnits.filter(isMercenaryUnit);
+const unitOption=u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+parsePointCost(u.points)+' pts</option>';
 const unitOptions=[
-ownFactionUnits.length?`<optgroup label="${esc(factions.find(f=>f.id===army.factionId)?.name||"Faction")}">${ownFactionUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</optgroup>`:"",
-mercenaryUnits.length?`<optgroup label="Mercenaries">${mercenaryUnits.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} · ${parsePointCost(u.points)} pts</option>`).join("")}</optgroup>`:""
-].join("");
+ownFactionUnits.length?renderUnitOptionGroups(ownFactionUnits,factions.find(f=>f.id===army.factionId)?.name||"Faction",unitOption):"",
+mercenaryUnits.length?renderUnitOptionGroups(mercenaryUnits,"Mercenaries",unitOption):""
+].join("")
 const total=armyTotal(army);
 const limit=parsePointCost(army.pointsLimit);
 const over=limit>0&&total>limit;
@@ -2039,7 +2079,7 @@ if(!el) return;
 const current=armiesOfInfamy.find(x=>x.id===document.getElementById("editInfamyId")?.value);
 const allowed=new Set(current?.allowedUnitIds||[]);
 const isChecked=u=>!current||!current.allowedUnitIds?.length||allowed.has(u.id);
-const renderGroup=(title,list)=>list.length?'<div class="muted" style="grid-column:1/-1;margin-top:8px"><strong>'+esc(title)+'</strong></div>'+list.map(u=>'<div class="rule-option"><button type="button" class="choice-button infamy-unit '+(isChecked(u)?"selected":"")+'" data-unit-id="'+esc(u.id)+'" aria-pressed="'+isChecked(u)+'" onclick="toggleInfamyUnit(this)"><span class="choice-main"><strong>'+esc(u.name)+'</strong><small>'+esc(u.category||"Unit")+'</small></span><span class="choice-status">'+(isChecked(u)?"Selected":"Select")+'</span></button></div>').join(""):"";
+const renderGroup=(title,list)=>list.length?'<div class="muted" style="grid-column:1/-1;margin-top:8px"><strong>'+esc(title)+'</strong></div>'+unitCategoryGroups(list).map(group=>'<section class="unit-category-group" style="grid-column:1/-1"><h4 class="unit-category-heading">'+esc(group.name)+'</h4><div class="rule-grid">'+group.items.map(u=>'<div class="rule-option"><button type="button" class="choice-button infamy-unit '+(isChecked(u)?"selected":"")+'" data-unit-id="'+esc(u.id)+'" aria-pressed="'+isChecked(u)+'" onclick="toggleInfamyUnit(this)"><span class="choice-main"><strong>'+esc(u.name)+'</strong></span><span class="choice-status">'+(isChecked(u)?"Selected":"Select")+'</span></button></div>').join("")+'</div></section>').join(""):"";
 const factionUnits=units.filter(u=>u.factionId===factionId).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 const mercenaryUnits=units.filter(isMercenaryUnit).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"}));
 const content=renderGroup("Faction units",factionUnits)+renderGroup("Mercenaries",mercenaryUnits);
