@@ -354,11 +354,22 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
 <div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
 <div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
-<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3><div id="factionMagicItemLibrary" class="list-scroll"></div></div><h3>Add Custom Equipment</h3><div class="grid">
+<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3><div id="factionMagicItemLibrary" class="list-scroll"></div></div><h3 id="customEquipmentFormTitle">Add Custom Equipment</h3>
+<input id="editEquipmentId" type="hidden">
+<div class="grid">
 <div class="field"><label>Equipment Name</label><input id="newEquipmentName" placeholder="Equipment name"></div>
-<div class="field"><label>Category</label><select id="newEquipmentCategory"><option value="Melee Weapons">Melee Weapons</option><option value="Ranged Weapons">Ranged Weapons</option><option value="Armour">Armour</option><option value="Additional Equipment">Additional Equipment</option></select></div>
-<div class="field" style="grid-column:1/-1"><label>Description</label><input id="newEquipmentDesc" placeholder="Description"></div></div>
-<div class="actions"><button class="primary" onclick="addLibraryEquipment()">Add to Library</button></div></div></section>
+<div class="field"><label>Category</label><select id="newEquipmentCategory" onchange="toggleCustomWeaponFields()"><option value="Melee Weapons">Melee Weapons</option><option value="Ranged Weapons">Ranged Weapons</option><option value="Armour">Armour</option><option value="Additional Equipment">Additional Equipment</option></select></div>
+<div class="field" style="grid-column:1/-1"><label>Description</label><textarea id="newEquipmentDesc" rows="2" placeholder="Description shown with the equipment profile"></textarea></div>
+</div>
+<div id="customWeaponFields" class="grid" style="margin-top:12px">
+<div class="field" style="grid-column:1/-1"><strong>Weapon Profile</strong><small class="muted">These values appear in the weapon table.</small></div>
+<div class="field"><label>Range</label><input id="newEquipmentRange" placeholder='e.g. Combat, 24&quot;, 12–36&quot;'></div>
+<div class="field"><label>Strength</label><input id="newEquipmentStrength" placeholder="e.g. S, S+1, 4"></div>
+<div class="field"><label>Armour Piercing (AP)</label><input id="newEquipmentAp" placeholder="e.g. -, -1, -2"></div>
+<div class="field" style="grid-column:1/-1"><label>Special Rules</label><input id="newEquipmentSpecialRules" placeholder="Comma-separated special rules"></div>
+<div class="field" style="grid-column:1/-1"><label>Optional Note (shown below the table)</label><textarea id="newEquipmentNotes" rows="2" placeholder="Additional weapon rules or clarification"></textarea></div>
+</div>
+<div class="actions"><button class="primary" id="saveCustomEquipmentButton" onclick="addLibraryEquipment()">Add to Library</button><button id="cancelEquipmentEditButton" class="hidden" onclick="cancelLibraryEquipmentEdit()">Cancel</button></div></div></section>
 <section id="rules" class="tab hidden">
 <div class="panel">
 <h2>Special Rules Library</h2>
@@ -1049,13 +1060,61 @@ return '<div class="item" style="grid-column:1/-1"><strong>'+esc(group)+'</stron
 renderUnitCostSummary();
 }
 
+function isWeaponEquipment(itemOrCategory){
+const category=typeof itemOrCategory==="string"?itemOrCategory:String(itemOrCategory?.category||"");
+return ["melee weapon","melee weapons","ranged weapon","ranged weapons"].includes(category.trim().toLowerCase());
+}
+function toggleCustomWeaponFields(){
+const category=document.getElementById("newEquipmentCategory")?.value||"";
+const fields=document.getElementById("customWeaponFields");
+if(fields) fields.style.display=isWeaponEquipment(category)?"grid":"none";
+}
+function resetLibraryEquipmentForm(){
+["editEquipmentId","newEquipmentName","newEquipmentDesc","newEquipmentRange","newEquipmentStrength","newEquipmentAp","newEquipmentSpecialRules","newEquipmentNotes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+document.getElementById("newEquipmentCategory").value="Melee Weapons";
+document.getElementById("customEquipmentFormTitle").textContent="Add Custom Equipment";
+document.getElementById("saveCustomEquipmentButton").textContent="Add to Library";
+document.getElementById("cancelEquipmentEditButton").classList.add("hidden");
+toggleCustomWeaponFields();
+}
+function cancelLibraryEquipmentEdit(){resetLibraryEquipmentForm();}
+function editLibraryEquipment(id){
+const item=equipment.find(e=>e.id===id&&e.custom);
+if(!item)return;
+document.getElementById("editEquipmentId").value=item.id;
+document.getElementById("newEquipmentName").value=item.name||"";
+document.getElementById("newEquipmentCategory").value=equipmentGroup(item);
+document.getElementById("newEquipmentDesc").value=item.desc||"";
+const stored=item.weaponProfile||{};
+const fallback=weaponDetails[item.name]?.stats?.[0]||[];
+document.getElementById("newEquipmentRange").value=stored.range??fallback[0]??"";
+document.getElementById("newEquipmentStrength").value=stored.strength??fallback[1]??"";
+document.getElementById("newEquipmentAp").value=stored.ap??fallback[2]??"";
+document.getElementById("newEquipmentSpecialRules").value=stored.specialRules??fallback[3]??"";
+document.getElementById("newEquipmentNotes").value=item.notes||weaponDetails[item.name]?.notes||"";
+document.getElementById("customEquipmentFormTitle").textContent="Edit Custom Equipment";
+document.getElementById("saveCustomEquipmentButton").textContent="Save Equipment";
+document.getElementById("cancelEquipmentEditButton").classList.remove("hidden");
+toggleCustomWeaponFields();
+document.getElementById("newEquipmentName").scrollIntoView({behavior:"smooth",block:"center"});
+}
 function addLibraryEquipment() {
-const name=document.getElementById("newEquipmentName").value.trim(), category=document.getElementById("newEquipmentCategory").value, desc=document.getElementById("newEquipmentDesc").value.trim();
-if(!name) { alert("Enter an equipment name."); return; }
-if(equipment.some(e=>e.name.toLowerCase()===name.toLowerCase())) { alert("This equipment already exists."); return; }
-equipment.push({id:uid(),name,category,desc,custom:true});
-document.getElementById("newEquipmentName").value=""; document.getElementById("newEquipmentDesc").value="";
-save(); renderEquipment(); renderUnitEquipmentPicker();
+const id=document.getElementById("editEquipmentId").value;
+const name=document.getElementById("newEquipmentName").value.trim();
+const category=document.getElementById("newEquipmentCategory").value;
+const desc=document.getElementById("newEquipmentDesc").value.trim();
+if(!name){alert("Enter an equipment name.");return;}
+if(equipment.some(e=>e.id!==id&&e.name.toLowerCase()===name.toLowerCase())){alert("This equipment already exists.");return;}
+const item=id?equipment.find(e=>e.id===id&&e.custom):null;
+if(id&&!item){alert("This custom equipment entry could not be found.");return;}
+const updated={...(item||{}),id:id||uid(),name,category,desc,custom:true};
+if(isWeaponEquipment(category)){
+updated.weaponProfile={range:document.getElementById("newEquipmentRange").value.trim(),strength:document.getElementById("newEquipmentStrength").value.trim(),ap:document.getElementById("newEquipmentAp").value.trim(),specialRules:document.getElementById("newEquipmentSpecialRules").value.trim()||"-"};
+updated.notes=document.getElementById("newEquipmentNotes").value.trim();
+}else{delete updated.weaponProfile;delete updated.notes;}
+if(item)Object.assign(item,updated);else equipment.push(updated);
+resetLibraryEquipmentForm();
+save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();
 }
 function deleteLibraryEquipment(id) {
 if(!confirm("Delete this equipment from the library? It will also be removed from units.")) return;
@@ -1088,7 +1147,10 @@ function renderEquipmentGroup(list,privateItems){
 const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
 return groups.map(group=>{
 const items=list.filter(e=>equipmentGroup(e)===group);
-const rows=items.map(e=>'<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · Beastmen Brayherds only':'')+'</small></div>'+(privateItems?'<a href="'+esc(e.sourceUrl||"https://tow.whfb.app/army/beastmen-brayherds")+'" target="_blank" rel="noopener">Source</a>':e.custom?'<button class="danger" onclick="deleteLibraryEquipment(\''+e.id+'\')">Delete</button>':'<span class="muted">Shared Equipment</span>')+'</div>'+(privateItems&&e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>').join("");
+const rows=items.map(e=>{
+const actions=privateItems?'<a href="'+esc(e.sourceUrl||"https://tow.whfb.app/army/beastmen-brayherds")+'" target="_blank" rel="noopener">Source</a>':e.custom?'<span><button onclick="editLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Edit</button> <button class="danger" onclick="deleteLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Delete</button></span>':'<span class="muted">Shared Equipment</span>';
+return '<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · Beastmen Brayherds only':'')+'</small></div>'+actions+'</div>'+(e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>';
+}).join("");
 return '<section class="equipment-category"><h4 class="equipment-category-heading">'+esc(group)+' ('+items.length+')</h4>'+(rows||'<p class="muted">No equipment in this category.</p>')+'</section>';
 }).join("");
 }
@@ -2025,16 +2087,23 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 function ruleBase(n){return n.replace(/\s*\(.*?\)/,"").trim();}
 
 function openWeaponModal(name){
-const w=weaponDetails[name]; if(!w)return;
+const storedEquipment=equipment.find(e=>String(e.name||"").toLowerCase()===String(name||"").toLowerCase());
+const base=weaponDetails[name]||{};
+const profile=storedEquipment?.weaponProfile;
+const stats=profile?[[profile.range||"-",profile.strength||"-",profile.ap||"-",profile.specialRules||"-"]]:base.stats||[];
+if(!stats.length&&!base.desc&&!storedEquipment?.desc)return;
 document.getElementById("mTitle").textContent=name;
 let h="";
-w.stats.forEach(p=>{
-if(w.stats.length>1)h+="<h4>"+p[0].replace(/:.*/,"")+"</h4>";
-const rules=p[3]&&p[3]!=="-"?p[3].split(",").map(r=>'<a class="rlink" data-name="'+r.trim().replace(/"/g,"&quot;")+'">'+r.trim()+'</a>').join(", "):"-";
-h+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+p[0]+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td><td>'+rules+'</td></tr></table>';
+stats.forEach(p=>{
+if(stats.length>1)h+="<h4>"+esc(String(p[0]||"").replace(/:.*/,""))+"</h4>";
+const ruleText=String(p[3]||"").trim();
+const ruleLinks=ruleText&&ruleText!=="-"?ruleText.split(",").map(r=>{const v=r.trim();return '<a class="rlink" data-name="'+esc(v)+'">'+esc(v)+'</a>';}).join(", "):"-";
+h+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(p[0]??"-")+'</td><td>'+esc(p[1]??"-")+'</td><td>'+esc(p[2]??"-")+'</td><td>'+ruleLinks+'</td></tr></table>';
 });
-if(w.desc)h+="<p>"+w.desc+"</p>";
-if(w.notes)h+='<p class="wnote">Notes: '+w.notes+"</p>";
+const description=storedEquipment?.desc||base.desc||"";
+const notes=storedEquipment?.notes||base.notes||"";
+if(description)h+="<p>"+esc(description)+"</p>";
+if(notes)h+='<p class="wnote">Notes: '+esc(notes)+"</p>";
 document.getElementById("mBody").innerHTML=h;
 overlay.classList.remove("hidden");
 }
@@ -2064,7 +2133,7 @@ const b=e.target.closest(".rlink"); if(b){openRuleModal(b.dataset.name);return;}
 // ---------- make names clickable after each render ----------
 function linkifyNames(){
 const root=document.querySelector("main"); if(!root)return;
-const names=Object.keys(weaponDetails).concat(rules.map(r=>r.name),factionRules.map(r=>r.name));
+const names=[...new Set(Object.keys(weaponDetails).concat(equipment.map(e=>e.name),rules.map(r=>r.name),factionRules.map(r=>r.name)))];
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const re=new RegExp("("+names.slice().sort((a,b)=>b.length-a.length).map(escRe).join("|")+")","gi");
 const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
@@ -2076,7 +2145,7 @@ while((m=re.exec(text))){
 if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)));
 const exact=names.find(x=>x.toLowerCase()===m[0].toLowerCase());
 const a=document.createElement("a");
-a.className=weaponDetails[exact]?"wlink":"rlink";
+a.className=(weaponDetails[exact]||isWeaponEquipment(equipment.find(e=>String(e.name||"").toLowerCase()===String(exact||"").toLowerCase())))?"wlink":"rlink";
 a.dataset.name=exact; a.textContent=m[0];
 frag.appendChild(a); last=m.index+m[0].length;
 }
@@ -2102,16 +2171,18 @@ function workshopEditEquipment(){
  const n=prompt('Name:',e.name);if(n===null||!n.trim())return;
  const c=prompt('Category:',e.category)||e.category;
  const d=prompt('Description:',e.desc||'');if(d===null)return;
- e.name=n.trim();e.category=c;e.desc=d;
- if(c==='Melee Weapon'||c==='Ranged Weapon'){
-  const previous=(typeof weaponDetails==='object'&&weaponDetails[e.name])?weaponDetails[e.name]:null;
-  const profile=previous?.stats?.[0]||['Combat','S','-','-'];
-  const range=prompt('Range / profile type (e.g. Combat or 24"):',profile[0]);if(range===null)return;
-  const strength=prompt('Strength:',profile[1]);if(strength===null)return;
-  const ap=prompt('Armour Piercing:',profile[2]);if(ap===null)return;
-  const special=prompt('Special rules:',profile[3]);if(special===null)return;
-  weaponDetails[e.name]={cat:c,desc:d,stats:[[range,strength,ap,special||'-']],notes:previous?.notes||''};
+ let profile=null,notes=e.notes||"";
+ if(isWeaponEquipment(c)){
+  const existing=e.weaponProfile||weaponDetails[e.name]?.stats?.[0]||["","S","-","-"];
+  const range=prompt('Range:',e.weaponProfile?.range??existing[0]??"");if(range===null)return;
+  const strength=prompt('Strength:',e.weaponProfile?.strength??existing[1]??"S");if(strength===null)return;
+  const ap=prompt('Armour Piercing (AP):',e.weaponProfile?.ap??existing[2]??"-");if(ap===null)return;
+  const special=prompt('Special Rules:',e.weaponProfile?.specialRules??existing[3]??"-");if(special===null)return;
+  const note=prompt('Optional note shown below the table:',notes);if(note===null)return;
+  profile={range:range.trim(),strength:strength.trim(),ap:ap.trim(),specialRules:special.trim()||"-"};notes=note.trim();
  }
+ e.name=n.trim();e.category=c;e.desc=d;
+ if(profile){e.weaponProfile=profile;e.notes=notes;}else{delete e.weaponProfile;delete e.notes;}
  save();renderEquipment();renderUnitEquipmentPicker();renderUnits();workshopRefreshSelectors();
 }function workshopEditRule(){const r=rules.find(x=>x.id===document.getElementById('wRule').value);if(!r){alert('Choose a rule.');return;}const n=prompt('Rule name:',r.name);if(n===null||!n.trim())return;const d=prompt('Rule description:',r.desc||'');if(d===null)return;r.name=n.trim();r.desc=d;r.hasParameter=confirm('Does this rule require a bracket value?');save();renderRules();renderUnitRulePicker();renderUnits();workshopRefreshSelectors();}
 function workshopLoadArmy(id){const a=armies.find(x=>x.id===id);if(!a)return;document.getElementById('wArmy').value=id;document.getElementById('wArmyName').value=a.name;document.getElementById('wArmyLimit').value=a.pointsLimit??'';}
