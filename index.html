@@ -459,12 +459,15 @@ Regularly export a backup. Clearing your browser data may delete your saved armi
 </div>
 
 <div class="panel">
-<h2>Export Units to PDF</h2>
-<p class="muted">Creates a printable unit catalogue: full profiles, equipment, paid options and special rules. In the print dialog choose Save as PDF.</p>
+<h2>Export to PDF</h2>
+<p class="muted">Export a saved army roster or build a custom print list by adding individual units one at a time. In the print dialog choose Save as PDF.</p>
 <div class="grid">
 <div class="field">
-<label>Faction</label>
-<select id="pdfFaction"></select>
+<label>Export Type</label>
+<select id="pdfExportMode" onchange="renderPdfExportControls()">
+<option value="army">Saved Army List</option>
+<option value="selected">Selected Unit List</option>
+</select>
 </div>
 <div class="field">
 <label>Layout</label>
@@ -474,8 +477,31 @@ Regularly export a backup. Clearing your browser data may delete your saved armi
 </select>
 </div>
 </div>
+<div id="pdfArmyExportControls">
+<div class="field"><label>Saved Army</label><select id="pdfArmySelect"><option value="" disabled selected hidden>Select an army</option></select></div>
+</div>
+<div id="pdfUnitExportControls" class="hidden">
+<p class="muted">Add units individually. They will appear in the PDF in the same order as this list. You can add the same unit more than once.</p>
+<div class="actions">
+<button type="button" onclick="openPdfUnitPicker()">Add Unit</button>
+<button type="button" onclick="clearPdfUnitSelection()">Clear List</button>
+</div>
+<div id="pdfSelectedUnits" class="list-scroll" style="margin-top:12px"></div>
+</div>
 <div class="actions">
 <button class="primary" onclick="exportUnitsPdf()">Export PDF</button>
+</div>
+</div>
+<div id="pdfUnitPickerModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pdfUnitPickerTitle">
+<div class="modal-box">
+<button type="button" class="danger modal-close" onclick="closePdfUnitPicker()">Close</button>
+<h3 id="pdfUnitPickerTitle">Add Unit to PDF List</h3>
+<p class="muted">Choose a unit, then confirm to add it to your print list.</p>
+<div class="field"><label>Unit</label><select id="pdfUnitChoice"></select></div>
+<div class="actions">
+<button type="button" class="primary" onclick="confirmPdfUnitAdd()">Confirm Add</button>
+<button type="button" onclick="closePdfUnitPicker()">Cancel</button>
+</div>
 </div>
 </div>
 
