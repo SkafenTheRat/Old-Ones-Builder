@@ -361,13 +361,18 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <div class="field"><label>Category</label><select id="newEquipmentCategory" onchange="toggleCustomWeaponFields()"><option value="Melee Weapons">Melee Weapons</option><option value="Ranged Weapons">Ranged Weapons</option><option value="Armour">Armour</option><option value="Additional Equipment">Additional Equipment</option></select></div>
 <div class="field" style="grid-column:1/-1"><label>Description</label><textarea id="newEquipmentDesc" rows="2" placeholder="Description shown with the equipment profile"></textarea></div>
 </div>
-<div id="customWeaponFields" class="grid" style="margin-top:12px">
-<div class="field" style="grid-column:1/-1"><strong>Weapon Profile</strong><small class="muted">These values appear in the weapon table.</small></div>
-<div class="field"><label>Range</label><input id="newEquipmentRange" placeholder='e.g. Combat, 24&quot;, 12–36&quot;'></div>
-<div class="field"><label>Strength</label><input id="newEquipmentStrength" placeholder="e.g. S, S+1, 4"></div>
-<div class="field"><label>Armour Piercing (AP)</label><input id="newEquipmentAp" placeholder="e.g. -, -1, -2"></div>
-<div class="field" style="grid-column:1/-1"><label>Special Rules</label><input id="newEquipmentSpecialRules" placeholder="Comma-separated special rules"></div>
-<div class="field" style="grid-column:1/-1"><label>Optional Note (shown below the table)</label><textarea id="newEquipmentNotes" rows="2" placeholder="Additional weapon rules or clarification"></textarea></div>
+<div id="customWeaponFields" style="margin-top:12px">
+<strong>Weapon Profile</strong>
+<p class="muted">Edit the values directly in the table. They will appear in the weapon preview.</p>
+<div style="overflow-x:auto">
+<table class="wstats custom-weapon-editor"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing (AP)</th><th>Special Rules</th></tr></thead><tbody><tr>
+<td><input id="newEquipmentRange" aria-label="Range" placeholder='Combat, 24&quot;'></td>
+<td><input id="newEquipmentStrength" aria-label="Strength" placeholder="S, S+1, 4"></td>
+<td><input id="newEquipmentAp" aria-label="Armour Piercing" placeholder="-, -1, -2"></td>
+<td><input id="newEquipmentSpecialRules" aria-label="Special Rules" placeholder="Comma-separated rules"></td>
+</tr></tbody></table>
+</div>
+<div class="field" style="margin-top:10px"><label>Optional Note (shown below the table)</label><textarea id="newEquipmentNotes" rows="2" placeholder="Additional weapon rules or clarification"></textarea></div>
 </div>
 <div class="actions"><button class="primary" id="saveCustomEquipmentButton" onclick="addLibraryEquipment()">Add to Library</button><button id="cancelEquipmentEditButton" class="hidden" onclick="cancelLibraryEquipmentEdit()">Cancel</button></div></div></section>
 <section id="rules" class="tab hidden">
@@ -1953,6 +1958,8 @@ renderArmies();
 .wstats{width:100%;border-collapse:collapse;margin:10px 0}
 .wstats th,.wstats td{border:1px solid #493b2d;padding:6px 8px;text-align:center;font-size:13px}
 .wstats th{color:#c6a15b;background:#25201c}
+.custom-weapon-editor input{width:100%;min-width:76px;box-sizing:border-box;padding:7px;font-size:12px}
+.custom-weapon-editor td{padding:4px}
 .wlink,.rlink{color:#c6a15b;cursor:pointer;text-decoration:underline dotted}
 .muted a{color:#c6a15b;background:transparent;border:0;border-radius:0;padding:0;text-decoration:underline dotted;cursor:pointer}
 .muted a:hover{color:var(--gold);border:0}
