@@ -235,7 +235,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <p class="muted">Create equipment that belongs only to this unit. Weapon profiles use the same table format as other weapons.</p>
 <div class="grid">
 <div class="field"><label>Equipment Name</label><input id="unitCustomEquipmentName" placeholder="Equipment name"></div>
-<div class="field"><label>Category</label><select id="unitCustomEquipmentCategory" onchange="toggleUnitCustomWeaponFields()"><option value="" selected>Select category</option><option value="Melee Weapon">Melee Weapon</option><option value="Ranged Weapon">Ranged Weapon</option><option value="Armour">Armour</option><option value="Other Equipment">Other Equipment</option></select></div>
+<div class="field"><label>Category</label><select id="unitCustomEquipmentCategory" onchange="toggleUnitCustomWeaponFields()"><option value="" disabled selected hidden>Select category</option><option value="Melee Weapon">Melee Weapon</option><option value="Ranged Weapon">Ranged Weapon</option><option value="Armour">Armour</option><option value="Other Equipment">Other Equipment</option></select></div>
 <div class="field" style="grid-column:1/-1"><label>Description</label><textarea id="unitCustomEquipmentDesc" rows="2" placeholder="Description shown with this unit's equipment"></textarea></div>
 </div>
 <input id="unitCustomEquipmentEditId" type="hidden">
