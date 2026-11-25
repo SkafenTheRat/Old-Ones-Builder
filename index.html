@@ -291,7 +291,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <h2>Unit Catalogue</h2>
 <div class="grid">
 <div class="field"><label>Faction</label><select id="filterFaction" onchange="renderUnits()"></select></div>
-<div class="field"><label>Unit</label><select id="catalogueUnitSelect" onchange="renderUnits()"><option value="">Select a faction first</option></select></div>
+<div class="field"><label>Unit</label><select id="catalogueUnitSelect" onchange="renderUnits()"><option value="" disabled selected hidden>Select a faction first</option></select></div>
 </div>
 <div id="unitList" class="list-scroll" style="margin-top:15px"></div>
 </div>
@@ -349,7 +349,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 </div>
 <div class="field">
 <label>Army List Type</label>
-<select id="aInfamy" onchange="updateArmyListTypeHint()"><option value="">Grand Army / standard list</option></select>
+<select id="aInfamy" onchange="updateArmyListTypeHint()"><option value="" disabled selected hidden>Grand Army / standard list</option></select>
 </div>
 </div>
 <p id="armyListTypeHint" class="muted">Choose a faction first; an Army of Infamy can then be selected if one has been created for it.</p>
@@ -893,15 +893,15 @@ function playableArmyFactions() {
 return factions.filter(f=>!isMercenaryFaction(f));
 }
 function refreshUnitSelectors() {
-const allFactionOptions='<option value="">Select faction</option>'+
+const allFactionOptions='<option value="" disabled selected hidden>Select faction</option>'+
 factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
-const armyFactionOptions='<option value="">Select faction</option>'+
+const armyFactionOptions='<option value="" disabled selected hidden>Select faction</option>'+
 playableArmyFactions().map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
 
 document.getElementById("uFaction").innerHTML=allFactionOptions;
 
 const catalogueFaction=document.getElementById("filterFaction");
-if(catalogueFaction){const current=catalogueFaction.value;catalogueFaction.innerHTML='<option value="">Select faction</option>'+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");if(factions.some(f=>f.id===current))catalogueFaction.value=current;renderUnits();}
+if(catalogueFaction){const current=catalogueFaction.value;catalogueFaction.innerHTML='<option value="" disabled selected hidden>Select faction</option>'+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");if(factions.some(f=>f.id===current))catalogueFaction.value=current;renderUnits();}
 
 const aFaction=document.getElementById("aFaction");
 if(aFaction) {
@@ -1046,7 +1046,7 @@ const needsValue=r.hasParameter||parameterRules.includes(r.name);
 let html='<div class="rule-option">';
 html+='<button type="button" class="choice-button rule-choice '+(selected?"selected":"")+'" aria-pressed="'+selected+'" onclick=\'if(!event.target.closest(".rule-name-link"))toggleUnitRule("'+esc(r.id)+'")\'><span class="choice-main"><strong><a class="rlink rule-name-link" data-name="'+esc(r.name)+'">'+esc(r.name)+'</a></strong></span><span class="choice-status">'+(selected?"Selected":"Select")+'</span></button>';
 if(r.name==="Hatred"){
-html+='<select class="rule-value" aria-label="Hated faction" onchange=\'updateRuleFaction("'+esc(r.id)+'",this.value)\'><option value="">Select hated faction</option>'+factions.map(f=>'<option value="'+esc(f.id)+'" '+(editingRuleFactions[r.id]===f.id?"selected":"")+'>'+esc(f.name)+'</option>').join("")+'</select>';
+html+='<select class="rule-value" aria-label="Hated faction" onchange=\'updateRuleFaction("'+esc(r.id)+'",this.value)\'><option value="" disabled selected hidden>Select hated faction</option>'+factions.map(f=>'<option value="'+esc(f.id)+'" '+(editingRuleFactions[r.id]===f.id?"selected":"")+'>'+esc(f.name)+'</option>').join("")+'</select>';
 }
 if(needsValue) html+='<input type="text" class="rule-value" placeholder="Value, e.g. 2, D3, 10..." value="'+esc(value)+'" oninput=\'updateRuleValue("'+esc(r.id)+'",this.value)\'>';
 html+='</div>';
@@ -1300,7 +1300,7 @@ let faction=document.getElementById("filterFaction").value;
 let unitSelect=document.getElementById("catalogueUnitSelect");
 let previousUnit=unitSelect.value;
 let factionUnits=faction?units.filter(u=>u.factionId===faction).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),undefined,{sensitivity:"base"})):[];
-unitSelect.innerHTML=faction?'<option value="">Select a unit</option>'+factionUnits.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join(""):'<option value="">Select a faction first</option>';
+unitSelect.innerHTML=faction?'<option value="">Select a unit</option>'+factionUnits.map(u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>').join(""):'<option value="" disabled selected hidden>Select a faction first</option>';
 if(factionUnits.some(u=>u.id===previousUnit))unitSelect.value=previousUnit;
 let list=factionUnits.filter(u=>u.id===unitSelect.value);
 
@@ -1850,7 +1850,7 @@ ${infamy?.rulesText?'<div class="notice">'+esc(infamy.rulesText)+'</div>':''}
 <div id="armyCost" class="notice${over?" over-limit":""}">${limit>0?`${total} / ${limit} pts${over?" · over the limit":""}`:`${total} pts · no points limit`}</div>
 <p class="muted">Choose units from ${esc(factionName)} or from the shared Mercenaries pool. Mercenary units can be added to any other faction's army.</p>
 <div class="grid" style="margin-top:14px">
-<div class="field"><label>Unit</label><select id="armyUnit"><option value="">Select unit</option>${unitOptions}</select></div>
+<div class="field"><label>Unit</label><select id="armyUnit"><option value="" disabled selected hidden>Select unit</option>${unitOptions}</select></div>
 <div class="field"><label>Quantity</label><input id="armyQty" type="number" min="1" step="1" value="1"></div>
 </div>
 <div class="actions"><button class="primary" onclick="addArmyEntry()">Add to Army</button></div>
@@ -1883,7 +1883,7 @@ const factionId=document.getElementById("aFaction")?.value||"";
 const select=document.getElementById("aInfamy");
 if(!select) return;
 const previous=select.value;
-select.innerHTML='<option value="">Grand Army / standard list</option>'+armiesOfInfamy.filter(x=>x.factionId===factionId).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
+select.innerHTML='<option value="" disabled selected hidden>Grand Army / standard list</option>'+armiesOfInfamy.filter(x=>x.factionId===factionId).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join("");
 if(armiesOfInfamy.some(x=>x.id===previous&&x.factionId===factionId)) select.value=previous;
 updateArmyListTypeHint();
 }
@@ -2188,7 +2188,7 @@ linkifyNames();
 
 <script>
 function workshopRefreshSelectors(){
- const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="">Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
+ const fill=(id,items,label)=>{const e=document.getElementById(id);if(!e)return;const old=e.value;e.innerHTML='<option value="" disabled selected hidden>Select '+label+'</option>'+items.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');if(items.some(x=>x.id===old))e.value=old;};
  fill('wEquipment',equipment,'equipment');fill('wRule',rules,'rule');fill('wArmy',armies,'army');
 }
 function workshopEditEquipment(){
