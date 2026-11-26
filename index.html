@@ -239,6 +239,48 @@ main { padding:16px 120px 16px 28px; }
 .tabs { right:6px; width:120px; max-height:calc(100vh - 16px); padding:6px; gap:5px; }
 .tabs button { padding:8px 6px; font-size:10px; line-height:1.2; }
 }
+
+/* Universal builder search */
+.builder-search-button{
+ position:fixed;top:20px;right:226px;z-index:1100;width:42px;height:42px;
+ display:flex;align-items:center;justify-content:center;padding:0;
+ background:#211b16;border:1px solid var(--gold);border-radius:6px;
+ color:var(--gold);box-shadow:0 5px 16px rgba(0,0,0,.4);cursor:pointer;
+}
+.builder-search-button:hover{background:#72552c;color:#fff;border-color:#e1c17d}
+.builder-search-button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.builder-search-overlay{position:fixed;inset:0;z-index:1300;display:flex;align-items:flex-start;justify-content:center;padding:9vh 20px 24px;background:rgba(0,0,0,.76)}
+.builder-search-overlay.hidden{display:none!important}
+.builder-search-panel{width:min(760px,100%);max-height:82vh;display:flex;flex-direction:column;overflow:hidden;background:#1d1a18;border:1px solid var(--gold);border-radius:10px;box-shadow:0 18px 55px rgba(0,0,0,.6);color:var(--text)}
+.builder-search-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:17px 18px 12px;border-bottom:1px solid var(--line)}
+.builder-search-heading h2{margin:0 0 5px;padding:0;border:0;font-size:20px}
+.builder-search-heading p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+.builder-search-close{flex:0 0 34px;width:34px;height:34px;padding:0;font-size:24px;line-height:1;background:transparent;border-color:var(--line)}
+.builder-search-field{display:flex;align-items:center;gap:10px;margin:14px 18px 8px;padding:0 11px;background:#12100e;border:1px solid #80673e;border-radius:6px}
+.builder-search-field svg{width:19px;height:19px;flex:0 0 auto;fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.builder-search-field input{min-width:0;height:44px;padding:8px 0;background:transparent;border:0;outline:0;box-shadow:none}
+.builder-search-field kbd{flex:0 0 auto;padding:3px 6px;border:1px solid #554638;border-radius:4px;color:var(--muted);font-size:10px}
+.builder-search-count{padding:0 18px 9px;color:var(--muted);font-size:11px}
+.builder-search-results{overflow-y:auto;min-height:110px;padding:0 12px 12px;overscroll-behavior:contain}
+.builder-search-result{display:flex;width:100%;align-items:center;gap:12px;padding:10px 9px;margin:0 0 5px;text-align:left;background:#26211c;border:1px solid #403329;border-radius:6px;cursor:pointer}
+.builder-search-result:hover{background:#33291f;border-color:var(--gold)}
+.builder-search-result-main{min-width:0;flex:1}
+.builder-search-result-title{display:block;color:var(--text);font-size:14px;font-weight:700;line-height:1.3}
+.builder-search-result-meta{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.35}
+.builder-search-result-type{flex:0 0 auto;max-width:120px;padding:4px 6px;border:1px solid #594735;border-radius:4px;color:var(--gold);font-size:10px;text-align:center}
+.builder-search-empty{padding:22px 10px;color:var(--muted);font-size:13px;text-align:center}
+@media(max-width:850px){.builder-search-button{right:180px}}
+@media(max-width:520px){
+ .builder-search-button{top:12px;right:136px;width:38px;height:38px}
+ .builder-search-overlay{padding:5vh 10px 12px}
+ .builder-search-panel{max-height:90vh}
+ .builder-search-heading{padding:13px 13px 10px}
+ .builder-search-field{margin:12px 13px 8px}
+ .builder-search-count{padding:0 13px 8px}
+ .builder-search-results{padding:0 8px 8px}
+ .builder-search-result{gap:7px;padding:9px 7px}
+ .builder-search-result-type{max-width:88px;font-size:9px}
+}
 </style>
 <style>
 /* Global link colour: applies to existing and dynamically-created links in every state. */
@@ -265,6 +307,25 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <button onclick="showTab('rules',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Special Rules Library</button>
 <button onclick="showTab('data',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Data Management</button>
 
+</div>
+
+<button type="button" id="builderSearchButton" class="builder-search-button" title="Search everything in the builder" aria-label="Search everything in the builder">
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>
+</button>
+<div id="builderSearchOverlay" class="builder-search-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="builderSearchTitle">
+<div class="builder-search-panel">
+<div class="builder-search-heading">
+<div><h2 id="builderSearchTitle">Search Builder</h2><p>Search units, special rules, equipment and magic items across all factions.</p></div>
+<button type="button" id="builderSearchClose" class="builder-search-close" aria-label="Close search">×</button>
+</div>
+<div class="builder-search-field">
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>
+<input type="search" id="builderSearchInput" placeholder="Search anything in the builder..." autocomplete="off" spellcheck="false">
+<kbd>ESC</kbd>
+</div>
+<div id="builderSearchCount" class="builder-search-count">Type to search all builder content</div>
+<div id="builderSearchResults" class="builder-search-results"><p class="builder-search-empty">Start typing to see matching content.</p></div>
+</div>
 </div>
 
 <section id="units" class="tab">
@@ -3698,6 +3759,195 @@ linkifyNames();
   suppressClickUntil=0;
  },true);
 })();
+
+/* ---------- Universal builder search ---------- */
+let builderSearchResultMap = new Map();
+function builderSearchNormalize(value){
+ return String(value??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g,"and");
+}
+function builderSearchFactionName(id){
+ return factions.find(f=>f.id===id)?.name||"";
+}
+function builderSearchCollect(){
+ const entries=[];
+ const add=(kind,type,name,meta,search,data,sourceKey)=>{
+  if(!name)return;
+  entries.push({kind,type,name:String(name),meta:String(meta||""),search:builderSearchNormalize([name,meta,search].join(" ")),data,sourceKey:sourceKey||""});
+ };
+ (units||[]).forEach(unit=>{
+  const faction=builderSearchFactionName(unit.factionId);
+  const equipmentNames=[...(unit.basicEquipmentIds||[]),...(unit.optionEquipment||[]).map(x=>x.id)].map(equipmentById).filter(Boolean).map(x=>x.name);
+  const magicNames=unitItemList(unit,"magicItems","magic item").map(x=>x.name);
+  const mutationNames=unitItemList(unit,"chaosMutations","chaos mutation").map(x=>x.name);
+  const ruleNames=(unit.ruleIds||[]).map(id=>formatUnitRuleLabel(unit,id)).filter(Boolean);
+  const customRules=(unit.customRules||[]).map(x=>x.name+" "+(x.desc||"")).join(" ");
+  const stats=Object.entries(unit.stats||{}).map(x=>x.join(" ")).join(" ");
+  add("unit","Unit",unit.name,[faction,unit.category,unit.points+" pts"].filter(Boolean).join(" · "),
+   [unit.desc,unit.baseSize,unit.troopType,stats,equipmentNames.join(" "),magicNames.join(" "),mutationNames.join(" "),ruleNames.join(" "),customRules].join(" "),
+   {unit},"unit:"+unit.id);
+ });
+ (rules||[]).forEach(rule=>add("rule","Special Rule",rule.name,"Shared Special Rules",[rule.desc,rule.hasParameter?"Parameterized rule":""] .join(" "),{rule},"rule:shared:"+rule.id));
+ (factionRules||[]).forEach(rule=>add("rule","Special Rule",rule.name,(builderSearchFactionName(rule.factionId)||"Faction")+" · Special Rules",rule.desc,{rule},"rule:faction:"+rule.id));
+ (units||[]).forEach(unit=>{
+  (unit.customRules||[]).forEach((rule,index)=>add("rule","Custom Special Rule",rule.name,(builderSearchFactionName(unit.factionId)||"Faction")+" · "+unit.name,rule.desc,{rule,unit},"rule:custom:"+unit.id+":"+(rule.id||index)));
+ });
+ (equipment||[]).forEach(item=>add("equipment","Equipment",item.name,item.category||"Shared Equipment",[item.desc,item.notes,item.weaponProfile?Object.values(item.weaponProfile).join(" "):""].join(" "),{item,source:"shared"},"equipment:shared:"+item.id));
+ (factionEquipment||[]).forEach(item=>add("equipment","Equipment",item.name,(builderSearchFactionName(item.factionId)||"Faction")+" · "+(item.category||"Equipment"),[item.desc,item.notes,item.weaponProfile?Object.values(item.weaponProfile).join(" "):""].join(" "),{item,source:"faction"},"equipment:faction:"+item.id));
+ (units||[]).forEach(unit=>{
+  (unit.customEquipment||[]).forEach((item,index)=>{
+   const category=String(item.category||"").toLowerCase();
+   if(category==="magic item"||category==="magic items"||category==="chaos mutation"||category==="chaos mutations")return;
+   add("equipment","Custom Equipment",item.name,(builderSearchFactionName(unit.factionId)||"Faction")+" · "+unit.name+" · "+(item.category||"Equipment"),[item.desc,item.notes,item.weaponProfile?Object.values(item.weaponProfile).join(" "):""].join(" "),{item,source:"custom",unit},"equipment:custom:"+unit.id+":"+(item.id||index));
+  });
+ });
+ (magicItems||[]).forEach(item=>add("magic","Magic Item",item.name,"Common · "+(item.type||"Magic Item"),[item.points,item.desc,item.rules,item.notes,item.profile].join(" "),{item,source:"shared"},"magic:shared:"+item.id));
+ (factionMagicItems||[]).forEach(item=>add("magic","Magic Item",item.name,(item.factionName||builderSearchFactionName(item.factionId)||"Faction")+" · "+(item.type||"Magic Item"),[item.points,item.desc,item.rules,item.notes,item.profile].join(" "),{item,source:"faction"},"magic:faction:"+item.id));
+ (units||[]).forEach(unit=>{
+  unitItemList(unit,"magicItems","magic item").forEach((item,index)=>add("magic","Magic Item",item.name,(builderSearchFactionName(unit.factionId)||"Faction")+" · "+unit.name+" · "+(item.type||"Unit entry"),[item.points,item.desc,item.rules,item.notes,item.profile].join(" "),{item,source:"custom",unit},"magic:custom:"+unit.id+":"+(item.id||index)));
+  unitItemList(unit,"chaosMutations","chaos mutation").forEach((item,index)=>add("mutation","Chaos Mutation",item.name,(builderSearchFactionName(unit.factionId)||"Faction")+" · "+unit.name,[item.points,item.desc,item.rules,item.notes].join(" "),{item,source:"custom",unit},"mutation:"+unit.id+":"+(item.id||index)));
+ });
+ (factions||[]).forEach(faction=>add("faction","Faction",faction.name,"Faction",[faction.desc].join(" "),{faction},"faction:"+faction.id));
+ (armiesOfInfamy||[]).forEach(list=>add("infamy","Army of Infamy",list.name,builderSearchFactionName(list.factionId)||"Army List",[list.desc,list.source,list.sourceTitle].join(" "),{list},"infamy:"+list.id));
+ return entries;
+}
+function renderBuilderSearchResults(){
+ const input=document.getElementById("builderSearchInput");
+ const list=document.getElementById("builderSearchResults");
+ const count=document.getElementById("builderSearchCount");
+ if(!input||!list||!count)return;
+ const query=builderSearchNormalize(input.value).trim();
+ if(!query){
+  builderSearchResultMap=new Map();
+  count.textContent="Type to search all builder content";
+  list.innerHTML='<p class="builder-search-empty">Search across every faction, unit, rule, equipment entry and magic item.</p>';
+  return;
+ }
+ const tokens=query.split(/\s+/).filter(Boolean);
+ const matches=builderSearchCollect().filter(item=>tokens.every(token=>item.search.includes(token)));
+ matches.sort((a,b)=>{
+  const aExact=builderSearchNormalize(a.name).startsWith(query)?0:1;
+  const bExact=builderSearchNormalize(b.name).startsWith(query)?0:1;
+  return aExact-bExact||a.name.localeCompare(b.name,undefined,{sensitivity:"base"});
+ });
+ builderSearchResultMap=new Map();
+ const shown=matches.slice(0,80).map(item=>{
+  const key=uid();
+  builderSearchResultMap.set(key,item);
+  return '<button type="button" class="builder-search-result" data-search-key="'+esc(key)+'"><span class="builder-search-result-main"><span class="builder-search-result-title">'+esc(item.name)+'</span><span class="builder-search-result-meta">'+esc(item.meta)+'</span></span><span class="builder-search-result-type">'+esc(item.type)+'</span></button>';
+ }).join("");
+ count.textContent=matches.length?(matches.length+" result"+(matches.length===1?"":"s")+(matches.length>80?" · showing first 80":"")):"No matching content";
+ list.innerHTML=shown||'<p class="builder-search-empty">No matches found. Try another name or keyword.</p>';
+}
+function closeBuilderSearch(){
+ const modal=document.getElementById("builderSearchOverlay");
+ if(modal)modal.classList.add("hidden");
+}
+function openBuilderSearch(){
+ const modal=document.getElementById("builderSearchOverlay");
+ const input=document.getElementById("builderSearchInput");
+ if(!modal||!input)return;
+ modal.classList.remove("hidden");
+ renderBuilderSearchResults();
+ input.focus();
+ input.select();
+}
+function showBuilderSearchDetail(title,html){
+ document.getElementById("mTitle").textContent=title;
+ document.getElementById("mBody").innerHTML=html;
+ overlay.classList.remove("hidden");
+}
+function openBuilderSearchResult(key){
+ const result=builderSearchResultMap.get(key);
+ if(!result)return;
+ closeBuilderSearch();
+ const data=result.data||{};
+ if(result.kind==="unit"){
+  const button=document.querySelector('.tabs button[data-tab-id="catalogue"]')||Array.from(document.querySelectorAll(".tabs button")).find(x=>String(x.getAttribute("onclick")||"").includes("showTab('catalogue'"));
+  if(button)showTab("catalogue",button);
+  const factionSelect=document.getElementById("filterFaction");
+  if(factionSelect){factionSelect.value=data.unit.factionId;renderUnits();}
+  const unitSelect=document.getElementById("catalogueUnitSelect");
+  if(unitSelect){unitSelect.value=data.unit.id;renderUnits();}
+  return;
+ }
+ if(result.kind==="rule"){
+  openRuleModal(data.rule.name);
+  return;
+ }
+ if(result.kind==="equipment"){
+  const item=data.item||{};
+  if(data.source==="shared"&&isWeaponEquipment(item.category)){openWeaponModal(item.id||item.name);return;}
+  if(data.source==="shared"||data.source==="faction"){
+   openEquipmentModal(item.id||item.name);
+   if(!document.getElementById("mTitle").textContent||document.getElementById("mTitle").textContent!==item.name){
+    const category=item.category||"Equipment",desc=item.desc||"",notes=item.notes||"";
+    let html='<p><strong>Category:</strong> '+esc(category)+'</p>'+(desc?'<p>'+esc(desc)+'</p>':"");
+    const profile=item.weaponProfile||{};
+    if(isWeaponEquipment(category)&&(profile.range||profile.strength||profile.ap||profile.specialRules)){
+     html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(profile.range||"-")+'</td><td>'+esc(profile.strength||"-")+'</td><td>'+esc(profile.ap||"-")+'</td><td>'+esc(profile.specialRules||"-")+'</td></tr></table>';
+    }
+    if(notes)html+='<p class="wnote">Notes: '+esc(notes)+'</p>';
+    showBuilderSearchDetail(item.name,html);
+   }
+   return;
+  }
+  const custom=data.item||{},customProfile=custom.weaponProfile||{};
+  let html='<p><strong>Category:</strong> '+esc(custom.category||"Equipment")+'</p>'+(custom.desc?'<p>'+esc(custom.desc)+'</p>':"");
+  if(isWeaponEquipment(custom.category)&&(customProfile.range||customProfile.strength||customProfile.ap||customProfile.specialRules)){
+   html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(customProfile.range||"-")+'</td><td>'+esc(customProfile.strength||"-")+'</td><td>'+esc(customProfile.ap||"-")+'</td><td>'+esc(customProfile.specialRules||"-")+'</td></tr></table>';
+  }
+  if(custom.notes)html+='<p class="wnote">Notes: '+esc(custom.notes)+'</p>';
+  html+='<p class="muted">Unit: '+esc(data.unit?.name||"")+'</p>';
+  showBuilderSearchDetail(custom.name,html);
+  return;
+ }
+ if(result.kind==="magic"||result.kind==="mutation"){
+  const item=data.item||{},unit=data.unit;
+  if(data.source!=="custom"&&result.kind==="magic"){openMagicItemModal(item.id);return;}
+  let html="";
+  if(item.type)html+='<p><strong>Type:</strong> '+esc(item.type)+'</p>';
+  if(item.points!=null||item.cost!=null)html+='<p><strong>Points:</strong> '+esc(item.points??item.cost)+' pts</p>';
+  if(unit)html+='<p><strong>Faction / Unit:</strong> '+esc(builderSearchFactionName(unit.factionId))+' · '+esc(unit.name)+'</p>';
+  if(item.desc)html+='<p>'+esc(item.desc)+'</p>';
+  if(item.rules)html+='<p>'+esc(item.rules)+'</p>';
+  if(item.profile){
+   const profile=typeof item.profile==="string"?item.profile:Object.entries(item.profile).map(x=>x[0]+": "+(Array.isArray(x[1])?x[1].join(", "):x[1])).join(" · ");
+   html+='<p>'+esc(profile)+'</p>';
+  }
+  if(item.notes)html+='<p class="wnote">Notes: '+esc(item.notes)+'</p>';
+  if(item.sourceUrl)html+='<p><a href="'+esc(item.sourceUrl)+'" target="_blank" rel="noopener">Open source</a></p>';
+  showBuilderSearchDetail(item.name,html||'<p>No additional details are stored for this entry.</p>');
+  return;
+ }
+ if(result.kind==="faction"||result.kind==="infamy"){
+  const entry=data.faction||data.list||{};
+  const html='<p>'+(entry.desc?esc(entry.desc):"No additional description is stored for this entry.")+'</p>'+(entry.sourceUrl||entry.source?'<p><a href="'+esc(entry.sourceUrl||entry.source)+'" target="_blank" rel="noopener">Open source</a></p>':"");
+  showBuilderSearchDetail(entry.name,html);
+ }
+}
+document.getElementById("builderSearchButton")?.addEventListener("click",openBuilderSearch);
+document.getElementById("builderSearchClose")?.addEventListener("click",closeBuilderSearch);
+document.getElementById("builderSearchInput")?.addEventListener("input",renderBuilderSearchResults);
+document.getElementById("builderSearchResults")?.addEventListener("click",event=>{
+ const button=event.target.closest("[data-search-key]");
+ if(button)openBuilderSearchResult(button.dataset.searchKey);
+});
+document.getElementById("builderSearchOverlay")?.addEventListener("click",event=>{
+ if(event.target.id==="builderSearchOverlay")closeBuilderSearch();
+});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"){closeBuilderSearch();return;}
+ if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
+  event.preventDefault();openBuilderSearch();return;
+ }
+ if(event.key==="/"&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
+  const tag=String(document.activeElement?.tagName||"").toLowerCase();
+  if(!["input","textarea","select"].includes(tag)&&!document.activeElement?.isContentEditable){
+   event.preventDefault();openBuilderSearch();
+  }
+ }
+});
+
 </script>
 
 </body>
