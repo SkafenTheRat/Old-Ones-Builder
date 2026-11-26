@@ -2539,7 +2539,7 @@ const customRule=customRules.find(exact)||customRules.find(sameBase);
 const rule=factionRule||sharedRule||customRule;
 document.getElementById("mTitle").textContent=name;
 const description=rule?.desc||"Open the online index for the complete rule, its restrictions and interactions.";
-const source=rule?.sourceUrl||("https://tow.whfb.app/special-rules/"+base.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""));
+const source=specialRuleUrl(rule,name);
 if(String(name||"").toLowerCase()==="giant attacks"){
 const attacks=[
 {roll:"1",name:"'Eadbutt",url:"https://tow.whfb.app/special-rules/eadbutt-giant",effect:"Choose one model in the enemy unit's fighting rank. It suffers D3+1 wounds; no Armour or Regeneration saves, Ward saves allowed."},
@@ -3122,11 +3122,11 @@ function seedMagicItemCatalogue(){
    notes:"Each time a natural 6 is rolled for the Extra Attacks (+D6) special rule, the wielder of the Black Maul suffers a -1 modifier to their Weapon Skill characteristic (to a minimum of 1, and for the remainder of the game)."
   },
   "Primeval Club":{
-   profile:{range:"Combat",strength:"Leadership",ap:"-3",specialRules:"-"},
+   profile:{range:"Combat",strength:"Leadership",ap:"-3",specialRules:"Hatred (Empire), Magical Attacks, Poisoned Attacks"},
    notes:"The Strength characteristic of the Primeval Club is equal to the current Leadership characteristic of the model that wields it."
   },
   "Axe of Men":{
-   profile:{range:"Combat",strength:"S",ap:"-1",specialRules:"-"},
+   profile:{range:"Combat",strength:"S",ap:"-1",specialRules:"Killing Blow, Magical Attacks"},
    notes:"Should the wielder of the Axe of Men kill an enemy character (including champions) in a challenge, they gain the Terror special rule for the remainder of the game."
   },
   "The Axes of Khorgor":{
@@ -3134,15 +3134,15 @@ function seedMagicItemCatalogue(){
    notes:"The wielder of the Axes of Khorgor may re-roll any rolls To Wound of a natural 1 made during the Combat phase."
   },
   "Mangelder":{
-   profile:{range:"Combat",strength:"S+1",ap:"-1",specialRules:"-"},
+   profile:{range:"Combat",strength:"S+1",ap:"-1",specialRules:"Magical Attacks, Terror"},
    notes:"The wielder of the Mangelder causes Terror. Any enemy unit that suffers one or more unsaved wounds from the Mangelder suffers a -1 modifier to its Leadership characteristic (to a minimum of 2) until the end of the turn."
   },
   "Hunter's Spear":{
-   profile:{range:'24"',strength:"6",ap:"-3",specialRules:"-"},
+   profile:{range:'24"',strength:"6",ap:"-3",specialRules:"Cumbersome, Magical Attacks, Multiple Wounds (2), Through & Through"},
    notes:"The Hunter's Spear shoots like a bolt thrower, using the 'Through & Through' special rule."
   },
   "The Brass Cleaver":{
-   profile:{range:"Combat",strength:"S",ap:"-2",specialRules:"-"},
+   profile:{range:"Combat",strength:"S",ap:"-2",specialRules:"Magical Attacks"},
    notes:"Enemy models are not permitted an armour, Ward or Regeneration save against an attack made with this weapon if the wielder rolls a natural 6 when making a roll To Wound."
   },
   "Scimitar of Skultar":{
@@ -3320,9 +3320,20 @@ function equipmentRuleUrl(item){
  return "https://tow.whfb.app/weapons-of-war/"+(aliases[name]||indexSlug(name));
 }
 function specialRuleUrl(rule,name){
- if(rule?.sourceUrl) return rule.sourceUrl;
  const base=ruleBase(name||rule?.name||"");
- const aliases={"Armour Bane":"armour-bane-x","Armoured Hide":"armoured-hide-x","Extra Attacks":"extra-attacks-x","Fly":"fly-x","Hatred":"hatred-x","Impact Hits":"impact-hits-x","Magic Resistance":"magic-resistance-x","Multiple Shots":"multiple-shots-x","Multiple Wounds":"multiple-wounds-x","Regeneration":"regeneration-x","Stomp Attacks":"stomp-attacks-x"};
+ const exactUrls={
+  "Cumbersome":"https://tow.whfb.app/special-rules/cumbersome",
+  "Hatred":"https://tow.whfb.app/special-rules/hatred",
+  "Killing Blow":"https://tow.whfb.app/special-rules/killing-blow",
+  "Magical Attacks":"https://tow.whfb.app/special-rules/magical-attacks",
+  "Multiple Wounds":"https://tow.whfb.app/special-rules/multiple-wounds",
+  "Poisoned Attacks":"https://tow.whfb.app/special-rules/poisoned-attacks",
+  "Terror":"https://tow.whfb.app/special-rules/terror",
+  "Through & Through":"https://tow.whfb.app/war-machines/through-and-through"
+ };
+ if(exactUrls[base])return exactUrls[base];
+ if(rule?.sourceUrl)return rule.sourceUrl;
+ const aliases={"Armour Bane":"armour-bane-x","Armoured Hide":"armoured-hide-x","Extra Attacks":"extra-attacks-x","Fly":"fly-x","Impact Hits":"impact-hits-x","Magic Resistance":"magic-resistance-x","Multiple Shots":"multiple-shots-x","Regeneration":"regeneration-x","Stomp Attacks":"stomp-attacks-x"};
  return "https://tow.whfb.app/special-rules/"+(aliases[base]||indexSlug(base));
 }
 function findNamed(list,name){
@@ -3341,7 +3352,7 @@ function openMagicItemModal(idOrName){
  if(item.rules)html+='<p><strong>Rules:</strong> '+esc(item.rules)+'</p>';
  if(item.profile){
   const p=item.profile;
-  html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+esc(p.specialRules||"-")+'</td></tr></tbody></table>';
+  html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+((p.specialRules&&p.specialRules!=="-")?String(p.specialRules).split(",").map(r=>{const v=r.trim();return '<a class="rlink" data-name="'+esc(v)+'">'+esc(v)+'</a>';}).join(", "):"-")+'</td></tr></tbody></table>';
  }
  if(item.table&&Array.isArray(item.table.headers)&&Array.isArray(item.table.rows)){
   html+='<table class="wstats"><thead><tr>'+item.table.headers.map(h=>'<th>'+esc(h)+'</th>').join("")+'</tr></thead><tbody>'+item.table.rows.map(row=>'<tr>'+row.map(cell=>'<td>'+esc(cell)+'</td>').join("")+'</tr>').join("")+'</tbody></table>';
