@@ -1602,10 +1602,11 @@ return `
 <div>${profile}</div>
 <div class="muted"><b>Base Size:</b> ${esc(u.baseSize||"Not set")}</div>
 <div class="muted"><b>Troop Type:</b> ${esc(u.troopType||"Not set")}</div>
-<div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
+<div class="muted"><b>Equipment:</b> ${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")||"—"}</div>
+${(profileUnit.optionEquipment||[]).some(o=>equipmentById(o.id))?'<div class="muted" style="margin-top:6px"><b>Paid Options:</b> '+(profileUnit.optionEquipment||[]).map(o=>{
 const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
-}).join("")}</div>
+}).join("")+'</div>':""}
 
 ${unitItemList(u,"magicItems","magic item").length?'<div><b>Magic Items</b>'+renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))+'</div>':""}
 ${unitItemList(u,"chaosMutations","chaos mutation").length?'<div style="margin-top:8px"><b>Chaos Mutations</b>'+renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))+'</div>':""}
