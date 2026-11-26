@@ -277,7 +277,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 </div>
 <div class="field">
 <label>Owning Faction</label>
-<select id="uFaction" onchange="renderUnitRulePicker();renderUnitEquipmentPicker()"></select>
+<select id="uFaction" onchange="updateUnitCreatorFactionSections();renderUnitRulePicker();renderUnitEquipmentPicker()"></select>
 </div>
 <div class="field">
 <label>Category</label>
@@ -320,7 +320,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <div class="grid">
 <div class="field"><label>Equipment Name</label><input id="unitCustomEquipmentName" placeholder="Equipment name"></div>
 <div class="field"><label>Category</label><select id="unitCustomEquipmentCategory" onchange="toggleUnitCustomWeaponFields()"><option value="" disabled selected hidden>Select category</option><option value="Melee Weapon">Melee Weapon</option><option value="Ranged Weapon">Ranged Weapon</option><option value="Armour">Armour</option><option value="Other Equipment">Other Equipment</option></select></div>
-<div class="field" style="grid-column:1/-1"><label>Description</label><textarea id="unitCustomEquipmentDesc" rows="2" placeholder="Description shown with this unit's equipment"></textarea></div>
+<div class="field" id="unitCustomEquipmentDescriptionField" style="grid-column:1/-1"><label>Description</label><textarea id="unitCustomEquipmentDesc" rows="2" placeholder="Description shown with this unit's equipment"></textarea></div>
 </div>
 <input id="unitCustomEquipmentEditId" type="hidden">
 <div id="unitCustomWeaponFields" style="margin-top:12px;display:none">
@@ -336,12 +336,18 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 </div>
 <div class="actions"><button type="button" id="addUnitCustomEquipmentButton" onclick="addCustomEquipmentToUnit()">Add Custom Equipment</button><button type="button" id="cancelUnitCustomEquipmentEdit" class="hidden" onclick="resetUnitCustomEquipmentForm()">Cancel</button></div>
 <div id="pendingCustomEquipment"></div>
-<h3>Magic Items</h3><div class="grid"><div class="field"><label>Magic Items Allowance (pts)</label><input id="unitMagicItemLimit" type="number" min="0" step="1" placeholder="0"></div><div class="field"><label>Chaos Mutations Allowance (pts)</label><input id="unitChaosMutationLimit" type="number" min="0" step="1" placeholder="0"></div></div><p class="muted">Record magic items separately from normal equipment.</p>
+<h3>Magic Items</h3>
+<div class="field"><label>Magic Items Allowance (pts)</label><input id="unitMagicItemLimit" type="number" min="0" step="1" placeholder="0"></div>
+<p class="muted">Record magic items separately from normal equipment.</p>
 <div class="grid"><div class="field"><label>Magic Item Name</label><input id="unitMagicItemName" placeholder="Magic item name"></div><div class="field"><label>Description / Notes</label><input id="unitMagicItemDesc" placeholder="Optional description"></div></div>
 <div class="actions"><button type="button" onclick="addUnitListItem('magicItems')">Add Magic Item</button></div><div id="pendingUnitMagicItems"></div>
-<h3>Chaos Mutations</h3><p class="muted">Record Chaos Mutations in their own list.</p>
+<div id="unitChaosMutationsSection" class="hidden">
+<h3>Chaos Mutations</h3>
+<div class="field"><label>Chaos Mutations Allowance (pts)</label><input id="unitChaosMutationLimit" type="number" min="0" step="1" placeholder="0"></div>
+<p class="muted">Chaos Mutations are available for Warriors of Chaos and Beastmen Brayherds units.</p>
 <div class="grid"><div class="field"><label>Mutation Name</label><input id="unitChaosMutationName" placeholder="Chaos Mutation name"></div><div class="field"><label>Description / Notes</label><input id="unitChaosMutationDesc" placeholder="Optional description"></div></div>
 <div class="actions"><button type="button" onclick="addUnitListItem('chaosMutations')">Add Chaos Mutation</button></div><div id="pendingUnitChaosMutations"></div>
+</div>
 <h3>Special Rules</h3>
 <p class="muted">
 Select the rules you want to assign. If a rule requires a value in brackets, enter it below its name, e.g. 2, D3, 10 or 2D6.
@@ -850,6 +856,7 @@ const gearRows=[
 ];
 gearRows.forEach(row=>{
 const p=row.split("|"),name=p[0],id="br_eq_"+beastmenSlug(name);
+if(/Chaos Mutation|Magic Weapon|Magic Armour|Talisman|Magic Standard|Enchanted Item|Arcane Item/.test(p[2]))return;
 let path="army/beastmen-brayherds";
 if(p[2]==="Weapons of War")path="weapons-of-war/"+beastmenSlug(name);
 else if(p[2].includes("Chaos Mutation"))path="magic-items/chaos-mutations";
@@ -924,8 +931,7 @@ const baseIds=gearNames.map(x=>makeGear(x)?.id).filter(Boolean),options=new Map(
 optText.forEach(x=>{const i=x.lastIndexOf(":"),g=makeGear(x.slice(0,i));if(g)options.set(g.id,{id:g.id,cost:Number(x.slice(i+1))});});
 Object.keys(mutations).forEach(n=>{if(mutationCap&&mutations[n]<=mutationCap){const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:mutations[n]});}});
 const standards=["The Gore Banner","Totem of Rust","Banner of the Warped Moon","The Beast Banner","Manbane Standard","Vitriolic Totem","Banner of Outrage","The Soiled Tapestry"];
-Object.keys(magic).forEach(n=>{if(magicCap&&magic[n]<=magicCap&&!standards.includes(n)){const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:magic[n]});}});
-if(["bestigor-herd","minotaur-herd","centigor-herd","wargor"].includes(slug)) standards.forEach(n=>{const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:magic[n]});});
+const separatedGearIds=new Set([...Object.keys(magic),...Object.keys(mutations),...standards].map(itemName=>"br_eq_"+beastmenSlug(itemName)));
 const ids=[],values={};
 ruleNames.forEach(label=>{const a=resolveRule(label);if(a){ids.push(a.id);if(a.value)values[a.id]=a.value;}});
 const optionList=[...options.values()],costs={};baseIds.forEach(x=>costs[x]=0);optionList.forEach(x=>costs[x.id]=x.cost);
@@ -934,12 +940,42 @@ name,factionId:fid,category,points:String(points),
 stats:Object.fromEntries(["M","WS","BS","S","T","W","I","A","Ld"].map((k,i)=>[k,String(stat[i]||"-")])),
 baseSize:base,troopType:troop,unitSize:size,magicItemLimit:magicCap,chaosMutationLimit:mutationCap,
 ruleIds:[...new Set([...(existing?.ruleIds||[]).filter(ruleId=>slug!=="chaos-giant"||!new Set(["Belly Flop","'Eadbutt (Giant)","Jump Up & Down","Mighty Swing (Giant)","Thump with Club"]).has(ruleById(ruleId)?.name)),...ids])],ruleValues:{...(existing?.ruleValues||{}),...values},
-basicEquipmentIds:[...new Set([...(existing?.basicEquipmentIds||[]),...baseIds])],
-optionEquipment:[...new Map([...(existing?.optionEquipment||[]),...optionList].map(x=>[x.id,x])).values()],
-equipmentIds:[...new Set([...(existing?.equipmentIds||[]),...baseIds,...optionList.map(x=>x.id)])],
-equipmentCosts:{...(existing?.equipmentCosts||{}),...costs},customRules:existing?.customRules||[],desc:existing?.desc||desc};
+basicEquipmentIds:[...new Set([...(existing?.basicEquipmentIds||[]).filter(x=>!separatedGearIds.has(x)),...baseIds])],
+optionEquipment:[...new Map([...(existing?.optionEquipment||[]).filter(x=>!separatedGearIds.has(x.id)),...optionList].map(x=>[x.id,x])).values()],
+equipmentIds:[...new Set([...(existing?.equipmentIds||[]).filter(x=>!separatedGearIds.has(x)),...baseIds,...optionList.map(x=>x.id)])],
+equipmentCosts:{...Object.fromEntries(Object.entries(existing?.equipmentCosts||{}).filter(([x])=>!separatedGearIds.has(x))),...costs},customRules:existing?.customRules||[],desc:existing?.desc||desc};
 units=existing?units.map(x=>x.id===existing.id?unit:x):units.concat(unit);
 });
+const standards=["The Gore Banner","Totem of Rust","Banner of the Warped Moon","The Beast Banner","Manbane Standard","Vitriolic Totem","Banner of Outrage","The Soiled Tapestry"];
+const separatedNames=[...Object.keys(magic),...Object.keys(mutations),...standards];
+const separatedIds=new Set(separatedNames.map(name=>"br_eq_"+beastmenSlug(name)));
+const specialNameById=new Map(separatedNames.map(name=>["br_eq_"+beastmenSlug(name),name]));
+factionEquipment=factionEquipment.filter(item=>!(item.factionId===fid&&separatedIds.has(item.id)));
+const mutationIdByName={"Slug-skin":"mutation_slug_skin","Crown of Horns (Beastmen)":"mutation_crown_of_horns","Muscular Monstrosity":"mutation_muscular_monstrosity","Pelt of Midnight":"mutation_pelt_of_midnight","Gouge-tusks":"mutation_gouge_tusks","Rune of the Beast Ascendant":"mutation_rune_of_the_beast_ascendant","Many-limbed Fiend":"mutation_many_limbed_fiend","Gnarled Hide":"mutation_gnarled_hide","Uncanny Senses":"mutation_uncanny_senses"};
+units=units.map(unit=>{
+ if(unit.factionId!==fid)return unit;
+ const profile=normalizeUnit(unit);
+ return {...profile,
+  basicEquipmentIds:(profile.basicEquipmentIds||[]).filter(id=>!separatedIds.has(id)),
+  optionEquipment:(profile.optionEquipment||[]).filter(option=>!separatedIds.has(option.id)),
+  equipmentIds:(profile.equipmentIds||[]).filter(id=>!separatedIds.has(id)),
+  equipmentCosts:Object.fromEntries(Object.entries(profile.equipmentCosts||{}).filter(([id])=>!separatedIds.has(id)))
+ };
+});
+armies=armies.map(army=>({...army,entries:(army.entries||[]).map(entry=>{
+ const unit=units.find(x=>x.id===entry.unitId);
+ if(unit?.factionId!==fid)return entry;
+ const selected=new Set(entry.selectedOptionIds||[]),selectedMagic=new Set(entry.selectedMagicItemIds||[]),selectedMutations=new Set(entry.selectedChaosMutationIds||[]);
+ specialNameById.forEach((name,legacyId)=>{
+  if(!selected.has(legacyId))return;
+  if(Object.prototype.hasOwnProperty.call(magic,name))selectedMagic.add("fmi_beastmen_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"));
+  else if(Object.prototype.hasOwnProperty.call(mutations,name)){const mutationId=mutationIdByName[name];if(mutationId)selectedMutations.add(mutationId);}
+  selected.delete(legacyId);
+ });
+ const equipmentChoices={...(entry.selectedEquipmentChoices||{})};
+ Object.keys(equipmentChoices).forEach(group=>{if(separatedIds.has(equipmentChoices[group]))delete equipmentChoices[group];});
+ return {...entry,selectedOptionIds:[...selected],selectedMagicItemIds:[...selectedMagic],selectedChaosMutationIds:[...selectedMutations],selectedAdditionalEquipmentIds:(entry.selectedAdditionalEquipmentIds||[]).filter(id=>!separatedIds.has(id)),selectedEquipmentChoices:equipmentChoices};
+})}));
 }
 function syncCoreEquipmentCatalogue(){
 defaultEquipment.forEach(def=>{
@@ -1012,6 +1048,7 @@ const armyFactionOptions='<option value="" disabled selected hidden>Select facti
 playableArmyFactions().map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
 
 document.getElementById("uFaction").innerHTML=allFactionOptions;
+updateUnitCreatorFactionSections();
 
 const catalogueFaction=document.getElementById("filterFaction");
 if(catalogueFaction){const current=catalogueFaction.value;catalogueFaction.innerHTML='<option value="" disabled selected hidden>Select faction</option>'+factions.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");if(factions.some(f=>f.id===current))catalogueFaction.value=current;renderUnits();}
@@ -1073,6 +1110,8 @@ function toggleUnitCustomWeaponFields(){
 const category=document.getElementById("unitCustomEquipmentCategory")?.value||"";
 const fields=document.getElementById("unitCustomWeaponFields");
 if(fields)fields.style.display=isWeaponEquipment(category)?"block":"none";
+const descriptionField=document.getElementById("unitCustomEquipmentDescriptionField");
+if(descriptionField)descriptionField.style.display=isWeaponEquipment(category)?"none":"block";
 }
 function resetUnitCustomEquipmentForm(){
 ["unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
@@ -1090,11 +1129,12 @@ const desc=document.getElementById("unitCustomEquipmentDesc").value.trim();
 if(!name){alert("Enter an equipment name.");return;}
 if(pendingCustomEquipment.some(e=>e.id!==editId&&e.name.toLowerCase()===name.toLowerCase())){alert("This custom equipment already exists for this unit.");return;}
 const existing=editId?pendingCustomEquipment.find(e=>e.id===editId):null;
-const item={...(existing||{}),id:editId||uid(),name,category,desc};
+const item={...(existing||{}),id:editId||uid(),name,category};
 if(isWeaponEquipment(category)){
+delete item.desc;
 item.weaponProfile={range:document.getElementById("unitCustomEquipmentRange").value.trim(),strength:document.getElementById("unitCustomEquipmentStrength").value.trim(),ap:document.getElementById("unitCustomEquipmentAp").value.trim(),specialRules:document.getElementById("unitCustomEquipmentSpecialRules").value.trim()||"-"};
 item.notes=document.getElementById("unitCustomEquipmentNotes").value.trim();
-}else{delete item.weaponProfile;delete item.notes;}
+}else{item.desc=desc;delete item.weaponProfile;delete item.notes;}
 if(existing)Object.assign(existing,item);else pendingCustomEquipment.push(item);
 resetUnitCustomEquipmentForm();renderPendingCustomEquipment();
 }
@@ -1125,7 +1165,7 @@ const el=document.getElementById("pendingCustomEquipment");if(!el)return;
 el.innerHTML=pendingCustomEquipment.map(item=>{
 let html='<div class="item"><div class="item-head"><div><strong>'+esc(item.name)+'</strong><br><small>'+esc(item.category||"Equipment")+'</small></div><span><button type="button" onclick="editPendingCustomEquipment(&quot;'+esc(item.id)+'&quot;)">Edit</button> <button type="button" class="danger" onclick="removePendingCustomEquipment(&quot;'+esc(item.id)+'&quot;)">Remove</button></span></div>';
 if(isWeaponEquipment(item.category)){const p=item.weaponProfile||{};html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+esc(p.specialRules||"-")+'</td></tr></tbody></table>';}
-if(item.desc)html+='<p class="muted">'+esc(item.desc)+'</p>';
+if(item.desc&&!isWeaponEquipment(item.category))html+='<p class="muted">'+esc(item.desc)+'</p>';
 if(item.notes)html+='<p class="wnote">Notes: '+esc(item.notes)+'</p>';
 return html+'</div>';
 }).join("");
@@ -1224,7 +1264,7 @@ const cards=items.map(e=>{
 const included=editingBasicEquipmentIds.includes(e.id);
 const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
 let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong>';
-if(e.desc) html+='<small class="equipment-description">'+esc(e.desc)+'</small>';
+if(e.desc&&!isWeaponEquipment(e)) html+='<small class="equipment-description">'+esc(e.desc)+'</small>';
 html+='<div class="equip-modes">';
 html+='<label><input type="checkbox" '+(included?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;basic&quot;,this.checked)"> Included</label>';
 html+='<label><input type="checkbox" '+(paid?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;paid&quot;,this.checked)"> Paid option</label>';
@@ -1236,6 +1276,18 @@ return html;
 return '<div class="item" style="grid-column:1/-1"><strong>'+esc(group)+'</strong><div class="rule-grid" style="margin-top:8px">'+cards+'</div></div>';
 }).join("")||'<p class="muted">No equipment in the library.</p>';
 renderUnitCostSummary();
+}
+
+function unitFactionAllowsChaosMutations(factionId){
+ const faction=factions.find(x=>x.id===factionId);
+ const name=String(faction?.name||"").trim().toLowerCase();
+ return name==="warriors of chaos"||name==="beastmen brayherds";
+}
+function updateUnitCreatorFactionSections(){
+ const allowed=unitFactionAllowsChaosMutations(document.getElementById("uFaction")?.value||"");
+ const section=document.getElementById("unitChaosMutationsSection");
+ if(section)section.classList.toggle("hidden",!allowed);
+ return allowed;
 }
 
 function isWeaponEquipment(itemOrCategory){
@@ -1300,6 +1352,7 @@ function addUnitListItem(key){
 const magic=key==="magicItems",prefix=magic?"unitMagicItem":"unitChaosMutation";
 const name=document.getElementById(prefix+"Name").value.trim(),desc=document.getElementById(prefix+"Desc").value.trim();
 if(!name){alert(magic?"Enter a magic item name.":"Enter a Chaos Mutation name.");return;}
+if(!magic&&!unitFactionAllowsChaosMutations(document.getElementById("uFaction")?.value||"")){alert("Chaos Mutations are only available to Warriors of Chaos and Beastmen Brayherds.");return;}
 const list=magic?pendingMagicItems:pendingChaosMutations;
 if(list.some(x=>String(x.name||"").toLowerCase()===name.toLowerCase())){alert("This entry is already listed.");return;}
 list.push({id:uid(),name,desc});
@@ -1357,11 +1410,11 @@ optionEquipment,
 equipmentIds:[...basicEquipmentIds,...optionEquipment.map(o=>o.id)],
 equipmentCosts,
 customRules:pendingCustomRules.filter(r=>!r.libraryId).map(r=>({...r})),
-customEquipment:pendingCustomEquipment.map(e=>({...e,weaponProfile:e.weaponProfile?{...e.weaponProfile}:undefined})),
+customEquipment:pendingCustomEquipment.map(e=>{const item={...e,weaponProfile:e.weaponProfile?{...e.weaponProfile}:undefined};if(isWeaponEquipment(item.category))delete item.desc;return item;}),
 magicItems:pendingMagicItems.map(e=>({...e})),
-chaosMutations:pendingChaosMutations.map(e=>({...e})),
+chaosMutations:unitFactionAllowsChaosMutations(factionId)?pendingChaosMutations.map(e=>({...e})):[],
 magicItemLimit:parsePointCost(document.getElementById("unitMagicItemLimit").value),
-chaosMutationLimit:parsePointCost(document.getElementById("unitChaosMutationLimit").value),
+chaosMutationLimit:unitFactionAllowsChaosMutations(factionId)?parsePointCost(document.getElementById("unitChaosMutationLimit").value):0,
 desc:document.getElementById("uDesc").value
 };
 
@@ -1392,7 +1445,7 @@ function resetUnitForm() {
 ["uName","uPoints","uDesc","editUnitId","uBaseSize","unitMagicItemLimit","unitChaosMutationLimit","sM","sWS","sBS","sS","sT","sW","sI","sA","sLd","customRuleName","customRuleDesc","unitCustomEquipmentEditId","unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>document.getElementById(id).value="");
 document.getElementById("uCategory").value="Core";
 document.getElementById("uTroopType").value="";
-pendingCustomRules=[];pendingCustomEquipment=[];pendingMagicItems=[];pendingChaosMutations=[];resetUnitCustomEquipmentForm();
+pendingCustomRules=[];pendingCustomEquipment=[];pendingMagicItems=[];pendingChaosMutations=[];resetUnitCustomEquipmentForm();updateUnitCreatorFactionSections();
 document.getElementById("unitMagicItemName").value="";document.getElementById("unitMagicItemDesc").value="";document.getElementById("unitChaosMutationName").value="";document.getElementById("unitChaosMutationDesc").value="";renderUnitSpecialLists();
 editingRuleIds=[];editingRuleValues={};editingRuleFactions={};editingBasicEquipmentIds=[];editingOptionCosts={};
 renderPendingCustomRules();renderPendingCustomEquipment();renderUnitRulePicker();renderUnitEquipmentPicker();renderUnitCostSummary();
@@ -1403,6 +1456,7 @@ let u=units.find(x=>x.id===id);
 document.getElementById("editUnitId").value=u.id;
 document.getElementById("uName").value=u.name;
 document.getElementById("uFaction").value=u.factionId;
+updateUnitCreatorFactionSections();
 document.getElementById("uCategory").value=u.category;
 document.getElementById("uPoints").value=u.points||"";
 document.getElementById("uDesc").value=u.desc||"";
@@ -1909,7 +1963,7 @@ function armyEquipmentGroup(item){const c=String(item?.category||"").trim().toLo
 function armyMagicItemsForUnit(unit){
  const profile=normalizeUnit(unit),optionNames=new Set((profile.optionEquipment||[]).map(o=>equipmentById(o.id)?.name?.toLowerCase()).filter(Boolean));
  const all=[...(magicItems||[]),...(factionMagicItems||[]).filter(x=>x.factionId===unit.factionId)],seen=new Set(),items=[];
- all.forEach(item=>{const key=String(item.name||"").toLowerCase();if(!key||seen.has(key)||(item.type==="Magic Standard"&&!optionNames.has(key)))return;const points=parsePointCost(item.points);if(points>parsePointCost(unit.magicItemLimit))return;seen.add(key);items.push({...item,points});});
+ all.forEach(item=>{const key=String(item.name||"").toLowerCase();if(!key||seen.has(key)||(item.type==="Magic Standard"&&!["bestigor-herd","minotaur-herd","centigor-herd","wargor"].includes(String(unit.sourceKey||"").split(":")[1])))return;const points=parsePointCost(item.points);if(points>parsePointCost(unit.magicItemLimit))return;seen.add(key);items.push({...item,points});});
  unitItemList(unit,"magicItems","magic item").forEach((item,i)=>{const key=String(item.name||"").toLowerCase(),points=parsePointCost(item.points??item.cost);if(key&&!seen.has(key)&&points<=parsePointCost(unit.magicItemLimit)){seen.add(key);items.push({...item,id:item.id||"unit_magic_"+i,type:item.type||"Magic Item",points});}});
  return items.sort((a,b)=>String(a.type||"").localeCompare(String(b.type||""))||String(a.name||"").localeCompare(String(b.name||"")));
 }
