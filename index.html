@@ -1606,7 +1606,8 @@ return `
 </div>
 
 <div>${profile}</div>
-<div class="muted"><b>Faction unit</b> · <b>Base:</b> ${esc(u.baseSize||"Not set")} · <b>Troop type:</b> ${esc(u.troopType||"Not set")}</div>
+<div class="muted"><b>Base Size:</b> ${esc(u.baseSize||"Not set")}</div>
+<div class="muted"><b>Troop Type:</b> ${esc(u.troopType||"Not set")}</div>
 <div>${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")}${(profileUnit.optionEquipment||[]).map(o=>{
 const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
@@ -1614,7 +1615,7 @@ return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cos
 
 ${(u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?`<div><b>Normal Equipment</b>${renderUnitCustomEquipment((u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())))}</div>`:""}
 ${unitItemList(u,"magicItems","magic item").length?`<div><b>Magic Items</b>${renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))}</div>`:""}
-${unitItemList(u,"chaosMutations","chaos mutation").length?`<div><b>Chaos Mutations</b>${renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))}</div>`:""}
+${unitItemList(u,"chaosMutations","chaos mutation").length?`<div style="margin-top:8px"><b>Chaos Mutations</b>${renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))}</div>`:""}
 
 <div>
 ${assigned.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}
