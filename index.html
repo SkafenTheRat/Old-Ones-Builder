@@ -1766,7 +1766,7 @@ return `<article class="unit-card compact">
 <table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
 <p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <p class="compact-line"><strong>Equipment:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
-<p class="compact-line"><strong>Magic Items:</strong> ${magicItems.map(e=>esc(e.name)).join(", ")||"—"}</p>
+${magicItems.length?'<p class="compact-line"><strong>Magic Items:</strong> '+magicItems.map(e=>esc(e.name)).join(", ")+'</p>':""}
 ${mutations.length?'<p class="compact-line"><strong>Chaos Mutations:</strong> '+mutations.map(e=>esc(e.name)).join(", ")+'</p>':""}
 ${customRulesHtml}
 <p class="compact-line"><strong>Special Rules:</strong> ${normalRules||"—"}</p>
@@ -1787,15 +1787,15 @@ return `<article class="unit-card">
 <h3>Equipment</h3>
 ${included.length?`<ul class="plain">${included.map(e=>`<li><strong>${esc(e.name)}</strong>${e.desc? ` — ${esc(e.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No equipment.</p>'}
 </section>
-<section>
+${options.length?`<section>
 <h3>Paid Options</h3>
-${options.length?`<ul class="plain">${options.map(o=>{
+<ul class="plain">${options.map(o=>{
 const item=equipmentById(o.id);
 if(!item) return "";
 return `<li><strong>${esc(item.name)}</strong> <span class="pts">+${parsePointCost(o.cost)} pts</span>${item.desc? ` — ${esc(item.desc)}`:""}</li>`;
-}).join("")}</ul>`:'<p class="empty-line">No paid options.</p>'}
-</section>
-<section><h3>Magic Items</h3>${magicItems.length?renderUnitSimpleItems(magicItems):'<p class="empty-line">No magic items.</p>'}</section>
+}).join("")}</ul>
+</section>`:""}
+${magicItems.length?`<section><h3>Magic Items</h3>${renderUnitSimpleItems(magicItems)}</section>`:""}
 ${mutations.length?`<section><h3>Chaos Mutations</h3>${renderUnitSimpleItems(mutations)}</section>`:""}
 ${custom.length?`<section><h3>Custom Special Rules</h3>${custom.map(r=>'<p><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join("")}</section>`:""}
 <section>
