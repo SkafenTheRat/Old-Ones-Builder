@@ -468,8 +468,18 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <h2>Equipment Library</h2><p class="muted">Common Old World equipment entries. Check your army book for faction-specific options and exact rules.</p>
 <div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
 <div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
-<div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
-<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3>
+
+<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Equipment</h3>
+<div class="field">
+<label>Faction</label>
+<select id="factionEquipmentFaction" onchange="renderFactionEquipment()">
+<option value="" disabled selected hidden>Select a faction</option>
+</select>
+</div>
+<div id="factionEquipmentResults" class="hidden">
+<div id="factionEquipmentLibrary" class="list-scroll"></div>
+</div>
+<h3>Faction Magic Items</h3>
 <div class="field">
 <label>Faction</label>
 <select id="factionMagicItemFaction" onchange="renderMagicItems()">
@@ -1035,7 +1045,7 @@ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"
 btn.classList.add("active");
 if(id==="units") refreshUnitSelectors();
 if(id==="data") renderPdfExportControls();
-if(id==="equipment"){ renderEquipment(); renderMagicItems(); }
+if(id==="equipment"){ renderEquipment(); renderFactionEquipment(); renderMagicItems(); }
 if(id==="army") renderArmies();
 if(id==="infamy") renderInfamy();
 }
@@ -1330,13 +1340,13 @@ if(category==="ranged weapon"||category==="ranged weapons") return "Ranged Weapo
 if(category==="armour"||category==="armor") return "Armour";
 return "Additional Equipment";
 }
-function renderEquipmentGroup(list,privateItems){
+function renderEquipmentGroup(list,privateItems,factionName=""){
 const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
 return groups.map(group=>{
 const items=list.filter(e=>equipmentGroup(e)===group);
 const rows=items.map(e=>{
-const actions=privateItems?'<a href="'+esc(e.sourceUrl||"https://tow.whfb.app/army/beastmen-brayherds")+'" target="_blank" rel="noopener">Source</a>':e.custom?'<button class="danger" onclick="deleteLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Delete</button>':'<span class="muted">Shared Equipment</span>';
-return '<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · Beastmen Brayherds only':'')+'</small></div>'+actions+'</div>'+(e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>';
+const actions=e.sourceUrl?'<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source</a>':e.custom?'<button class="danger" onclick="deleteLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Delete</button>':'<span class="muted">'+(privateItems?'Faction-only':'Shared Equipment')+'</span>';
+return '<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · '+esc(factionName||"Faction-only")+' only':'')+'</small></div>'+actions+'</div>'+(e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>';
 }).join("");
 return '<section class="equipment-category"><h4 class="equipment-category-heading">'+esc(group)+' ('+items.length+')</h4>'+(rows||'<p class="muted">No equipment in this category.</p>')+'</section>';
 }).join("");
@@ -1346,9 +1356,22 @@ const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase
 const list=equipment.filter(e=>(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
 const library=document.getElementById("equipmentLibrary");
 if(library) library.innerHTML=renderEquipmentGroup(list,false);
-const privateList=factionEquipment.filter(e=>e.factionId===beastmenFactionId()&&(e.name+" "+e.category+" "+(e.desc||"")).toLowerCase().includes(search));
-const privateEl=document.getElementById("beastmenEquipmentLibrary");
-if(privateEl) privateEl.innerHTML=renderEquipmentGroup(privateList,true);
+renderFactionEquipment();
+}
+function renderFactionEquipment(){
+ const select=document.getElementById("factionEquipmentFaction"),library=document.getElementById("factionEquipmentLibrary");
+ const results=document.getElementById("factionEquipmentResults");
+ if(!select||!library||!results)return;
+ const previous=select.value||"";
+ select.innerHTML='<option value="" disabled selected hidden>Select a faction</option>'+factions.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join("");
+ if(factions.some(f=>f.id===previous))select.value=previous;
+ const factionId=select.value||"";
+ results.classList.toggle("hidden",!factionId);
+ if(!factionId){library.innerHTML="";return;}
+ const faction=factions.find(f=>f.id===factionId);
+ const search=(document.getElementById("equipmentSearch")?.value||"").toLowerCase();
+ const items=factionEquipment.filter(item=>item.factionId===factionId&&(item.name+" "+item.category+" "+(item.desc||"")).toLowerCase().includes(search));
+ library.innerHTML=items.length?renderEquipmentGroup(items,true,faction?.name||"Faction"):'<div class="empty">No faction-specific equipment entries for '+esc(faction?.name||"this faction")+' yet.</div>';
 }
 
 function unitItemList(u,key,legacyCategory){
@@ -3116,15 +3139,9 @@ function renderMagicItems(){
  const a=document.getElementById("magicItemLibrary"),b=document.getElementById("factionMagicItemLibrary");
  const factionSelect=document.getElementById("factionMagicItemFaction");
  const previousFactionId=factionSelect?.value||"";
- const availableFactions=new Map();
- factionMagicItems.forEach(item=>{
-  if(!item.factionId)return;
-  const faction=factions.find(x=>x.id===item.factionId);
-  availableFactions.set(item.factionId,faction?.name||item.factionName||"Faction-only");
- });
  if(factionSelect){
-  factionSelect.innerHTML='<option value="" disabled selected hidden>Select a faction</option>'+[...availableFactions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>'<option value="'+esc(id)+'">'+esc(name)+'</option>').join("");
-  if(availableFactions.has(previousFactionId))factionSelect.value=previousFactionId;
+  factionSelect.innerHTML='<option value="" disabled selected hidden>Select a faction</option>'+factions.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""))).map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join("");
+  if(factions.some(f=>f.id===previousFactionId))factionSelect.value=previousFactionId;
  }
  const selectedFactionId=factionSelect?.value||"";
  const sharedHtml=categories.map(type=>{
