@@ -143,10 +143,11 @@ padding:13px; border-radius:6px; margin-bottom:9px;
 .item small { color:var(--muted); }
 .magic-category-heading { color:var(--gold); margin:0 0 10px; font-size:16px; border-bottom:1px solid var(--line); padding-bottom:8px; }
 #magicItemLibrary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#factionMagicItemLibrary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .magic-category { background:#201c19; border:1px solid var(--line); border-radius:7px; padding:12px; min-width:0; }
 .magic-category .item { margin-bottom:7px; }
 .magic-category .item:last-child { margin-bottom:0; }
-@media(max-width:850px){#magicItemLibrary{grid-template-columns:1fr;}}
+@media(max-width:850px){#magicItemLibrary,#factionMagicItemLibrary{grid-template-columns:1fr;}}
 #equipmentLibrary, #beastmenEquipmentLibrary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:none; overflow:visible; padding-right:0; }
 .equipment-category { background:#201c19; border:1px solid var(--line); border-radius:7px; padding:12px; min-width:0; }
 .equipment-category-heading { color:var(--gold); margin:0 0 10px; font-size:16px; border-bottom:1px solid var(--line); padding-bottom:8px; }
@@ -468,7 +469,14 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <div class="field"><label>Search Equipment</label><input id="equipmentSearch" oninput="renderEquipment()" placeholder="Search equipment..."></div>
 <div id="equipmentLibrary" class="list-scroll" style="margin-top:14px"></div>
 <div class="panel" style="margin-top:16px"><h3>Beastmen Brayherds — faction equipment</h3><p class="muted">These items are stored separately from shared equipment and are only available when editing Beastmen units.</p><div id="beastmenEquipmentLibrary" class="list-scroll"></div></div>
-<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3><div id="factionMagicItemLibrary" class="list-scroll"></div></div></div></section></div></section>
+<div class="panel" style="margin-top:16px"><h3>Magic Items — common</h3><div class="field"><label>Search magic items</label><input id="magicItemSearch" oninput="renderMagicItems()" placeholder="Search..."></div><div id="magicItemLibrary" class="list-scroll"></div><h3>Faction Magic Items</h3>
+<div class="field">
+<label>Faction</label>
+<select id="factionMagicItemFaction" onchange="renderMagicItems()">
+<option value="" disabled selected hidden>Select a faction</option>
+</select>
+</div>
+<div id="factionMagicItemLibrary" class="list-scroll"></div></div></div></section></div></section>
 <section id="rules" class="tab hidden">
 <div class="panel">
 <h2>Special Rules Library</h2>
@@ -3104,27 +3112,40 @@ function renderMagicItems(){
  const categories=["Magic Weapon","Magic Armour","Talisman","Magic Standard","Enchanted Item","Arcane Item"];
  const categoryLabels={"Magic Weapon":"Magic Weapons","Magic Armour":"Magic Armour","Talisman":"Talismans","Magic Standard":"Magic Standards","Enchanted Item":"Enchanted Items","Arcane Item":"Arcane Items"};
  const a=document.getElementById("magicItemLibrary"),b=document.getElementById("factionMagicItemLibrary");
+ const factionSelect=document.getElementById("factionMagicItemFaction");
+ const previousFactionId=factionSelect?.value||"";
+ const availableFactions=new Map();
+ factionMagicItems.forEach(item=>{
+  if(!item.factionId)return;
+  const faction=factions.find(x=>x.id===item.factionId);
+  availableFactions.set(item.factionId,faction?.name||item.factionName||"Faction-only");
+ });
+ if(factionSelect){
+  factionSelect.innerHTML='<option value="" disabled selected hidden>Select a faction</option>'+[...availableFactions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>'<option value="'+esc(id)+'">'+esc(name)+'</option>').join("");
+  if(availableFactions.has(previousFactionId))factionSelect.value=previousFactionId;
+ }
+ const selectedFactionId=factionSelect?.value||"";
  const sharedHtml=categories.map(type=>{
   const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q)).sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No items match this search.</p>')+'</section>';
  }).join("");
  const factionGroups=categories.map(type=>{
-  const list=factionMagicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&x.type===type&&(x.name+" "+x.type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
    .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
  }).join("");
  const knownTypes=new Set(categories);
- const otherTypes=[...new Set(factionMagicItems.map(x=>String(x.type||"Other")).filter(type=>!knownTypes.has(type)))].sort((a,b)=>a.localeCompare(b));
+ const otherTypes=[...new Set(factionMagicItems.filter(x=>x.factionId===selectedFactionId).map(x=>String(x.type||"Other")).filter(type=>!knownTypes.has(type)))].sort((a,b)=>a.localeCompare(b));
  const otherHtml=otherTypes.map(type=>{
-  const list=factionMagicItems.filter(x=>String(x.type||"Other")===type&&(x.name+" "+type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&String(x.type||"Other")===type&&(x.name+" "+type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
    .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(type)+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
  }).join("");
  if(a)a.innerHTML=sharedHtml;
- if(b)b.innerHTML=factionGroups+otherHtml||'<div class="empty">No faction items found.</div>';
+ if(b)b.innerHTML=!selectedFactionId?'<p class="muted">Select a faction to view its magic items.</p>':(factionGroups+otherHtml||'<div class="empty">No faction items found.</div>');
 }
 document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a)openMagicItemModal(a.dataset.id);});
 seedMagicItemCatalogue();
