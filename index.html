@@ -118,7 +118,7 @@ border-bottom:1px solid var(--line);
 .army-profile-add-row button,.army-profile-selected button{padding:6px 9px;white-space:nowrap}
 .army-profile-selected{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(0,0,0,.2);font-size:12px}
 .army-profile-selected span:first-child{min-width:0}.army-profile-selected .army-profile-cost{margin-left:auto;white-space:nowrap;font-style:italic}
-.army-profile-empty{font-size:12px;color:#ddd;font-style:italic}.army-profile-rules{padding:10px 0 2px;font-size:13px;line-height:1.55}.army-profile-rules a{text-decoration:underline}
+.army-profile-empty{font-size:12px;color:#ddd;font-style:italic}.army-profile-rules{padding:10px 0 2px;font-size:13px;line-height:1.55}.army-profile-custom-rules{margin:0 0 9px;font-size:13px;line-height:1.5}.army-profile-custom-rules h5{margin:0 0 5px;color:#eee;font-size:13px}.army-profile-custom-rules>div{margin:2px 0}.army-profile-rules a{text-decoration:underline}
 @media(max-width:560px){.army-unit-profile{padding-left:8px;padding-right:8px}.army-unit-profile-header{padding-left:40px;padding-right:54px}.army-unit-profile-title{font-size:17px}.army-unit-stats th,.army-unit-stats td{padding:3px 4px;font-size:11px}.army-unit-profile-section h4{font-size:13px}}
 
 h2 {
@@ -1613,17 +1613,11 @@ const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
 }).join("")}</div>
 
-${(u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?`<div><b>Normal Equipment</b>${renderUnitCustomEquipment((u.customEquipment||[]).filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())))}</div>`:""}
-${unitItemList(u,"magicItems","magic item").length?`<div><b>Magic Items</b>${renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))}</div>`:""}
-${unitItemList(u,"chaosMutations","chaos mutation").length?`<div style="margin-top:8px"><b>Chaos Mutations</b>${renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))}</div>`:""}
+\${unitItemList(u,"magicItems","magic item").length?'<div><b>Magic Items</b>'+renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))+'</div>':""}
+\${unitItemList(u,"chaosMutations","chaos mutation").length?'<div style="margin-top:8px"><b>Chaos Mutations</b>'+renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))+'</div>':""}
 
-<div>
-${assigned.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}
-</div>
-
-${(u.customRules||[]).map(r=>`
-<div class="muted"><b>${esc(r.name)}:</b> ${esc(r.desc)}</div>
-`).join("")}
+\${(u.customRules||[]).length?'<div class="muted" style="margin-top:8px"><b>Custom Special Rules:</b>'+ (u.customRules||[]).map(r=>'<div><b>'+esc(r.name)+'</b>'+(r.desc?': '+esc(r.desc):"")+'</div>').join("")+'</div>':""}
+\${assigned.length?'<div class="muted" style="margin-top:6px"><b>Special Rules:</b> '+assigned.map(esc).join(", ")+'</div>':""}
 
 ${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
 ${u.sourceUrl?`<p class="muted"><a href="${esc(u.sourceUrl)}" target="_blank" rel="noopener">Source profile</a></p>`:""}
@@ -1741,71 +1735,68 @@ const included=(profile.basicEquipmentIds||[]).map(equipmentById).filter(Boolean
 const options=profile.optionEquipment||[];
 const assigned=unitRuleDetails(profile);
 const custom=profile.customRules||[];
-const customEquipment=profile.customEquipment||[];
+const definedMutations=unitItemList(profile,"chaosMutations","chaos mutation");
+const selectedMutations=Array.isArray(profile.armySelectedChaosMutations)?profile.armySelectedChaosMutations:[];
+const mutations=selectedMutations.length
+ ?selectedMutations.filter(x=>definedMutations.some(y=>String(y.id||y.name)===String(x.id||x.name)||String(y.name).toLowerCase()===String(x.name).toLowerCase()))
+ :definedMutations;
+const magicItems=Array.isArray(profile.armySelectedMagicItems)?profile.armySelectedMagicItems:unitItemList(profile,"magicItems","magic item");
 const points=parsePointCost(profile.points);
-
-const statHead=stats.map(k=>`<th>${k}</th>`).join("");
-const statBody=stats.map(k=>`<td>${esc((profile.stats||{})[k]||"-")}</td>`).join("");
-
+const statHead=stats.map(k=>'<th>'+k+'</th>').join("");
+const statBody=stats.map(k=>'<td>'+esc((profile.stats||{})[k]||"-")+'</td>').join("");
+const normalRules=assigned.map(r=>esc(r.label)).join(", ");
+const customRulesHtml=custom.length?custom.map(r=>'<p class="compact-line"><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join(""):"";
 if(compact) {
-return `<article class="unit-card compact">
+return \`<article class="unit-card compact">
 <header class="unit-head">
 <div>
-<h2>${esc(profile.name)}</h2>
-<p class="meta">${esc(faction?.name||"No faction")} · ${esc(profile.category||"-")} · ${points} pts</p>
+<h2>\${esc(profile.name)}</h2>
+<p class="meta">\${esc(faction?.name||"No faction")} · \${esc(profile.category||"-")} · \${points} pts</p>
 </div>
 </header>
-<table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table><p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
-<p class="compact-line"><strong>Included:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
-<p class="compact-line"><strong>Normal equipment:</strong> ${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).map(e=>esc(e.name)).join(", ")||"—"}</p>
-<p class="compact-line"><strong>Magic Items:</strong> ${(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")).map(e=>esc(e.name)).join(", ")||"—"}</p>
-<p class="compact-line"><strong>Chaos Mutations:</strong> ${(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")).map(e=>esc(e.name)).join(", ")||"—"}</p>
-<p class="compact-line"><strong>Options:</strong> ${options.length?options.map(o=>{
-const item=equipmentById(o.id);
-return item?`${esc(item.name)} (+${parsePointCost(o.cost)} pts)`:"";
-}).filter(Boolean).join(", "):"—"}</p>
-<p class="compact-line"><strong>Rules:</strong> ${assigned.length?assigned.map(r=>esc(r.label)).join(", "):"—"}${custom.length?"; "+custom.map(r=>esc(r.name)).join(", "):""}</p>
-</article>`;
+<table class="stat-table"><thead><tr>\${statHead}</tr></thead><tbody><tr>\${statBody}</tr></tbody></table>
+<p class="compact-line"><strong>Base size:</strong> \${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> \${esc(profile.troopType||"—")}</p>
+<p class="compact-line"><strong>Equipment:</strong> \${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
+<p class="compact-line"><strong>Magic Items:</strong> \${magicItems.map(e=>esc(e.name)).join(", ")||"—"}</p>
+\${mutations.length?'<p class="compact-line"><strong>Chaos Mutations:</strong> '+mutations.map(e=>esc(e.name)).join(", ")+'</p>':""}
+\${customRulesHtml}
+<p class="compact-line"><strong>Special Rules:</strong> \${normalRules||"—"}</p>
+</article>\`;
 }
-
-return `<article class="unit-card">
+return \`<article class="unit-card">
 <header class="unit-head">
 <div>
-<p class="eyebrow">${esc(faction?.name||"No faction")} · ${esc(profile.category||"-")}</p>
-<h2>${esc(profile.name)}</h2>
+<p class="eyebrow">\${esc(faction?.name||"No faction")} · \${esc(profile.category||"-")}</p>
+<h2>\${esc(profile.name)}</h2>
 </div>
-<div class="points-badge">${points}<span>pts</span></div>
+<div class="points-badge">\${points}<span>pts</span></div>
 </header>
-<table class="stat-table">
-<thead><tr>${statHead}</tr></thead>
-<tbody><tr>${statBody}</tr></tbody>
-</table>
-<p class="meta"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
+<table class="stat-table"><thead><tr>\${statHead}</tr></thead><tbody><tr>\${statBody}</tr></tbody></table>
+<p class="meta"><strong>Base size:</strong> \${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> \${esc(profile.troopType||"—")}</p>
 <div class="unit-sections">
 <section>
-<h3>Included Equipment</h3>
-${included.length?`<ul class="plain">${included.map(e=>`<li><strong>${esc(e.name)}</strong>${e.desc?` — ${esc(e.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No included equipment.</p>'}
+<h3>Equipment</h3>
+\${included.length?\`<ul class="plain">\${included.map(e=>\`<li><strong>\${esc(e.name)}</strong>\${e.desc? \` — \${esc(e.desc)}\`:""}</li>\`).join("")}</ul>\`:'<p class="empty-line">No equipment.</p>'}
 </section>
 <section>
 <h3>Paid Options</h3>
-${options.length?`<ul class="plain">${options.map(o=>{
+\${options.length?\`<ul class="plain">\${options.map(o=>{
 const item=equipmentById(o.id);
 if(!item) return "";
-return `<li><strong>${esc(item.name)}</strong> <span class="pts">+${parsePointCost(o.cost)} pts</span>${item.desc?` — ${esc(item.desc)}`:""}</li>`;
-}).join("")}</ul>`:'<p class="empty-line">No paid options.</p>'}
+return \`<li><strong>\${esc(item.name)}</strong> <span class="pts">+\${parsePointCost(o.cost)} pts</span>\${item.desc? \` — \${esc(item.desc)}\`:""}</li>\`;
+}).join("")}</ul>\`:'<p class="empty-line">No paid options.</p>'}
 </section>
-<section><h3>Normal Equipment</h3>${customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase())).length?renderPdfUnitCustomEquipment(customEquipment.filter(e=>!["magic item","magic items","chaos mutation","chaos mutations"].includes(String(e.category||"").toLowerCase()))):'<p class="empty-line">No custom equipment.</p>'}</section>
-<section><h3>Magic Items</h3>${(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")).length?renderUnitSimpleItems(profile.armySelectedMagicItems||unitItemList(profile,"magicItems","magic item")):'<p class="empty-line">No magic items.</p>'}</section>
-<section><h3>Chaos Mutations</h3>${(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")).length?renderUnitSimpleItems(profile.armySelectedChaosMutations||unitItemList(profile,"chaosMutations","chaos mutation")):'<p class="empty-line">No Chaos Mutations.</p>'}</section>
+<section><h3>Magic Items</h3>\${magicItems.length?renderUnitSimpleItems(magicItems):'<p class="empty-line">No magic items.</p>'}</section>
+\${mutations.length?\`<section><h3>Chaos Mutations</h3>\${renderUnitSimpleItems(mutations)}</section>\`:""}
+\${custom.length?\`<section><h3>Custom Special Rules</h3>\${custom.map(r=>'<p><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join("")}</section>\`:""}
 <section>
 <h3>Special Rules</h3>
-${assigned.length||custom.length?`<ul class="plain">${assigned.map(r=>`<li><strong>${esc(r.label)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}${custom.map(r=>`<li><strong>${esc(r.name)}</strong>${r.desc?` — ${esc(r.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No special rules.</p>'}
+\${normalRules?\`<p>\${normalRules}</p>\`:'<p class="empty-line">No special rules.</p>'}
 </section>
-${profile.desc?`<section><h3>Notes</h3><p class="notes">${esc(profile.desc)}</p></section>`:""}
+\${profile.desc?\`<section><h3>Notes</h3><p class="notes">\${esc(profile.desc)}</p></section>\`:""}
 </div>
-</article>`;
+</article>\`;
 }
-
 let pdfSelectedUnitIds=[];
 try { const stored=JSON.parse(localStorage.getItem("ow_pdf_selected_units")||"[]"); if(Array.isArray(stored))pdfSelectedUnitIds=stored.filter(id=>typeof id==="string"); } catch(e) {}
 function savePdfSelectedUnitIds(){try{localStorage.setItem("ow_pdf_selected_units",JSON.stringify(pdfSelectedUnitIds));}catch(e){}}
@@ -2004,11 +1995,10 @@ function armyMagicItemsForUnit(unit){
 }
 function armyChaosMutationsForUnit(unit){
  const cap=parsePointCost(unit.chaosMutationLimit);if(!cap)return [];
- const isBeastmen=String(factions.find(f=>f.id===unit.factionId)?.name||"").toLowerCase()==="beastmen brayherds";
- const known=isBeastmen?BEASTMEN_CHAOS_MUTATIONS.filter(x=>x.points<=cap):[];
- const custom=unitItemList(unit,"chaosMutations","chaos mutation").map((x,i)=>({id:x.id||"unit_mutation_"+i,name:x.name||String(x),points:parsePointCost(x.points??x.cost),desc:x.desc||""})).filter(x=>x.name&&x.points<=cap);
- const map=new Map();[...known,...custom].forEach(x=>{if(!map.has(String(x.name).toLowerCase()))map.set(String(x.name).toLowerCase(),x);});
- return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name));
+ return unitItemList(unit,"chaosMutations","chaos mutation")
+  .map((x,i)=>({id:x.id||"unit_mutation_"+i,name:x.name||String(x),points:parsePointCost(x.points??x.cost),desc:x.desc||""}))
+  .filter(x=>x.name&&x.points<=cap)
+  .sort((a,b)=>a.name.localeCompare(b.name));
 }
 function armyProfileEquipmentItems(unit){
  const profile=normalizeUnit(unit),items=new Map();
@@ -2220,9 +2210,9 @@ function renderArmyEntriesByCategory(entries){
    const keys=["M","WS","BS","S","T","W","I","A","Ld"],statHead=keys.map(x=>'<th>'+x+'</th>').join(""),statBody=keys.map(x=>'<td>'+esc((profile.stats||{})[x]||"-")+'</td>').join("");
    const points=armyEntryUnitCost(entry),hero=String(unit.category||"").toLowerCase()==="hero";
    const general=hero?'<label class="army-profile-general"><input type="checkbox" '+(armyEntriesGeneral(armies.find(a=>a.id===selectedArmyId),entry.id)?'checked':'')+' onchange="setArmyEntryGeneral(&quot;'+esc(entry.id)+'&quot;,this.checked)"> General <em class="army-profile-cost">free</em></label>':"";
-   const rules=unitRuleDetails(profile).map(x=>'<a class="rlink" data-name="'+esc(x.label)+'" title="'+esc(x.desc||x.label)+'">'+esc(x.label)+'</a>');
-   (profile.customRules||[]).forEach(x=>rules.push('<span title="'+esc(x.desc||"")+'">'+esc(x.name)+'</span>'));
-   const rulesHtml='<section class="army-unit-profile-section army-profile-rules"><h4>Special Rules:</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
+   const rules=unitRuleDetails(profile).map(x=>'<a class="rlink" data-name="'+esc(x.label)+'">'+esc(x.label)+'</a>');
+   const customRulesHtml=(profile.customRules||[]).length?'<div class="army-profile-custom-rules"><h5>Custom Special Rules:</h5>'+(profile.customRules||[]).map(x=>'<div><strong>'+esc(x.name)+'</strong>'+(x.desc?': '+esc(x.desc):'')+'</div>').join("")+'</div>':"";
+   const rulesHtml='<section class="army-unit-profile-section army-profile-rules">'+customRulesHtml+'<h4>Special Rules:</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
    const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\\s*\\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
    let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div><label class="army-unit-profile-qty"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" aria-label="Unit quantity" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"></label></header>';
    html+=note+'<table class="army-unit-stats"><thead><tr><th>Model</th>'+statHead+'</tr></thead><tbody><tr><td>'+esc(unit.name)+'</td>'+statBody+'</tr></tbody></table>';
