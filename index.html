@@ -1345,8 +1345,9 @@ const groups=["Melee Weapons","Ranged Weapons","Armour","Additional Equipment"];
 return groups.map(group=>{
 const items=list.filter(e=>equipmentGroup(e)===group);
 const rows=items.map(e=>{
-const actions=e.sourceUrl?'<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source</a>':e.custom?'<button class="danger" onclick="deleteLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Delete</button>':'<span class="muted">'+(privateItems?'Faction-only':'Shared Equipment')+'</span>';
-return '<div class="item"><div class="item-head"><div><strong>'+esc(e.name)+'</strong><br><small>'+esc(group)+(privateItems?' · '+esc(factionName||"Faction-only")+' only':'')+'</small></div>'+actions+'</div>'+(e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>';
+const name=e.sourceUrl?'<a class="rlink" href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">'+esc(e.name)+'</a>':'<strong>'+esc(e.name)+'</strong>';
+const actions=e.custom&&!e.sourceUrl?'<button class="danger" onclick="deleteLibraryEquipment(&quot;'+esc(e.id)+'&quot;)">Delete</button>':!e.sourceUrl?'<span class="muted">'+(privateItems?'Faction-only':'Shared Equipment')+'</span>':'';
+return '<div class="item"><div class="item-head"><div><strong>'+name+'</strong><br><small>'+esc(group)+(privateItems?' · '+esc(factionName||"Faction-only")+' only':'')+'</small></div>'+actions+'</div>'+(e.desc?'<p class="muted">'+esc(e.desc)+'</p>':'')+'</div>';
 }).join("");
 return '<section class="equipment-category"><h4 class="equipment-category-heading">'+esc(group)+' ('+items.length+')</h4>'+(rows||'<p class="muted">No equipment in this category.</p>')+'</section>';
 }).join("");
