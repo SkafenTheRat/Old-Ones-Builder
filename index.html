@@ -1613,11 +1613,11 @@ const item=equipmentById(o.id);
 return item?`<span class="tag option">${esc(item.name)} (+${parsePointCost(o.cost)} pts)</span>`:"";
 }).join("")}</div>
 
-\${unitItemList(u,"magicItems","magic item").length?'<div><b>Magic Items</b>'+renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))+'</div>':""}
-\${unitItemList(u,"chaosMutations","chaos mutation").length?'<div style="margin-top:8px"><b>Chaos Mutations</b>'+renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))+'</div>':""}
+${unitItemList(u,"magicItems","magic item").length?'<div><b>Magic Items</b>'+renderUnitSimpleItems(unitItemList(u,"magicItems","magic item"))+'</div>':""}
+${unitItemList(u,"chaosMutations","chaos mutation").length?'<div style="margin-top:8px"><b>Chaos Mutations</b>'+renderUnitSimpleItems(unitItemList(u,"chaosMutations","chaos mutation"))+'</div>':""}
 
-\${(u.customRules||[]).length?'<div class="muted" style="margin-top:8px"><b>Custom Special Rules:</b>'+ (u.customRules||[]).map(r=>'<div><b>'+esc(r.name)+'</b>'+(r.desc?': '+esc(r.desc):"")+'</div>').join("")+'</div>':""}
-\${assigned.length?'<div class="muted" style="margin-top:6px"><b>Special Rules:</b> '+assigned.map(esc).join(", ")+'</div>':""}
+${(u.customRules||[]).length?'<div class="muted" style="margin-top:8px"><b>Custom Special Rules:</b>'+ (u.customRules||[]).map(r=>'<div><b>'+esc(r.name)+'</b>'+(r.desc?': '+esc(r.desc):"")+'</div>').join("")+'</div>':""}
+${assigned.length?'<div class="muted" style="margin-top:6px"><b>Special Rules:</b> '+assigned.map(esc).join(", ")+'</div>':""}
 
 ${u.desc?`<p class="muted">${esc(u.desc)}</p>`:""}
 ${u.sourceUrl?`<p class="muted"><a href="${esc(u.sourceUrl)}" target="_blank" rel="noopener">Source profile</a></p>`:""}
@@ -1747,55 +1747,55 @@ const statBody=stats.map(k=>'<td>'+esc((profile.stats||{})[k]||"-")+'</td>').joi
 const normalRules=assigned.map(r=>esc(r.label)).join(", ");
 const customRulesHtml=custom.length?custom.map(r=>'<p class="compact-line"><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join(""):"";
 if(compact) {
-return \`<article class="unit-card compact">
+return `<article class="unit-card compact">
 <header class="unit-head">
 <div>
-<h2>\${esc(profile.name)}</h2>
-<p class="meta">\${esc(faction?.name||"No faction")} · \${esc(profile.category||"-")} · \${points} pts</p>
+<h2>${esc(profile.name)}</h2>
+<p class="meta">${esc(faction?.name||"No faction")} · ${esc(profile.category||"-")} · ${points} pts</p>
 </div>
 </header>
-<table class="stat-table"><thead><tr>\${statHead}</tr></thead><tbody><tr>\${statBody}</tr></tbody></table>
-<p class="compact-line"><strong>Base size:</strong> \${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> \${esc(profile.troopType||"—")}</p>
-<p class="compact-line"><strong>Equipment:</strong> \${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
-<p class="compact-line"><strong>Magic Items:</strong> \${magicItems.map(e=>esc(e.name)).join(", ")||"—"}</p>
-\${mutations.length?'<p class="compact-line"><strong>Chaos Mutations:</strong> '+mutations.map(e=>esc(e.name)).join(", ")+'</p>':""}
-\${customRulesHtml}
-<p class="compact-line"><strong>Special Rules:</strong> \${normalRules||"—"}</p>
-</article>\`;
+<table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
+<p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
+<p class="compact-line"><strong>Equipment:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
+<p class="compact-line"><strong>Magic Items:</strong> ${magicItems.map(e=>esc(e.name)).join(", ")||"—"}</p>
+${mutations.length?'<p class="compact-line"><strong>Chaos Mutations:</strong> '+mutations.map(e=>esc(e.name)).join(", ")+'</p>':""}
+${customRulesHtml}
+<p class="compact-line"><strong>Special Rules:</strong> ${normalRules||"—"}</p>
+</article>`;
 }
-return \`<article class="unit-card">
+return `<article class="unit-card">
 <header class="unit-head">
 <div>
-<p class="eyebrow">\${esc(faction?.name||"No faction")} · \${esc(profile.category||"-")}</p>
-<h2>\${esc(profile.name)}</h2>
+<p class="eyebrow">${esc(faction?.name||"No faction")} · ${esc(profile.category||"-")}</p>
+<h2>${esc(profile.name)}</h2>
 </div>
-<div class="points-badge">\${points}<span>pts</span></div>
+<div class="points-badge">${points}<span>pts</span></div>
 </header>
-<table class="stat-table"><thead><tr>\${statHead}</tr></thead><tbody><tr>\${statBody}</tr></tbody></table>
-<p class="meta"><strong>Base size:</strong> \${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> \${esc(profile.troopType||"—")}</p>
+<table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
+<p class="meta"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <div class="unit-sections">
 <section>
 <h3>Equipment</h3>
-\${included.length?\`<ul class="plain">\${included.map(e=>\`<li><strong>\${esc(e.name)}</strong>\${e.desc? \` — \${esc(e.desc)}\`:""}</li>\`).join("")}</ul>\`:'<p class="empty-line">No equipment.</p>'}
+${included.length?`<ul class="plain">${included.map(e=>`<li><strong>${esc(e.name)}</strong>${e.desc? ` — ${esc(e.desc)}`:""}</li>`).join("")}</ul>`:'<p class="empty-line">No equipment.</p>'}
 </section>
 <section>
 <h3>Paid Options</h3>
-\${options.length?\`<ul class="plain">\${options.map(o=>{
+${options.length?`<ul class="plain">${options.map(o=>{
 const item=equipmentById(o.id);
 if(!item) return "";
-return \`<li><strong>\${esc(item.name)}</strong> <span class="pts">+\${parsePointCost(o.cost)} pts</span>\${item.desc? \` — \${esc(item.desc)}\`:""}</li>\`;
-}).join("")}</ul>\`:'<p class="empty-line">No paid options.</p>'}
+return `<li><strong>${esc(item.name)}</strong> <span class="pts">+${parsePointCost(o.cost)} pts</span>${item.desc? ` — ${esc(item.desc)}`:""}</li>`;
+}).join("")}</ul>`:'<p class="empty-line">No paid options.</p>'}
 </section>
-<section><h3>Magic Items</h3>\${magicItems.length?renderUnitSimpleItems(magicItems):'<p class="empty-line">No magic items.</p>'}</section>
-\${mutations.length?\`<section><h3>Chaos Mutations</h3>\${renderUnitSimpleItems(mutations)}</section>\`:""}
-\${custom.length?\`<section><h3>Custom Special Rules</h3>\${custom.map(r=>'<p><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join("")}</section>\`:""}
+<section><h3>Magic Items</h3>${magicItems.length?renderUnitSimpleItems(magicItems):'<p class="empty-line">No magic items.</p>'}</section>
+${mutations.length?`<section><h3>Chaos Mutations</h3>${renderUnitSimpleItems(mutations)}</section>`:""}
+${custom.length?`<section><h3>Custom Special Rules</h3>${custom.map(r=>'<p><strong>'+esc(r.name)+'</strong>'+(r.desc?': '+esc(r.desc):"")+'</p>').join("")}</section>`:""}
 <section>
 <h3>Special Rules</h3>
-\${normalRules?\`<p>\${normalRules}</p>\`:'<p class="empty-line">No special rules.</p>'}
+${normalRules?`<p>${normalRules}</p>`:'<p class="empty-line">No special rules.</p>'}
 </section>
-\${profile.desc?\`<section><h3>Notes</h3><p class="notes">\${esc(profile.desc)}</p></section>\`:""}
+${profile.desc?`<section><h3>Notes</h3><p class="notes">${esc(profile.desc)}</p></section>`:""}
 </div>
-</article>\`;
+</article>`;
 }
 let pdfSelectedUnitIds=[];
 try { const stored=JSON.parse(localStorage.getItem("ow_pdf_selected_units")||"[]"); if(Array.isArray(stored))pdfSelectedUnitIds=stored.filter(id=>typeof id==="string"); } catch(e) {}
