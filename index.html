@@ -3115,8 +3115,139 @@ function seedMagicItemCatalogue(){
  ["Stone of Spite","Enchanted Item",45],["Horn of the Great Hunt","Enchanted Item",35],["Horn of the First Beast","Enchanted Item",30],["Scourge of the Burdened","Enchanted Item",25],["Cacophonous Dirge","Enchanted Item",15],["Skin of Man","Enchanted Item",15],
  ["The Plague Chalice","Arcane Item",40],["Blood of the Shadowgave","Arcane Item",35],["Daemon Heart","Arcane Item",30],["Hagtree Fetish","Arcane Item",30],["Goretooth","Arcane Item",15],["Jagged Dagger","Arcane Item",15]
  ];
- const privateSeen=new Set(factionMagicItems.filter(x=>x.factionId===f.id).map(x=>x.name.toLowerCase()));
- beastmen.forEach(([name,type,points])=>{if(!privateSeen.has(name.toLowerCase()))factionMagicItems.push({id:"fmi_beastmen_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,factionId:f.id,factionName:f.name,desc:"",sourceUrl:"https://tow.whfb.app/magic-items/beastmen-brayherds-magic-items"});});
+
+ const beastmenMagicDetails={
+  "The Black Maul":{
+   profile:{range:"Combat",strength:"S+2",ap:"-3",specialRules:"Extra Attacks (+D6), Magical Attacks"},
+   notes:"Each time a natural 6 is rolled for the Extra Attacks (+D6) special rule, the wielder of the Black Maul suffers a -1 modifier to their Weapon Skill characteristic (to a minimum of 1, and for the remainder of the game)."
+  },
+  "Primeval Club":{
+   profile:{range:"Combat",strength:"Leadership",ap:"-3",specialRules:"-"},
+   notes:"The Strength characteristic of the Primeval Club is equal to the current Leadership characteristic of the model that wields it."
+  },
+  "Axe of Men":{
+   profile:{range:"Combat",strength:"S",ap:"-1",specialRules:"-"},
+   notes:"Should the wielder of the Axe of Men kill an enemy character (including champions) in a challenge, they gain the Terror special rule for the remainder of the game."
+  },
+  "The Axes of Khorgor":{
+   profile:{range:"Combat",strength:"S+1",ap:"-2",specialRules:"Extra Attacks (+1), Magical Attacks, Requires Two Hands"},
+   notes:"The wielder of the Axes of Khorgor may re-roll any rolls To Wound of a natural 1 made during the Combat phase."
+  },
+  "Mangelder":{
+   profile:{range:"Combat",strength:"S+1",ap:"-1",specialRules:"-"},
+   notes:"The wielder of the Mangelder causes Terror. Any enemy unit that suffers one or more unsaved wounds from the Mangelder suffers a -1 modifier to its Leadership characteristic (to a minimum of 2) until the end of the turn."
+  },
+  "Hunter's Spear":{
+   profile:{range:'24"',strength:"6",ap:"-3",specialRules:"-"},
+   notes:"The Hunter's Spear shoots like a bolt thrower, using the 'Through & Through' special rule."
+  },
+  "The Brass Cleaver":{
+   profile:{range:"Combat",strength:"S",ap:"-2",specialRules:"-"},
+   notes:"Enemy models are not permitted an armour, Ward or Regeneration save against an attack made with this weapon if the wielder rolls a natural 6 when making a roll To Wound."
+  },
+  "Scimitar of Skultar":{
+   profile:{range:"Combat",strength:"S",ap:"-1",specialRules:"Armour Bane (1), Magical Attacks, Multiple Wounds (2)"}
+  },
+  "Full Plate Chaos Armour":{
+   rules:"Full Plate Chaos Armour is a suit of full plate armour. It may be purchased and worn by a Wizard, even if they do not have the option to be equipped with armour, a shield or barding, without penalty. In addition, the wearer of Chaos Armour has a 5+ Ward save against any wounds suffered.",
+   extremelyCommon:true
+  },
+  "Pelt of the Dark Young":{
+   rules:"May be worn with other armour. The wearer improves their armour value by 1 (to a maximum of 2+). In addition, the wearer and any unit they have joined have Magic Resistance (-2)."
+  },
+  "Heavy Chaos Armour":{
+   rules:"Heavy Chaos Armour is a suit of heavy armour. It may be purchased and worn by a Wizard, even if they do not have the option to be equipped with armour, a shield or barding, without penalty. In addition, the wearer of Chaos Armour has a 5+ Ward save against any wounds suffered.",
+   extremelyCommon:true
+  },
+  "The Blackened Plate":{
+   rules:"The Blackened Plate is a suit of full plate armour. In addition, its wearer has a 3+ Ward save against any wounds suffered that were caused by an attack that has the Flaming Attacks special rule."
+  },
+  "The Fur of Sharggu":{
+   rules:"May be worn with other armour. The wearer improves their armour value by 2 (to a maximum of 2+) against non-magical shooting attacks."
+  },
+  "Chalice of Dark Rain":{
+   rules:"Single use. During the Command sub-phase of their turn, if the bearer is not engaged in combat, they may drink from the Chalice. Until their next Start of Turn sub-phase, the range of all enemy missile weapons is halved (rounding fractions up) and enemy war machines cannot shoot."
+  },
+  "Cornucopia of Corpulence":{
+   rules:"When the bearer's combat is chosen during Step 1.1 of any Choose & Fight Combat sub-phase, enemy models in base contact with the bearer must make a Toughness test. If this test is failed, they lose a single Wound."
+  },
+  "Rune of the True Beast":{
+   rules:"Enemy models whose troop type is Monster suffer a -1 modifier to their Weapon Skill characteristic whilst within 6 inches of the bearer."
+  },
+  "Dark Heart":{
+   rules:"Single use. During the Command sub-phase of their turn, the bearer can consume the Dark Heart. The model immediately recovers one lost Wound.",
+   extremelyCommon:true
+  },
+  "The Gore Banner":{
+   rules:"If a unit wishes to declare a charge against a unit carrying the Gore Banner, it must first make a Leadership test. If this test is failed, the unit cannot charge, does not move and is considered to have made a failed charge. If the test is passed, the unit can charge as normal."
+  },
+  "Totem of Rust":{
+   rules:"Every model (friend or foe) within 6 inches of the model carrying the Totem of Rust suffers a -1 modifier to its Armour Save rolls."
+  },
+  "Banner of the Warped Moon":{
+   rules:"Single use. During the Command sub-phase of their turn, if the bearer is not engaged in combat, they may attempt to unleash the banner's power by making a Leadership test using their own unmodified Leadership. If this test is passed, enemy units cannot use the Fly (X) special rule until their next Start of Turn sub-phase."
+  },
+  "The Beast Banner":{
+   rules:"A unit carrying the Beast Banner increases its maximum possible charge range by 3 inches and, when it makes a Charge roll, may apply a +D3 modifier to the result."
+  },
+  "Manbane Standard":{
+   rules:"All enemy units within 6 inches of the model carrying the Manbane Standard suffer a -1 modifier to their Leadership characteristic (to a minimum of 2)."
+  },
+  "Vitriolic Totem":{
+   rules:"A unit carrying the Vitriolic Totem gains the Poisoned Attacks special rule."
+  },
+  "Banner of Outrage":{
+   rules:"A unit carrying the Banner of Outrage may re-roll its Leadership test when testing for Primal Fury."
+  },
+  "The Soiled Tapestry":{
+   rules:"A unit carrying the Soiled Tapestry gains the Hatred (all enemies) special rule. However, all enemy models Hate the unit carrying this banner."
+  },
+  "Stone of Spite":{
+   rules:"Single use. During the Command sub-phase of their turn, if the bearer is not engaged in combat, this character may use the Stone of Spite. Until their next Start of Turn sub-phase, all Wizards (friend or foe) suffer a -2 modifier to their Casting rolls."
+  },
+  "Horn of the Great Hunt":{
+   rules:"Once per turn, after rolling to determine if a unit with the Ambushers special rule that is currently held in reserve as reinforcements arrives, and if the bearer is on the battlefield and is not fleeing, you may apply a +1 or -1 modifier to the result."
+  },
+  "Horn of the First Beast":{
+   rules:"Unless the bearer is fleeing, any friendly unit within 18 inches of this model may use its Leadership characteristic when testing for Primal Fury."
+  },
+  "Scourge of the Burdened":{
+   rules:"The wielder can cast the Call of the Wild spell from the Lore of Primal Magic as a Bound Spell, with a Power Level of 2."
+  },
+  "Cacophonous Dirge":{
+   rules:"Whilst their unit is within 18 inches of the bearer, enemy musicians cannot use their Onwards to Victory!, Steadying Rhythm or Quick Time rules."
+  },
+  "Skin of Man":{
+   rules:"Beastmen Chieftains and Beastmen Shamans whose troop type is Infantry only. The wearer of the Skin of Man gains the Scouts and Vanguard special rules."
+  },
+  "The Plague Chalice":{
+   rules:"If the bearer rolls any natural double when making a Casting roll (not including a natural double 1), the spell is cast as a perfect invocation, regardless of its casting value or any other modifiers. However, each time the bearer casts a perfect invocation, they suffer a Strength 4 hit with no armour save permitted. Ward and Regeneration saves can be attempted as normal."
+  },
+  "Blood of the Shadowgave":{
+   rules:"Single use. A Wizard may use this item instead of making a Wizardly dispel attempt. If they do so, the spell is automatically dispelled with no Dispel roll required. A perfect invocation cannot be dispelled.",
+   extremelyCommon:true
+  },
+  "Daemon Heart":{
+   rules:"When attempting a Wizardly dispel, the bearer counts their Level of Wizardry as being one higher than that of the Wizard whose spell they are dispelling or, in the case of Bound Spells, one higher than that spell's Power Level. This applies even if it would mean the bearer counts their Level of Wizardry as being lower than it actually is."
+  },
+  "Hagtree Fetish":{
+   rules:"Whenever the bearer successfully casts a Magic Missile, they may re-roll any rolls To Wound of a natural 1."
+  },
+  "Goretooth":{
+   rules:"In addition to the Lores of Magic they may normally know spells from, the bearer may know spells from the Lore of Primal Magic.",
+   extremelyCommon:true
+  },
+  "Jagged Dagger":{
+   rules:"The Jagged Dagger can only be used by a Wizard that has joined a unit. Before making a Casting roll, the bearer may make a sacrifice: one model belonging to the bearer's unit is immediately removed from play as a casualty. The bearer may then modify their Casting roll by adding the Wounds characteristic of the sacrificed model to the result. This modifies the result of the roll and does not negate a natural double 1."
+  }
+ };
+ beastmen.forEach(([name,type,points])=>{
+  const id="fmi_beastmen_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_");
+  const existing=factionMagicItems.find(x=>x.factionId===f.id&&String(x.name||"").toLowerCase()===name.toLowerCase());
+  const itemData={id:existing?.id||id,name,type,points,factionId:f.id,factionName:f.name,sourceUrl:"https://tow.whfb.app/magic-items/beastmen-brayherds-magic-items",...(beastmenMagicDetails[name]||{})};
+  if(existing)Object.assign(existing,itemData);
+  else factionMagicItems.push(itemData);
+ });
 }
 
 function openMagicItemModal(id){
@@ -3207,6 +3338,7 @@ function openMagicItemModal(idOrName){
  let html='<p><strong>Type:</strong> '+esc(item.type||"Magic Item")+'</p><p><strong>Points:</strong> '+points+'</p>';
  if(item.factionName)html+='<p><strong>Faction:</strong> '+esc(item.factionName)+'</p>';
  if(item.extremelyCommon)html+='<p><strong>Extremely Common</strong></p>';
+ if(item.rules)html+='<p><strong>Rules:</strong> '+esc(item.rules)+'</p>';
  if(item.profile){
   const p=item.profile;
   html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+esc(p.specialRules||"-")+'</td></tr></tbody></table>';
