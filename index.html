@@ -3163,7 +3163,7 @@ function seedMagicItemCatalogue(){
  const sources={"Magic Weapon":"magic-weapons","Magic Armour":"magic-armour","Talisman":"talismans","Magic Standard":"magic-standards","Enchanted Item":"enchanted-items","Arcane Item":"arcane-items"};
  common.forEach(([name,type,points,extremelyCommon])=>{
   const detail=commonMagicItemDetails[name]||{};
-  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",rules:type==="Magic Weapon"?"":(detail.rules||""),profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||(type==="Magic Weapon"?(detail.rules||""):""),sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
+  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",rules:type==="Magic Weapon"?"":(detail.rules||detail.desc||""),profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||(type==="Magic Weapon"?(detail.rules||""):""),sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
  });
  const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");if(!f)return;
  const beastmen=[
