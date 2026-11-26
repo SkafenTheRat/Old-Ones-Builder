@@ -3095,16 +3095,75 @@ const commonMagicItemDetails = {
   },
   "Earthing Rod": {
     "desc": "Single use. When the bearer suffers a Miscast, they may re-roll the result on the Miscast table."
+  },
+  "Axe of Abandon": {
+    "profile": ["Combat", "S+1", "-2", "Extra Attacks (D3), Magical Attacks"],
+    "rules": "The bearer gains +1 Strength, AP -2 and Extra Attacks (D3). If the Extra Attacks roll is a 3, the bearer suffers -1 To Hit for that Combat phase."
+  },
+  "Briar-bow": {
+    "profile": ["30 in", "3", "-1", "Magical Attacks"],
+    "rules": "When this bow hits, the target suffers a number of hits equal to the result on the Artillery dice. If the Artillery dice rolls Misfire, the bow breaks and cannot be used again; the bearer suffers one hit instead of the target."
+  },
+  "Flaming Sword": {
+    "profile": ["Combat", "S", "-1", "Flaming Attacks, Magical Attacks"],
+    "rules": "Always wounds a target with the Flammable special rule on a 4+, regardless of its Toughness. The bearer cannot join a unit with the Regeneration special rule."
+  },
+  "Helmcutter": {
+    "profile": ["Combat", "S", "-1", "Magical Attacks"],
+    "rules": "On a natural 6 To Wound, the target cannot make an Armour Save against that attack."
+  },
+  "Armour of Dust": {
+    "rules": "Full plate armour (4+). Its Armour Value cannot be improved or modified by any means. Each natural 1 rolled for an Armour Save reduces the bearer's Toughness by 1 for the remainder of the battle."
+  },
+  "Armour of Fate": {
+    "rules": "Infantry or Cavalry only. Heavy armour that allows the bearer to re-roll failed Armour Saves. If a re-rolled save is a natural 1, the bearer suffers a Strength 5 hit with no Armour Save allowed; Ward saves may be taken against this hit."
+  },
+  "Bronze Shield": {
+    "rules": "Once per battle, the first time the bearer suffers one or more Wounds from an Assailment spell, Magic Missile or Magical Vortex, the caster suffers D3 Strength 4 hits with AP -2."
+  },
+  "Armour of Jet": {
+    "rules": "Extremely Common. Heavy armour that any Wizard may wear without suffering the usual penalty for wearing armour. If the bearer Miscasts or is Outclassed in the Art, apply a -1 modifier to their roll on the Miscast table."
+  },
+  "Pariah Stone": {
+    "rules": "Whenever a spell attempts to target the bearer or the unit they have joined, the caster must pass a Leadership test using their own Leadership characteristic. If the test is failed, the caster must choose a different target."
+  },
+  "Obsidian Pendant": {
+    "rules": "The bearer has a 4+ Ward save against Magic Missiles. If the bearer ever fails a Ward save granted by this item, the pendant is destroyed and cannot be used again."
+  },
+  "Mouldering Banner": {
+    "rules": "Enemy units that target the unit carrying this banner with shooting attacks suffer -1 To Hit. Friendly units within 6 inches of the bearer’s unit also suffer -1 To Hit when shooting."
+  },
+  "Banner of the Resolute Dead": {
+    "rules": "When taking a Leadership test or Break test, the unit may roll 3D6 and discard the highest result. The unit suffers -1 to its Movement characteristic."
+  },
+  "Robes of Phakth": {
+    "rules": "Infantry only. The bearer gains the Ethereal, Fly (8) and Loner special rules."
+  },
+  "Barrow-dirt": {
+    "profile": ["N/A", "3", "-3", "Breath Weapon, Magical Attacks, Multiple Wounds (2)"],
+    "notes": "Single use. After using this Breath Weapon, the bearer must take an Initiative test. If failed, the bearer risks being hit as if partially under the flame template."
+  },
+  "Crown of Fury": {
+    "rules": "The bearer, but not their mount, gains the Furious Charge and Impetuous special rules."
+  },
+  "Tome of Oppression": {
+    "rules": "Infantry or Cavalry only. Once per turn, when an enemy Wizard casts a spell other than a Remains in Play spell, the bearer may use this instead of a normal Wizardly Dispel. Both Wizards roll a D6 and add their Toughness. If the casting Wizard has the higher total, the spell is cast and the dispelling Wizard suffers a Strength 4 hit with AP -1. If the totals tie, the spell is dispelled and neither Wizard suffers a hit. If the dispelling Wizard has the higher total, the spell is dispelled and the casting Wizard suffers a Strength 4 hit with AP -1."
+  },
+  "Crude Canopics": {
+    "rules": "Extremely Common. When the bearer attempts a Wizardly Dispel, any natural double other than a double 1 automatically dispels the spell. On a natural double 1, the dispel fails and the bearer must roll twice on the Miscast table, applying both results."
+  },
+  "Moritherin's Magnifier": {
+    "rules": "Once per turn, before choosing a target for a spell, the bearer may increase that spell's range by 3 inches. The spell's Casting Value is increased by 1."
   }
 };
 
 function seedMagicItemCatalogue(){
- const common=[["Ogre Blade","Magic Weapon",75],["Cackling Blade","Magic Weapon",65],["Sword of Battle","Magic Weapon",60],["Duellist's Blades","Magic Weapon",55],["Dragon Slaying Sword","Magic Weapon",50],["Meteor Hammer","Magic Weapon",50],["Headsman's Axe","Magic Weapon",45],["Spelleater Axe","Magic Weapon",35],["Giant Blade","Magic Weapon",30],["Hell-forged Axe","Magic Weapon",30],["Sword of Sorrow","Magic Weapon",30],["Sword of Swiftness","Magic Weapon",25],["Berserker Blade","Magic Weapon",20],["Sword of Might","Magic Weapon",20,true],["Biting Blade","Magic Weapon",15],["Sword of Striking","Magic Weapon",15,true],["Burning Blade","Magic Weapon",5,true],["Armour of Destiny","Magic Armour",70],["Bedazzling Helm","Magic Armour",60],["Armour of Silvered Steel","Magic Armour",40],["Glittering Scales","Magic Armour",35],["Shield of the Warrior True","Magic Armour",30],["Levitating Shield","Magic Armour",25],["Spellshield","Magic Armour",25,true],["Armour of Meteoric Iron","Magic Armour",20],["Trailblazer's Hauberk","Magic Armour",20],["Enchanted Shield","Magic Armour",10,true],["Charmed Shield","Magic Armour",5,true],["Dawnstone","Talisman",35],["Icon of Fortitude","Talisman",35],["Ironhide Talisman","Talisman",30],["Talisman of Protection","Talisman",30],["Paymaster's Coin","Talisman",25,true],["Obsidian Lodestone","Talisman",20,true],["Luckstone","Talisman",15,true],["Banner of Iron Resolve","Magic Standard",50],["Banner of the Steadfast","Magic Standard",50],["Totem of Wrath","Magic Standard",50],["Razor Standard","Magic Standard",40],["Banner of Swirling Wind","Magic Standard",30],["Rampaging Banner","Magic Standard",30],["The Blazing Banner","Magic Standard",25],["Monster Hunter's Tapestry","Magic Standard",25],["War Banner","Magic Standard",25],["Wizarding Hat","Enchanted Item",45],["Arch-Lightning Rod","Enchanted Item",40],["Flying Carpet","Enchanted Item",40],["Healing Potion","Enchanted Item",35,true],["Ruby Ring of Ruin","Enchanted Item",35],["Potion of Fervour","Enchanted Item",30],["Potion of Strength","Enchanted Item",25,true],["Becalming Orb","Enchanted Item",20],["Potion of Toughness","Enchanted Item",20,true],["Potion of Speed","Enchanted Item",10,true],["Potion of Foolhardiness","Enchanted Item",5,true],["Feedback Scroll","Arcane Item",60],["Scroll of Transmogrification","Arcane Item",50,true],["Wand of Jet","Arcane Item",45],["Staff of Quietude","Arcane Item",35],["Lore Familiar","Arcane Item",30],["Scroll of Disruption","Arcane Item",30],["Tome of Spellcraft","Arcane Item",30],["Dispel Scroll","Arcane Item",20,true],["Power Scroll","Arcane Item",20,true],["Arcane Familiar","Arcane Item",15],["Earthing Rod","Arcane Item",5], ["Sword of Reaving","Magic Weapon",50], ["Flail of Wrecks","Magic Weapon",45], ["Grim Verdict","Magic Weapon",40], ["Hunter's Scorn","Magic Weapon",20], ["Armour of Dark Faith","Magic Armour",40], ["Scale of False Promise","Magic Armour",35], ["Mantle of Drifting Shadow","Magic Armour",20], ["Amulet of Spell Attraction","Talisman",25], ["Periapt of Soul Exchange","Talisman",20], ["Banner of the Dark Heart","Magic Standard",50], ["Standard of the Fell Warrior","Magic Standard",15], ["Ring of Doom","Enchanted Item",25], ["Daemon-Blooded Steed","Enchanted Item",15], ["Elixir of Power","Enchanted Item",15], ["Rod of Might","Arcane Item",50], ["Scroll of Invocation","Arcane Item",30,true], ["Infernal Familiar","Arcane Item",25]];
+ const common=[["Ogre Blade","Magic Weapon",75],["Cackling Blade","Magic Weapon",65],["Sword of Battle","Magic Weapon",60],["Duellist's Blades","Magic Weapon",55],["Dragon Slaying Sword","Magic Weapon",50],["Meteor Hammer","Magic Weapon",50],["Headsman's Axe","Magic Weapon",45],["Spelleater Axe","Magic Weapon",35],["Giant Blade","Magic Weapon",30],["Hell-forged Axe","Magic Weapon",30],["Sword of Sorrow","Magic Weapon",30],["Sword of Swiftness","Magic Weapon",25],["Berserker Blade","Magic Weapon",20],["Sword of Might","Magic Weapon",20,true],["Biting Blade","Magic Weapon",15],["Sword of Striking","Magic Weapon",15,true],["Burning Blade","Magic Weapon",5,true],["Armour of Destiny","Magic Armour",70],["Bedazzling Helm","Magic Armour",60],["Armour of Silvered Steel","Magic Armour",40],["Glittering Scales","Magic Armour",35],["Shield of the Warrior True","Magic Armour",30],["Levitating Shield","Magic Armour",25],["Spellshield","Magic Armour",25,true],["Armour of Meteoric Iron","Magic Armour",20],["Trailblazer's Hauberk","Magic Armour",20],["Enchanted Shield","Magic Armour",10,true],["Charmed Shield","Magic Armour",5,true],["Dawnstone","Talisman",35],["Icon of Fortitude","Talisman",35],["Ironhide Talisman","Talisman",30],["Talisman of Protection","Talisman",30],["Paymaster's Coin","Talisman",25,true],["Obsidian Lodestone","Talisman",20,true],["Luckstone","Talisman",15,true],["Banner of Iron Resolve","Magic Standard",50],["Banner of the Steadfast","Magic Standard",50],["Totem of Wrath","Magic Standard",50],["Razor Standard","Magic Standard",40],["Banner of Swirling Wind","Magic Standard",30],["Rampaging Banner","Magic Standard",30],["The Blazing Banner","Magic Standard",25],["Monster Hunter's Tapestry","Magic Standard",25],["War Banner","Magic Standard",25],["Wizarding Hat","Enchanted Item",45],["Arch-Lightning Rod","Enchanted Item",40],["Flying Carpet","Enchanted Item",40],["Healing Potion","Enchanted Item",35,true],["Ruby Ring of Ruin","Enchanted Item",35],["Potion of Fervour","Enchanted Item",30],["Potion of Strength","Enchanted Item",25,true],["Becalming Orb","Enchanted Item",20],["Potion of Toughness","Enchanted Item",20,true],["Potion of Speed","Enchanted Item",10,true],["Potion of Foolhardiness","Enchanted Item",5,true],["Feedback Scroll","Arcane Item",60],["Scroll of Transmogrification","Arcane Item",50,true],["Wand of Jet","Arcane Item",45],["Staff of Quietude","Arcane Item",35],["Lore Familiar","Arcane Item",30],["Scroll of Disruption","Arcane Item",30],["Tome of Spellcraft","Arcane Item",30],["Dispel Scroll","Arcane Item",20,true],["Power Scroll","Arcane Item",20,true],["Arcane Familiar","Arcane Item",15],["Earthing Rod","Arcane Item",5], ["Sword of Reaving","Magic Weapon",50], ["Flail of Wrecks","Magic Weapon",45], ["Grim Verdict","Magic Weapon",40], ["Hunter's Scorn","Magic Weapon",20], ["Armour of Dark Faith","Magic Armour",40], ["Scale of False Promise","Magic Armour",35], ["Mantle of Drifting Shadow","Magic Armour",20], ["Amulet of Spell Attraction","Talisman",25], ["Periapt of Soul Exchange","Talisman",20], ["Banner of the Dark Heart","Magic Standard",50], ["Standard of the Fell Warrior","Magic Standard",15], ["Ring of Doom","Enchanted Item",25], ["Daemon-Blooded Steed","Enchanted Item",15], ["Elixir of Power","Enchanted Item",15], ["Rod of Might","Arcane Item",50], ["Scroll of Invocation","Arcane Item",30,true], ["Infernal Familiar","Arcane Item",25],["Axe of Abandon","Magic Weapon",40],["Briar-bow","Magic Weapon",25],["Flaming Sword","Magic Weapon",25],["Helmcutter","Magic Weapon",20],["Armour of Dust","Magic Armour",45],["Armour of Fate","Magic Armour",35],["Bronze Shield","Magic Armour",30],["Armour of Jet","Magic Armour",20,true],["Pariah Stone","Talisman",35],["Obsidian Pendant","Talisman",20],["Mouldering Banner","Magic Standard",25],["Banner of the Resolute Dead","Magic Standard",15],["Robes of Phakth","Enchanted Item",50],["Barrow-dirt","Enchanted Item",20],["Crown of Fury","Enchanted Item",20],["Tome of Oppression","Arcane Item",40],["Crude Canopics","Arcane Item",30,true],["Moritherin's Magnifier","Arcane Item",25]];
  magicItems=magicItems.filter(x=>!String(x.id||"").startsWith("mi_"));
  const sources={"Magic Weapon":"magic-weapons","Magic Armour":"magic-armour","Talisman":"talismans","Magic Standard":"magic-standards","Enchanted Item":"enchanted-items","Arcane Item":"arcane-items"};
  common.forEach(([name,type,points,extremelyCommon])=>{
   const detail=commonMagicItemDetails[name]||{};
-  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
+  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",rules:detail.rules||"",profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
  });
  const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");if(!f)return;
  const beastmen=[
@@ -3271,12 +3330,12 @@ function renderMagicItems(){
  }
  const selectedFactionId=factionSelect?.value||"";
  const sharedHtml=categories.map(type=>{
-  const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q)).sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
+  const list=magicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.desc||"")+" "+(x.rules||"")+" "+(x.notes||"")).toLowerCase().includes(q)).sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No items match this search.</p>')+'</section>';
  }).join("");
  const factionGroups=categories.map(type=>{
-  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&x.type===type&&(x.name+" "+x.type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&x.type===type&&(x.name+" "+x.type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.rules||"")+" "+(x.notes||"")).toLowerCase().includes(q))
    .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
@@ -3284,7 +3343,7 @@ function renderMagicItems(){
  const knownTypes=new Set(categories);
  const otherTypes=[...new Set(factionMagicItems.filter(x=>x.factionId===selectedFactionId).map(x=>String(x.type||"Other")).filter(type=>!knownTypes.has(type)))].sort((a,b)=>a.localeCompare(b));
  const otherHtml=otherTypes.map(type=>{
-  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&String(x.type||"Other")===type&&(x.name+" "+type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+  const list=factionMagicItems.filter(x=>x.factionId===selectedFactionId&&String(x.type||"Other")===type&&(x.name+" "+type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.rules||"")+" "+(x.notes||"")).toLowerCase().includes(q))
    .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+'</small>'+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(type)+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
