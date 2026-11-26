@@ -103,7 +103,7 @@ border-bottom:1px solid var(--line);
 .army-unit-stats th:first-child,.army-unit-stats td:first-child{text-align:left}
 .army-unit-profile-section{margin:0 -10px;padding:9px 10px;border-top:1px solid rgba(0,0,0,.38)}
 .army-unit-profile-section h4{color:#fff;font-size:14px;margin:0 0 7px}
-.army-profile-control-list{display:grid;gap:4px}
+.army-profile-control-list{display:grid;gap:4px}.army-profile-equipment-list{font-size:13px;line-height:1.55}.army-profile-optional-group{margin:7px 0 10px}.army-profile-optional-group h5{color:#eee;font-size:13px;margin:0 0 5px;font-weight:700}.army-profile-optional .army-profile-accordion{margin:0}.army-profile-optional .army-profile-accordion+.army-profile-accordion{margin-top:5px}
 .army-profile-control{display:flex;align-items:center;gap:8px;min-height:30px;font-size:13px;line-height:1.25;cursor:pointer}
 .army-profile-control input{width:auto;margin:0;accent-color:#c6a15b;flex:0 0 auto}
 .army-profile-control .army-profile-cost{margin-left:auto;color:#fff;font-style:italic;white-space:nowrap}
@@ -2093,13 +2093,14 @@ function renderArmyEntrySpecialSection(entry,unit,kind){
  const chosenHtml=selected.map(x=>'<div class="army-profile-selected"><span>'+esc(x.name)+'</span><span class="army-profile-cost">'+parsePointCost(x.points)+' pts</span><button type="button" class="danger" onclick="removeArmyEntrySpecialItem(&quot;'+esc(entry.id)+'&quot;,&quot;'+kind+'&quot;,&quot;'+esc(x.id)+'&quot;)">Remove</button></div>').join("");
  return '<details class="army-profile-accordion"><summary><strong>'+label+'</strong><span class="army-profile-limit">'+used+' / '+cap+' pts</span></summary><div class="army-profile-accordion-body"><div class="army-profile-add-row"><select id="'+esc(selectId)+'"><option value="" disabled selected>Select '+(magic?"a magic item":"a mutation")+'</option>'+options+'</select><button type="button" onclick="addArmyEntrySpecialItem(&quot;'+esc(entry.id)+'&quot;,&quot;'+kind+'&quot;,&quot;'+esc(selectId)+'&quot;)" '+(!options?"disabled":"")+'>Add</button></div>'+(chosenHtml||'<p class="army-profile-empty">No '+label.toLowerCase()+' selected.</p>')+'</div></details>';
 }
-function renderArmyEntryRadioGroup(entry,group,label,items,selectedId,allowNone){
+function renderArmyEntryRadioGroup(entry,group,label,items,selectedId,allowNone,baseItems=[]){
  if(!items.length)return "";
- const none=allowNone?'<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="__none__" '+(selectedId==="__none__"?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;__none__&quot;)"><span>No armour</span><em class="army-profile-cost">free</em></label>':"";
+ const baseItem=baseItems[0]||null;
+ const base=baseItem?'<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="'+esc(baseItem.id)+'" '+(selectedId===baseItem.id?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;'+esc(baseItem.id)+'&quot;)"><span>Use starting equipment ('+esc(baseItem.name)+')</span><em class="army-profile-cost">free</em></label>':"";
+ const none=allowNone&&!baseItem?'<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="__none__" '+(selectedId==="__none__"?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;__none__&quot;)"><span>No armour</span><em class="army-profile-cost">free</em></label>':"";
  const radios=items.map(x=>{const cost=parsePointCost(x.cost);return '<label class="army-profile-control"><input type="radio" name="army-'+esc(entry.id)+'-'+esc(group)+'" value="'+esc(x.id)+'" '+(selectedId===x.id?"checked":"")+' onchange="setArmyEntryEquipmentChoice(&quot;'+esc(entry.id)+'&quot;,&quot;'+group+'&quot;,&quot;'+esc(x.id)+'&quot;)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+(cost?cost+" pts":"free")+'</em></label>';}).join("");
- return '<section class="army-unit-profile-section"><h4>'+label+':</h4><div class="army-profile-control-list">'+none+radios+'</div></section>';
+ return '<div class="army-profile-optional-group"><h5>'+label+':</h5><div class="army-profile-control-list">'+base+none+radios+'</div></div>';
 }
-
 function armyEntryCost(entry) { return armyEntryProfileCost(entry); }
 
 function armyTotal(army) {
@@ -2202,25 +2203,31 @@ function renderArmyEntriesByCategory(entries){
    if(!unit)return '<div class="item"><div class="item-head"><strong>Missing unit</strong><button class="danger" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">Remove</button></div></div>';
    ensureArmyEntryProfileState(entry,unit);
    const profile=normalizeUnit(unit),gear=armyProfileEquipmentItems(unit),choices=entry.selectedEquipmentChoices||{};
-   const weapon=gear.filter(x=>armyEquipmentGroup(x)==="Weapons"),ranged=gear.filter(x=>armyEquipmentGroup(x)==="Ranged Weapons"),armour=gear.filter(x=>armyEquipmentGroup(x)==="Armour"),additional=gear.filter(x=>armyEquipmentGroup(x)==="Options");
-   const hasBasicArmour=(profile.basicEquipmentIds||[]).some(id=>{const x=equipmentById(id);return x&&armyEquipmentGroup(x)==="Armour";});
-   const weaponsHtml=renderArmyEntryRadioGroup(entry,"Weapons","Weapons",weapon,choices.Weapons,false);
-   const rangedHtml=renderArmyEntryRadioGroup(entry,"Ranged Weapons","Missile Weapons",ranged,choices["Ranged Weapons"],false);
-   const armourHtml=renderArmyEntryRadioGroup(entry,"Armour","Armour",armour,choices.Armour,!hasBasicArmour);
-   const additionalHtml=additional.length?'<section class="army-unit-profile-section"><h4>Options:</h4><div class="army-profile-control-list">'+additional.map(x=>{const checked=(entry.selectedAdditionalEquipmentIds||[]).includes(x.id);return '<label class="army-profile-control"><input type="checkbox" '+(checked?'checked':'')+(x.included?' disabled':'')+' onchange="toggleArmyEntryAdditionalEquipment(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(x.id)+'&quot;,this.checked)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+(x.included?'free':parsePointCost(x.cost)+' pts')+'</em></label>';}).join("")+'</div></section>':"";
+   const starting=gear.filter(x=>x.included),optional=gear.filter(x=>!x.included);
+   const byGroup=(items,group)=>items.filter(x=>armyEquipmentGroup(x)===group);
+   const weapon=byGroup(optional,"Weapons"),ranged=byGroup(optional,"Ranged Weapons"),armour=byGroup(optional,"Armour"),additional=byGroup(optional,"Options");
+   const baseWeapons=byGroup(starting,"Weapons"),baseRanged=byGroup(starting,"Ranged Weapons"),baseArmour=byGroup(starting,"Armour");
+   const weaponsHtml=renderArmyEntryRadioGroup(entry,"Weapons","Weapons",weapon,choices.Weapons,false,baseWeapons);
+   const rangedHtml=renderArmyEntryRadioGroup(entry,"Ranged Weapons","Missile Weapons",ranged,choices["Ranged Weapons"],false,baseRanged);
+   const armourHtml=renderArmyEntryRadioGroup(entry,"Armour","Armour",armour,choices.Armour,!baseArmour.length,baseArmour);
+   const additionalHtml=additional.length?'<div class="army-profile-optional-group"><h5>Options:</h5><div class="army-profile-control-list">'+additional.map(x=>{const checked=(entry.selectedAdditionalEquipmentIds||[]).includes(x.id);return '<label class="army-profile-control"><input type="checkbox" '+(checked?'checked':'')+' onchange="toggleArmyEntryAdditionalEquipment(&quot;'+esc(entry.id)+'&quot;,&quot;'+esc(x.id)+'&quot;,this.checked)"><span>'+esc(x.name)+'</span><em class="army-profile-cost">'+parsePointCost(x.cost)+' pts</em></label>';}).join("")+'</div></div>':"";
+   const startingHtml=starting.length?'<div class="army-profile-equipment-list">'+starting.map(x=>esc(x.name)).join(", ")+'</div>':'<div class="army-profile-empty">No starting equipment.</div>';
+   const custom=profile.customEquipment||[],customHtml=custom.length?renderUnitCustomEquipment(custom):"";
+   const equipmentHtml='<section class="army-unit-profile-section"><h4>Equipment:</h4>'+startingHtml+customHtml+'</section>';
+   const magicHtml=renderArmyEntrySpecialSection(entry,unit,"magicItems"),mutHtml=renderArmyEntrySpecialSection(entry,unit,"chaosMutations");
+   const hasOptional=!!(optional.length||magicHtml||mutHtml);
+   const optionalHtml=hasOptional?'<section class="army-unit-profile-section army-profile-optional"><h4>Optional</h4>'+weaponsHtml+rangedHtml+armourHtml+additionalHtml+magicHtml+mutHtml+'</section>':"";
    const keys=["M","WS","BS","S","T","W","I","A","Ld"],statHead=keys.map(x=>'<th>'+x+'</th>').join(""),statBody=keys.map(x=>'<td>'+esc((profile.stats||{})[x]||"-")+'</td>').join("");
    const points=armyEntryUnitCost(entry),hero=String(unit.category||"").toLowerCase()==="hero";
    const general=hero?'<label class="army-profile-general"><input type="checkbox" '+(armyEntriesGeneral(armies.find(a=>a.id===selectedArmyId),entry.id)?'checked':'')+' onchange="setArmyEntryGeneral(&quot;'+esc(entry.id)+'&quot;,this.checked)"> General <em class="army-profile-cost">free</em></label>':"";
    const rules=unitRuleDetails(profile).map(x=>'<a class="rlink" data-name="'+esc(x.label)+'" title="'+esc(x.desc||x.label)+'">'+esc(x.label)+'</a>');
    (profile.customRules||[]).forEach(x=>rules.push('<span title="'+esc(x.desc||"")+'">'+esc(x.name)+'</span>'));
-   const rulesHtml='<section class="army-unit-profile-section army-profile-rules"><h4>Special Rules</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
-   const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\s*\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
-   const custom=profile.customEquipment||[],customHtml=custom.length?'<section class="army-unit-profile-section"><h4>Unit Equipment</h4>'+renderUnitCustomEquipment(custom)+'</section>':"";
-   const magicHtml=renderArmyEntrySpecialSection(entry,unit,"magicItems"),mutHtml=renderArmyEntrySpecialSection(entry,unit,"chaosMutations");
+   const rulesHtml='<section class="army-unit-profile-section army-profile-rules"><h4>Special Rules:</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
+   const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\\s*\\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
    let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div><label class="army-unit-profile-qty"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" aria-label="Unit quantity" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"></label></header>';
    html+=note+'<table class="army-unit-stats"><thead><tr><th>Model</th>'+statHead+'</tr></thead><tbody><tr><td>'+esc(unit.name)+'</td>'+statBody+'</tr></tbody></table>';
    if(unit.baseSize||unit.troopType)html+='<div class="muted" style="margin:-5px 0 8px">Base: '+esc(unit.baseSize||"—")+' · '+esc(unit.troopType||"—")+'</div>';
-   html+=general+weaponsHtml+rangedHtml+armourHtml+additionalHtml+customHtml+magicHtml+mutHtml+rulesHtml+'</article>';
+   html+=general+equipmentHtml+optionalHtml+rulesHtml+'</article>';
    return html;
   }).join("");
   return '<section class="unit-category-group"><h3 class="unit-category-heading">'+esc(group.name)+'</h3>'+cards+'</section>';
