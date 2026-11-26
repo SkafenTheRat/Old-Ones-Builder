@@ -3098,19 +3098,19 @@ const commonMagicItemDetails = {
   },
   "Axe of Abandon": {
     "profile": ["Combat", "S+1", "-2", "Extra Attacks (D3), Magical Attacks"],
-    "rules": "The bearer gains +1 Strength, AP -2 and Extra Attacks (D3). If the Extra Attacks roll is a 3, the bearer suffers -1 To Hit for that Combat phase."
+    "notes": "The bearer gains +1 Strength, AP -2 and Extra Attacks (D3). If the Extra Attacks roll is a 3, the bearer suffers -1 To Hit for that Combat phase."
   },
   "Briar-bow": {
     "profile": ["30 in", "3", "-1", "Magical Attacks"],
-    "rules": "When this bow hits, the target suffers a number of hits equal to the result on the Artillery dice. If the Artillery dice rolls Misfire, the bow breaks and cannot be used again; the bearer suffers one hit instead of the target."
+    "notes": "When this bow hits, the target suffers a number of hits equal to the result on the Artillery dice. If the Artillery dice rolls Misfire, the bow breaks and cannot be used again; the bearer suffers one hit instead of the target."
   },
   "Flaming Sword": {
     "profile": ["Combat", "S", "-1", "Flaming Attacks, Magical Attacks"],
-    "rules": "Always wounds a target with the Flammable special rule on a 4+, regardless of its Toughness. The bearer cannot join a unit with the Regeneration special rule."
+    "notes": "Always wounds a target with the Flammable special rule on a 4+, regardless of its Toughness. The bearer cannot join a unit with the Regeneration special rule."
   },
   "Helmcutter": {
     "profile": ["Combat", "S", "-1", "Magical Attacks"],
-    "rules": "On a natural 6 To Wound, the target cannot make an Armour Save against that attack."
+    "notes": "On a natural 6 To Wound, the target cannot make an Armour Save against that attack."
   },
   "Armour of Dust": {
     "rules": "Full plate armour (4+). Its Armour Value cannot be improved or modified by any means. Each natural 1 rolled for an Armour Save reduces the bearer's Toughness by 1 for the remainder of the battle."
@@ -3163,7 +3163,7 @@ function seedMagicItemCatalogue(){
  const sources={"Magic Weapon":"magic-weapons","Magic Armour":"magic-armour","Talisman":"talismans","Magic Standard":"magic-standards","Enchanted Item":"enchanted-items","Arcane Item":"arcane-items"};
  common.forEach(([name,type,points,extremelyCommon])=>{
   const detail=commonMagicItemDetails[name]||{};
-  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",rules:detail.rules||"",profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||"",sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
+  magicItems.push({id:"mi_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_"),name,type,points,extremelyCommon:!!extremelyCommon,desc:detail.desc||"",rules:type==="Magic Weapon"?"":(detail.rules||""),profile:detail.profile?{range:detail.profile[0],strength:detail.profile[1],ap:detail.profile[2],specialRules:detail.profile[3]}:null,table:detail.table||null,notes:detail.notes||(type==="Magic Weapon"?(detail.rules||""):""),sourceUrl:"https://tow.whfb.app/magic-items/"+sources[type]});
  });
  const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");if(!f)return;
  const beastmen=[
