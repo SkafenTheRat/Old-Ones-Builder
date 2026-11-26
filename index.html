@@ -3877,18 +3877,19 @@ function openBuilderSearchResult(key){
  if(result.kind==="equipment"){
   const item=data.item||{};
   if(data.source==="shared"&&isWeaponEquipment(item.category)){openWeaponModal(item.id||item.name);return;}
-  if(data.source==="shared"||data.source==="faction"){
+  if(data.source==="shared"){
    openEquipmentModal(item.id||item.name);
-   if(!document.getElementById("mTitle").textContent||document.getElementById("mTitle").textContent!==item.name){
-    const category=item.category||"Equipment",desc=item.desc||"",notes=item.notes||"";
-    let html='<p><strong>Category:</strong> '+esc(category)+'</p>'+(desc?'<p>'+esc(desc)+'</p>':"");
-    const profile=item.weaponProfile||{};
-    if(isWeaponEquipment(category)&&(profile.range||profile.strength||profile.ap||profile.specialRules)){
-     html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(profile.range||"-")+'</td><td>'+esc(profile.strength||"-")+'</td><td>'+esc(profile.ap||"-")+'</td><td>'+esc(profile.specialRules||"-")+'</td></tr></table>';
-    }
-    if(notes)html+='<p class="wnote">Notes: '+esc(notes)+'</p>';
-    showBuilderSearchDetail(item.name,html);
+   return;
+  }
+  if(data.source==="faction"){
+   const category=item.category||"Equipment",desc=item.desc||"",notes=item.notes||"",profile=item.weaponProfile||{};
+   let html='<p><strong>Category:</strong> '+esc(category)+'</p>'+(desc?'<p>'+esc(desc)+'</p>':"");
+   if(isWeaponEquipment(category)&&(profile.range||profile.strength||profile.ap||profile.specialRules)){
+    html+='<table class="wstats"><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr><tr><td>'+esc(profile.range||"-")+'</td><td>'+esc(profile.strength||"-")+'</td><td>'+esc(profile.ap||"-")+'</td><td>'+esc(profile.specialRules||"-")+'</td></tr></table>';
    }
+   if(notes)html+='<p class="wnote">Notes: '+esc(notes)+'</p>';
+   if(item.sourceUrl)html+='<p><a href="'+esc(item.sourceUrl)+'" target="_blank" rel="noopener">Open source</a></p>';
+   showBuilderSearchDetail(item.name,html);
    return;
   }
   const custom=data.item||{},customProfile=custom.weaponProfile||{};
