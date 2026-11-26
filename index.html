@@ -1164,7 +1164,7 @@ const el=document.getElementById("pendingCustomEquipment");if(!el)return;
 el.innerHTML=pendingCustomEquipment.map(item=>{
 let html='<div class="item"><div class="item-head"><div><strong>'+esc(item.name)+'</strong><br><small>'+esc(item.category||"Equipment")+'</small></div><span><button type="button" onclick="editPendingCustomEquipment(&quot;'+esc(item.id)+'&quot;)">Edit</button> <button type="button" class="danger" onclick="removePendingCustomEquipment(&quot;'+esc(item.id)+'&quot;)">Remove</button></span></div>';
 if(isWeaponEquipment(item.category)){const p=item.weaponProfile||{};html+='<table class="wstats"><thead><tr><th>Range</th><th>Strength</th><th>Armour Piercing</th><th>Special Rules</th></tr></thead><tbody><tr><td>'+esc(p.range||"-")+'</td><td>'+esc(p.strength||"-")+'</td><td>'+esc(p.ap||"-")+'</td><td>'+esc(p.specialRules||"-")+'</td></tr></tbody></table>';}
-if(item.desc&&!isWeaponEquipment(item.category))html+='<p class="muted">'+esc(item.desc)+'</p>';
+if(item.desc&&!isWeaponEquipment(item.category)&&!["armour","armor","other equipment","additional equipment"].includes(String(item.category||"").trim().toLowerCase()))html+='<p class="muted">'+esc(item.desc)+'</p>';
 if(item.notes)html+='<p class="wnote">Notes: '+esc(item.notes)+'</p>';
 return html+'</div>';
 }).join("");
@@ -1263,7 +1263,7 @@ const cards=items.map(e=>{
 const included=editingBasicEquipmentIds.includes(e.id);
 const paid=Object.prototype.hasOwnProperty.call(editingOptionCosts,e.id);
 let html='<div class="rule-option"><strong>'+esc(e.name)+'</strong>';
-if(e.desc&&!isWeaponEquipment(e)) html+='<small class="equipment-description">'+esc(e.desc)+'</small>';
+
 html+='<div class="equip-modes">';
 html+='<label><input type="checkbox" '+(included?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;basic&quot;,this.checked)"> Included</label>';
 html+='<label><input type="checkbox" '+(paid?'checked':'')+' onchange="setEquipmentMode(&quot;'+esc(e.id)+'&quot;,&quot;paid&quot;,this.checked)"> Paid option</label>';
@@ -3109,9 +3109,22 @@ function renderMagicItems(){
   const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No items match this search.</p>')+'</section>';
  }).join("");
- const priv=factionMagicItems.filter(x=>(x.name+" "+x.type+" "+(x.factionName||"")).toLowerCase().includes(q));
+ const factionGroups=categories.map(type=>{
+  const list=factionMagicItems.filter(x=>x.type===type&&(x.name+" "+x.type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+   .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
+  const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+(x.extremelyCommon?" · Extremely Common":"")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
+  return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(categoryLabels[type])+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
+ }).join("");
+ const knownTypes=new Set(categories);
+ const otherTypes=[...new Set(factionMagicItems.map(x=>String(x.type||"Other")).filter(type=>!knownTypes.has(type)))].sort((a,b)=>a.localeCompare(b));
+ const otherHtml=otherTypes.map(type=>{
+  const list=factionMagicItems.filter(x=>String(x.type||"Other")===type&&(x.name+" "+type+" "+(x.factionName||"")+" "+(x.desc||"")+" "+(x.notes||"")).toLowerCase().includes(q))
+   .sort((a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||String(a.name||"").localeCompare(String(b.name||"")));
+  const rows=list.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+'</small>'+(x.desc?'<p class="muted">'+esc(x.desc)+'</p>':"")+'</div>').join("");
+  return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(type)+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
+ }).join("");
  if(a)a.innerHTML=sharedHtml;
- if(b)b.innerHTML=priv.map(x=>'<div class="item"><strong><a class="magiclink" data-id="'+esc(x.id)+'">'+esc(x.name)+'</a></strong><br><small>'+esc(x.type)+' · '+esc(x.factionName||"Faction-only")+' · '+(x.points==null?"No points listed":esc(x.points)+" pts")+'</small></div>').join("")||'<div class="empty">No faction items found.</div>';
+ if(b)b.innerHTML=factionGroups+otherHtml||'<div class="empty">No faction items found.</div>';
 }
 document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a)openMagicItemModal(a.dataset.id);});
 seedMagicItemCatalogue();
