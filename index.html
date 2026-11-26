@@ -3170,7 +3170,7 @@ function renderMagicItems(){
  if(results)results.classList.toggle("hidden",!selectedFactionId);
  if(b)b.innerHTML=selectedFactionId?(factionGroups+otherHtml||'<div class="empty">No faction items found.</div>'):"";
 }
-document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a)openMagicItemModal(a.dataset.id);});
+document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a){e.preventDefault();openMagicItemModal(a.dataset.id||a.dataset.name);}});
 seedMagicItemCatalogue();
 save();
 renderMagicItems();
