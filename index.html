@@ -476,7 +476,9 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <option value="" disabled selected hidden>Select a faction</option>
 </select>
 </div>
-<div id="factionMagicItemLibrary" class="list-scroll"></div></div></div></section></div></section>
+<div id="factionMagicItemResults" class="hidden">
+<div id="factionMagicItemLibrary" class="list-scroll"></div>
+</div></div></div></section></div></section>
 <section id="rules" class="tab hidden">
 <div class="panel">
 <h2>Special Rules Library</h2>
@@ -3145,7 +3147,9 @@ function renderMagicItems(){
   return '<section class="magic-category"><h4 class="magic-category-heading">'+esc(type)+' ('+list.length+')</h4>'+(rows||'<p class="muted">No faction items match this search.</p>')+'</section>';
  }).join("");
  if(a)a.innerHTML=sharedHtml;
- if(b)b.innerHTML=!selectedFactionId?'<p class="muted">Select a faction to view its magic items.</p>':(factionGroups+otherHtml||'<div class="empty">No faction items found.</div>');
+ const results=document.getElementById("factionMagicItemResults");
+ if(results)results.classList.toggle("hidden",!selectedFactionId);
+ if(b)b.innerHTML=selectedFactionId?(factionGroups+otherHtml||'<div class="empty">No faction items found.</div>'):"";
 }
 document.addEventListener("click",e=>{const a=e.target.closest(".magiclink");if(a)openMagicItemModal(a.dataset.id);});
 seedMagicItemCatalogue();
