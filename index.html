@@ -1584,13 +1584,7 @@ let profile='<table class="unit-stat-table"><tbody><tr>'+unitStatKeys.map(k=>'<t
 let basePoints=parsePointCost(u.points);
 const profileUnit=normalizeUnit(u);
 
-let assigned=(u.ruleIds||[]).map(id=>{
-let rule=ruleById(id);
-if(!rule) return null;
-let value=(u.ruleValues||{})[id];
-if(rule.name==="Hatred") { const target=factions.find(f=>f.id===(u.ruleFactions||{})[id]); return target?`Hatred (${target.name})`:"Hatred"; }
-return value?`${rule.name} (${value})`:rule.name;
-}).filter(Boolean);
+let assigned=(u.ruleIds||[]).map(id=>formatUnitRuleLabel(u,id)).filter(Boolean);
 
 return `
 <div class="item">
@@ -1694,15 +1688,30 @@ a.click();
 URL.revokeObjectURL(a.href);
 }
 
-function formatUnitRuleLabel(u,ruleId) {
-const rule=ruleById(ruleId);
-if(!rule) return null;
-if(rule.name==="Hatred") {
-const target=factions.find(f=>f.id===(u.ruleFactions||{})[ruleId]);
-return target?`Hatred (${target.name})`:"Hatred";
+function formatParameterizedRuleName(name,value,hasParameter=false) {
+ const ruleName=String(name||"");
+ const raw=String(value??"").trim();
+ if(!raw)return ruleName;
+ const marker=ruleName.match(/\(([-+]?X\+?)\)/i);
+ if(!marker) return hasParameter?ruleName+" ("+raw+")":ruleName+" ("+raw+")";
+ const token=marker[1],prefix=token.startsWith("-")?"-":token.startsWith("+")?"+":"",suffix=token.endsWith("+")?"+":"";
+ let numeric=raw;
+ if(prefix==="-")numeric=numeric.replace(/^[-+]/,"");
+ else if(prefix==="+")numeric=numeric.replace(/^\+/,"");
+ if(suffix&&!numeric.endsWith("+"))numeric+="+";
+ const formatted=prefix+numeric;
+ return ruleName.replace(marker[0],"("+formatted+")");
 }
-const value=(u.ruleValues||{})[ruleId];
-return value?`${rule.name} (${value})`:rule.name;
+function formatUnitRuleLabel(u,ruleId) {
+ const rule=ruleById(ruleId);
+ if(!rule) return null;
+ if(rule.name==="Hatred") {
+  const target=factions.find(f=>f.id===(u.ruleFactions||{})[ruleId]);
+  return target?`Hatred (${target.name})`:"Hatred";
+ }
+ const value=(u.ruleValues||{})[ruleId];
+ const needsValue=!!rule.hasParameter||parameterRules.includes(rule.name)||/\([-+]?X\+?\)/i.test(rule.name);
+ return formatParameterizedRuleName(rule.name,value,needsValue);
 }
 
 function unitRuleDetails(u) {
