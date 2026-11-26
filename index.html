@@ -929,7 +929,6 @@ const p=row.split("|"),slug=p[0],name=p[1],category=p[2],points=p[3],stat=p[4].s
 const existing=units.find(x=>x.sourceKey==="beastmen-brayherds:"+slug)||units.find(x=>x.factionId===fid&&String(x.name).toLowerCase()===name.toLowerCase());
 const baseIds=gearNames.map(x=>makeGear(x)?.id).filter(Boolean),options=new Map();
 optText.forEach(x=>{const i=x.lastIndexOf(":"),g=makeGear(x.slice(0,i));if(g)options.set(g.id,{id:g.id,cost:Number(x.slice(i+1))});});
-Object.keys(mutations).forEach(n=>{if(mutationCap&&mutations[n]<=mutationCap){const g=makeGear(n);if(g)options.set(g.id,{id:g.id,cost:mutations[n]});}});
 const standards=["The Gore Banner","Totem of Rust","Banner of the Warped Moon","The Beast Banner","Manbane Standard","Vitriolic Totem","Banner of Outrage","The Soiled Tapestry"];
 const separatedGearIds=new Set([...Object.keys(magic),...Object.keys(mutations),...standards].map(itemName=>"br_eq_"+beastmenSlug(itemName)));
 const ids=[],values={};
@@ -1961,7 +1960,7 @@ reader.readAsText(file);
 const BEASTMEN_CHAOS_MUTATIONS=[{id:"mutation_slug_skin",name:"Slug-skin",points:50},{id:"mutation_crown_of_horns",name:"Crown of Horns (Beastmen)",points:45},{id:"mutation_muscular_monstrosity",name:"Muscular Monstrosity",points:35},{id:"mutation_pelt_of_midnight",name:"Pelt of Midnight",points:35},{id:"mutation_gouge_tusks",name:"Gouge-tusks",points:30},{id:"mutation_rune_of_the_beast_ascendant",name:"Rune of the Beast Ascendant",points:25},{id:"mutation_many_limbed_fiend",name:"Many-limbed Fiend",points:20},{id:"mutation_gnarled_hide",name:"Gnarled Hide",points:15},{id:"mutation_uncanny_senses",name:"Uncanny Senses",points:10}];
 function armyEquipmentGroup(item){const c=String(item?.category||"").trim().toLowerCase();if(c==="melee weapon"||c==="melee weapons")return "Weapons";if(c==="ranged weapon"||c==="ranged weapons")return "Ranged Weapons";if(c==="armour"||c==="armor")return "Armour";return "Options";}
 function armyMagicItemsForUnit(unit){
- const profile=normalizeUnit(unit),optionNames=new Set((profile.optionEquipment||[]).map(o=>equipmentById(o.id)?.name?.toLowerCase()).filter(Boolean));
+ const profile=normalizeUnit(unit);
  const all=[...(magicItems||[]),...(factionMagicItems||[]).filter(x=>x.factionId===unit.factionId)],seen=new Set(),items=[];
  all.forEach(item=>{const key=String(item.name||"").toLowerCase();if(!key||seen.has(key)||(item.type==="Magic Standard"&&!["bestigor-herd","minotaur-herd","centigor-herd","wargor"].includes(String(unit.sourceKey||"").split(":")[1])))return;const points=parsePointCost(item.points);if(points>parsePointCost(unit.magicItemLimit))return;seen.add(key);items.push({...item,points});});
  unitItemList(unit,"magicItems","magic item").forEach((item,i)=>{const key=String(item.name||"").toLowerCase(),points=parsePointCost(item.points??item.cost);if(key&&!seen.has(key)&&points<=parsePointCost(unit.magicItemLimit)){seen.add(key);items.push({...item,id:item.id||"unit_magic_"+i,type:item.type||"Magic Item",points});}});
