@@ -302,7 +302,7 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <button class="active" onclick="showTab('units',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Unit Creator</button>
 <button onclick="showTab('catalogue',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Unit Catalogue</button>
 <button onclick="showTab('army',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Army</button>
-<button onclick="showTab('infamy',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Army of Infamy</button>
+<button onclick="showTab('infamy',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Army Lists</button>
 <button onclick="showTab('equipment',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Equipment Library</button>
 <button onclick="showTab('rules',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Special Rules Library</button>
 <button onclick="showTab('data',this)"><span class="tab-drag-handle" aria-hidden="true" title="Drag to reorder"></span>Data Management</button>
@@ -458,7 +458,7 @@ Select the rules you want to assign. If a rule requires a value in brackets, ent
 <section id="infamy" class="tab hidden">
 <div class="panel">
 <h2>Army Lists &amp; Army of Infamy Creator</h2>
-<p class="muted">Create a themed army list attached to an existing faction. Define its composition limits, unit access and special rules. This is a custom list editor; verify official restrictions against the relevant Arcane Journal.</p>
+<p class="muted">Built-in Beastmen army lists are shown below. Click a list name to view its composition and special rules. You can also create your own Army of Infamy for any faction.</p>
 <div class="grid">
 <div class="field"><label>Parent Faction</label><select id="iFaction"></select></div>
 <div class="field"><label>Army of Infamy Name</label><input id="iName" placeholder="e.g. Slayer Host"></div>
@@ -1130,7 +1130,7 @@ function seedBeastmenArmyLists(){
   battleStandardBearer:"A single Wargor may be upgraded to be the Battle Standard Bearer for +25 points. In addition to its usual magic item allowance, it may purchase a single Magic Standard with no points limit.",
   magicItems:"Models that have the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
-  "Beastlord","Great Bray-Shaman","Doombull","Wargor","Bray-Shaman","Gorebull","Ghorros Warhoof","Warhoof",
+  "Beastlord","Great Bray-Shaman","Doombull","Wargor","Bray-Shaman","Gorebull","Ghorros Warhoof","Warhoof","Centigor Chieftain","Centigor Chieftains",
   "Gor Herd","Ungor Herd","Chaos Warhounds","Razorgor Herd","Tuskgor Chariot","Bestigor Herd","Minotaur Herd",
   "Harpies","Centigor Herd","Dragon Ogres","Razorgor Chariot","Cockatrice","Cygor","Jabberslythe","Ghorgon",
   "Preyton","Herdstone","Dragon Ogre Shaggoth","Chaos Giant"
@@ -1166,7 +1166,7 @@ function seedBeastmenArmyLists(){
   battleStandardBearer:"A single Gorebull or Wargor may be upgraded to be the Battle Standard Bearer for +25 points. It may purchase a single Magic Banner with no points limit in addition to its usual magic item allowance.",
   magicItems:"Models with the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
-  "Doombull","Bray-Shaman","Gorebull","Wargor","Minotaur Herd","Herdstone","Gor Herd","Ungor Herd",
+  "Doombull","Bray-Shaman","Gorebull","Wargor","Warhoof","Ghorros Warhoof","Centigor Chieftain","Centigor Chieftains","Minotaur Herd","Herdstone","Gor Herd","Chaos Ogres","Chaos Ogre","Chaos Trolls","Chaos Troll","Ungor Herd",
   "Chaos Warhounds","Dragon Ogres","Harpies","Centigor Herd","Razorgor Herd","Ghorgon","Dragon Ogre Shaggoth","Chaos Giant"
  ]);
  makeList({
@@ -1201,7 +1201,7 @@ function seedBeastmenArmyLists(){
   battleStandardBearer:"A single Wargor may be upgraded to be the Battle Standard Bearer for +25 points. It may purchase a single Magic Banner with no points limit in addition to its usual magic item allowance.",
   magicItems:"Models with the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
-  "Beastlord","Great Bray-Shaman","Wargor","Bray-Shaman","Warhoof","Kralmaw, the Prophet of Ruin",
+  "Beastlord","Great Bray-Shaman","Wargor","Bray-Shaman","Warhoof","Ghorros Warhoof","Centigor Chieftain","Centigor Chieftains","Kralmaw, the Prophet of Ruin",
   "Primal Warherd","Tuskgor Chariot","Centigor Herd","Gor Herd","Ungor Herd","Chaos Warhounds",
   "Primal Warhounds","Razorgor Herd","Dragon Ogres","Warped Gors","Bestigor Herd","Harpies",
   "Razorgor Chariot","Cockatrice","Preyton","Herdstone","Dragon Ogre Shaggoth","Jabberslythe","Cygor","Chaos Giant"
