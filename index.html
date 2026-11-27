@@ -3739,6 +3739,7 @@ function openWeaponModal(idOrName){
  overlay.classList.remove("hidden");
 }
 function openRuleModal(name){
+ pushCurrentModal();
  const base=ruleBase(name);
  const exact=r=>String(r.name||"").toLowerCase()===String(name||"").toLowerCase();
  const sameBase=r=>ruleBase(String(r.name||"")).toLowerCase()===base.toLowerCase();
