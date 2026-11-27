@@ -2272,7 +2272,17 @@ function armyEntryUnitCost(entry){
  const mutations=armyEntryChosenMutations(entry,unit).reduce((sum,x)=>sum+parsePointCost(x.points),0);
  return parsePointCost(p.points)+gear+magic+mutations;
 }
-function armyEntryProfileCost(entry){return armyEntryUnitCost(entry)*Math.max(1,parseInt(entry.qty,10)||1);}
+function armyUnitMinimumModels(unit){
+ const size=String(unit?.unitSize||"").trim();
+ if(!size)return 1;
+ const mixed=[...size.matchAll(/(\d+)\s*(?:models?|[a-z][a-z-]*)/gi)];
+ if(mixed.length>1&&/[+&,]/.test(size))return Math.max(1,mixed.reduce((sum,m)=>sum+Number(m[1]||0),0));
+ const range=size.match(/^(\d+)\s*[-–]\s*\d+/);
+ if(range)return Math.max(1,Number(range[1]));
+ const first=size.match(/\d+/);
+ return first?Math.max(1,Number(first[0])):1;
+}
+function armyEntryProfileCost(entry){const unit=units.find(u=>u.id===entry.unitId);return armyEntryUnitCost(entry)*armyUnitMinimumModels(unit);}
 function setArmyEntryEquipmentChoice(entryId,group,itemId){
  const army=armies.find(x=>x.id===selectedArmyId),entry=army?.entries?.find(x=>x.id===entryId),unit=units.find(x=>x.id===entry?.unitId);if(!army||!entry||!unit)return;
  ensureArmyEntryProfileState(entry,unit);entry.selectedEquipmentChoices[group]=itemId;const p=normalizeUnit(unit),ids=new Set(entry.selectedOptionIds||[]);
@@ -2358,10 +2368,9 @@ function addArmyEntry() {
 const army=armies.find(a=>a.id===selectedArmyId);
 if(!army) return;
 const unitId=document.getElementById("armyUnit").value;
-const qty=Math.max(1,parseInt(document.getElementById("armyQty").value,10)||1);
 if(!unitId) { alert("Select a unit."); return; }
 const unit=units.find(x=>x.id===unitId);
-const entry={id:uid(),unitId,qty,selectedOptionIds:[],selectedMagicItemIds:[],selectedChaosMutationIds:[],isGeneral:false};
+const entry={id:uid(),unitId,selectedOptionIds:[],selectedMagicItemIds:[],selectedChaosMutationIds:[],isGeneral:false};
 if(unit)ensureArmyEntryProfileState(entry,unit);
 army.entries.push(entry);
 save();
@@ -2444,7 +2453,7 @@ function renderArmyEntriesByCategory(entries){
    const customRulesHtml=(profile.customRules||[]).length?'<div class="army-profile-custom-rules"><h5>Custom Special Rules:</h5>'+(profile.customRules||[]).map(x=>'<div><strong>'+esc(x.name)+'</strong>'+(x.desc?': '+esc(x.desc):'')+'</div>').join("")+'</div>':"";
    const rulesHtml='<section class="army-unit-profile-section army-profile-rules">'+customRulesHtml+'<h4>Special Rules:</h4>'+(rules.length?rules.join(", "):'<span class="army-profile-empty">No special rules.</span>')+'</section>';
    const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\\s*\\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
-   let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div><label class="army-unit-profile-qty"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" aria-label="Unit quantity" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"></label></header>';
+   let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div></header>';
    html+=note+'<table class="army-unit-stats"><thead><tr><th>Model</th>'+statHead+'</tr></thead><tbody><tr><td>'+esc(unit.name)+'</td>'+statBody+'</tr></tbody></table>';
    if(unit.baseSize||unit.unitSize||unit.troopType)html+='<div class="muted" style="margin:-5px 0 8px">Base: '+esc(unit.baseSize||"—")+' · Unit Size: '+esc(unit.unitSize||"—")+' · '+esc(unit.troopType||"—")+'</div>';
    html+=general+equipmentHtml+optionalHtml+rulesHtml+'</article>';
@@ -2477,7 +2486,7 @@ const allowed=infamy?.allowedUnitIds||[];
 const factionUnits=units.filter(u=>unitAllowedInArmyList(u,army,infamy));
 const ownFactionUnits=factionUnits.filter(u=>u.factionId===army.factionId);
 const mercenaryUnits=factionUnits.filter(isMercenaryUnit);
-const unitOption=u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+parsePointCost(u.points)+' pts</option>';
+const unitOption=u=>'<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+(parsePointCost(u.points)*armyUnitMinimumModels(u))+' pts ('+armyUnitMinimumModels(u)+' models min.)</option>';
 const unitOptions=[
 ownFactionUnits.length?renderUnitOptionGroups(ownFactionUnits,factions.find(f=>f.id===army.factionId)?.name||"Faction",unitOption):"",
 mercenaryUnits.length?renderUnitOptionGroups(mercenaryUnits,"Mercenaries",unitOption):""
@@ -2495,7 +2504,7 @@ ${infamy?.rulesText?'<div class="notice">'+esc(infamy.rulesText)+'</div>':''}
 <p class="muted">Choose units from ${esc(factionName)} or from the shared Mercenaries pool. Mercenary units can be added to any other faction's army.</p>
 <div class="grid" style="margin-top:14px">
 <div class="field"><label>Unit</label><select id="armyUnit"><option value="" disabled selected hidden>Select unit</option>${unitOptions}</select></div>
-<div class="field"><label>Quantity</label><input id="armyQty" type="number" min="1" step="1" value="1"></div>
+
 </div>
 <div class="actions"><button class="primary" onclick="addArmyEntry()">Add to Army</button></div>
 <div style="margin-top:14px">
