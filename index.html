@@ -372,8 +372,8 @@ a, a:link, a:visited, a:hover, a:active, a:focus {
 <label>Ld<input id="sLd" placeholder="-"></label>
 </div>
 
-<h3>Base Size & Troop Type</h3>
-<div class="grid"><div class="field"><label>Base Size (mm)</label><input id="uBaseSize" placeholder="e.g. 25x25, 30x60, 50x50"></div><div class="field"><label>Troop Type</label><input id="uTroopType" placeholder="e.g. Regular Infantry, Heavy Cavalry, Behemoth"></div></div>
+<h3>Base Size, Unit Size & Troop Type</h3>
+<div class="grid"><div class="field"><label>Base Size (mm)</label><input id="uBaseSize" placeholder="e.g. 25x25, 30x60, 50x50"></div><div class="field"><label>Unit Size (models)</label><input id="uUnitSize" placeholder="e.g. 5+, 2-9, 0-1, 1"></div><div class="field"><label>Troop Type</label><input id="uTroopType" placeholder="e.g. Regular Infantry, Heavy Cavalry, Behemoth"></div></div>
 <h3>Equipment</h3>
 <p class="muted">Included equipment is part of the unit and adds no points. Mark an item as a paid option to set its price — it is chosen later, when you build an army.</p>
 <div id="unitEquipmentPicker" class="rule-grid"></div>
@@ -1650,6 +1650,7 @@ category:document.getElementById("uCategory").value,
 points:document.getElementById("uPoints").value,
 stats,
 baseSize:document.getElementById("uBaseSize").value.trim(),
+unitSize:document.getElementById("uUnitSize").value.trim(),
 troopType:document.getElementById("uTroopType").value,
 ruleIds:[...editingRuleIds].sort((a,b)=>String(ruleById(a)?.name||a).localeCompare(String(ruleById(b)?.name||b),undefined,{sensitivity:"base"})),
 ruleValues:{...editingRuleValues},
@@ -1691,7 +1692,7 @@ alert("Unit saved successfully.");
 }
 
 function resetUnitForm() {
-["uName","uPoints","uDesc","editUnitId","uBaseSize","unitMagicItemLimit","unitChaosMutationLimit","sM","sWS","sBS","sS","sT","sW","sI","sA","sLd","customRuleName","customRuleDesc","unitCustomEquipmentEditId","unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>document.getElementById(id).value="");
+["uName","uPoints","uDesc","editUnitId","uBaseSize","uUnitSize","unitMagicItemLimit","unitChaosMutationLimit","sM","sWS","sBS","sS","sT","sW","sI","sA","sLd","customRuleName","customRuleDesc","unitCustomEquipmentEditId","unitCustomEquipmentName","unitCustomEquipmentDesc","unitCustomEquipmentRange","unitCustomEquipmentStrength","unitCustomEquipmentAp","unitCustomEquipmentSpecialRules","unitCustomEquipmentNotes"].forEach(id=>document.getElementById(id).value="");
 document.getElementById("uCategory").value="Core";
 document.getElementById("uTroopType").value="";
 pendingCustomRules=[];pendingCustomEquipment=[];pendingMagicItems=[];pendingChaosMutations=[];resetUnitCustomEquipmentForm();updateUnitCreatorFactionSections();
@@ -1710,6 +1711,7 @@ document.getElementById("uCategory").value=u.category;
 document.getElementById("uPoints").value=u.points||"";
 document.getElementById("uDesc").value=u.desc||"";
 document.getElementById("uBaseSize").value=u.baseSize||"";
+document.getElementById("uUnitSize").value=u.unitSize||"";
 document.getElementById("uTroopType").value=u.troopType||"";
 document.getElementById("unitMagicItemLimit").value=u.magicItemLimit??"";
 document.getElementById("unitChaosMutationLimit").value=u.chaosMutationLimit??"";
@@ -1816,6 +1818,7 @@ return `
 
 <div>${profile}</div>
 <div class="muted"><b>Base Size:</b> ${esc(u.baseSize||"Not set")}</div>
+<div class="muted"><b>Unit Size:</b> ${esc(u.unitSize||"Not set")}</div>
 <div class="muted"><b>Troop Type:</b> ${esc(u.troopType||"Not set")}</div>
 <div class="muted"><b>Equipment:</b> ${(profileUnit.basicEquipmentIds||[]).map(id=>equipmentById(id)).filter(Boolean).map(e=>`<span class="tag">${esc(e.name)}</span>`).join("")||"—"}</div>
 ${(profileUnit.optionEquipment||[]).some(o=>equipmentById(o.id))?'<div class="muted" style="margin-top:6px"><b>Paid Options:</b> '+(profileUnit.optionEquipment||[]).map(o=>{
@@ -1980,7 +1983,7 @@ return `<article class="unit-card compact">
 </div>
 </header>
 <table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
-<p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
+<p class="compact-line"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Unit size:</strong> ${esc(profile.unitSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <p class="compact-line"><strong>Equipment:</strong> ${included.length?included.map(e=>esc(e.name)).join(", "):"—"}</p>
 ${magicItems.length?'<p class="compact-line"><strong>Magic Items:</strong> '+magicItems.map(e=>esc(e.name)).join(", ")+'</p>':""}
 ${mutations.length?'<p class="compact-line"><strong>Chaos Mutations:</strong> '+mutations.map(e=>esc(e.name)).join(", ")+'</p>':""}
@@ -1997,7 +2000,7 @@ return `<article class="unit-card">
 <div class="points-badge">${points}<span>pts</span></div>
 </header>
 <table class="stat-table"><thead><tr>${statHead}</tr></thead><tbody><tr>${statBody}</tr></tbody></table>
-<p class="meta"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
+<p class="meta"><strong>Base size:</strong> ${esc(profile.baseSize||"—")} · <strong>Unit size:</strong> ${esc(profile.unitSize||"—")} · <strong>Troop type:</strong> ${esc(profile.troopType||"—")}</p>
 <div class="unit-sections">
 <section>
 <h3>Equipment</h3>
@@ -2443,7 +2446,7 @@ function renderArmyEntriesByCategory(entries){
    const desc=String(unit.desc||"").trim(),note=desc&&!/(magic items?|chaos mutations?).*up to\\s*\\d+/i.test(desc)?'<p class="army-unit-note">'+esc(desc)+'</p>':"";
    let html='<article class="army-unit-profile"><header class="army-unit-profile-header"><button type="button" class="army-unit-profile-close" title="Remove unit from army" onclick="removeArmyEntry(&quot;'+esc(entry.id)+'&quot;)">×</button><div><div class="army-unit-profile-title">'+esc(unit.name)+'</div><div class="army-unit-profile-points"><span id="entryCost-'+esc(entry.id)+'">'+points+'</span> pts</div></div><label class="army-unit-profile-qty"><input type="number" min="1" step="1" value="'+Math.max(1,parseInt(entry.qty,10)||1)+'" aria-label="Unit quantity" onchange="updateArmyQty(&quot;'+esc(entry.id)+'&quot;,this.value)"></label></header>';
    html+=note+'<table class="army-unit-stats"><thead><tr><th>Model</th>'+statHead+'</tr></thead><tbody><tr><td>'+esc(unit.name)+'</td>'+statBody+'</tr></tbody></table>';
-   if(unit.baseSize||unit.troopType)html+='<div class="muted" style="margin:-5px 0 8px">Base: '+esc(unit.baseSize||"—")+' · '+esc(unit.troopType||"—")+'</div>';
+   if(unit.baseSize||unit.unitSize||unit.troopType)html+='<div class="muted" style="margin:-5px 0 8px">Base: '+esc(unit.baseSize||"—")+' · Unit Size: '+esc(unit.unitSize||"—")+' · '+esc(unit.troopType||"—")+'</div>';
    html+=general+equipmentHtml+optionalHtml+rulesHtml+'</article>';
    return html;
   }).join("");
