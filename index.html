@@ -1076,6 +1076,7 @@ function seedBeastmenArmyLists(){
    ...data,
    factionId:fid,
    isBuiltIn:true,
+   allowedUnitNames:unitNames.map(x=>String(x).toLowerCase()),
    allowedUnitIds:findUnitIds(unitNames),
    sharedRuleNames:sharedRuleNames.slice()
   };
@@ -2403,7 +2404,9 @@ const isSharedMercenary=isMercenaryUnit(unit);
 if(!belongsToArmyFaction&&!isSharedMercenary) return false;
 if(!armyList) return true; // Grand Army: faction units and the shared Mercenaries pool are available.
 const allowed=Array.isArray(armyList.allowedUnitIds)?armyList.allowedUnitIds:[];
-return allowed.length===0||allowed.includes(unit.id);
+const allowedNames=new Set((Array.isArray(armyList.allowedUnitNames)?armyList.allowedUnitNames:[]).map(name=>String(name).toLowerCase()));
+if(!allowed.length&&!allowedNames.size)return true;
+return allowed.includes(unit.id)||allowedNames.has(String(unit.name||"").toLowerCase());
 }
 
 function renderArmyEntriesByCategory(entries){
