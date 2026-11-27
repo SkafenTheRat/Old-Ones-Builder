@@ -1021,7 +1021,7 @@ const optionList=[...options.values()],costs={};baseIds.forEach(x=>costs[x]=0);o
 const unit={...(existing||{}),id:existing?.id||id,sourceKey:"beastmen-brayherds:"+slug,sourceUrl:"https://tow.whfb.app/unit/"+slug,
 name,factionId:fid,category,points:String(points),
 stats:Object.fromEntries(["M","WS","BS","S","T","W","I","A","Ld"].map((k,i)=>[k,String(stat[i]||"-")])),
-baseSize:base,troopType:troop,unitSize:size,magicItemLimit:magicCap,chaosMutationLimit:mutationCap,
+baseSize:base,troopType:troop,unitSize:existing?.unitSize||size,magicItemLimit:magicCap,chaosMutationLimit:mutationCap,
 ruleIds:[...new Set([...(existing?.ruleIds||[]).filter(ruleId=>slug!=="chaos-giant"||!new Set(["Belly Flop","'Eadbutt (Giant)","Jump Up & Down","Mighty Swing (Giant)","Thump with Club"]).has(ruleById(ruleId)?.name)),...ids])],ruleValues:{...(existing?.ruleValues||{}),...values},
 basicEquipmentIds:[...new Set([...(existing?.basicEquipmentIds||[]).filter(x=>!separatedGearIds.has(x)),...baseIds])],
 optionEquipment:[...new Map([...(existing?.optionEquipment||[]).filter(x=>!separatedGearIds.has(x.id)),...optionList].map(x=>[x.id,x])).values()],
