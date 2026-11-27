@@ -868,8 +868,9 @@ function beastmenSlug(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/
 function beastmenFactionId(){const f=factions.find(x=>String(x.name||"").toLowerCase()==="beastmen brayherds");return f?f.id:"catalogue_beastmen_brayherds";}
 function seedBeastmenCatalogue(){
 const fid=beastmenFactionId();
-const specialRules="Ancient Sorcery|Belly Flop|Bestial Charge|Blessings of Chaos|Blood Greed|Blood Rage|Bloodshed & Butchery|Brayhorn|Bull-gors|Champions of Slaughter|Crown of Antlers|Dark Coven|Drunken|'Eadbutt (Giant)|Endless Malice|Ensorcelled Weapons|Father of Beasts|Foe Render|Future Sight|Gaze of the Gods|Ghostsight|Giant Attacks|Gifts from the Dark Gods|Guardians of the Herdstones|Herdstones|Jump Up & Down|Leader of the Pack (Beastmen)|Leering Spirit|Maddening Aura|Magics of the Dark Gods|Mighty Swing (Giant)|Mixed Unit|Pick Up And...|Primal Fury|The Quickening Storm|Razor Tusks|Roaming Warbands|Slaughterer's Call|The Sons of Ghorros|Soul-eater|Spurting Bile Blood|Stony Stare|Storm Call|Swallow Whole|Thump with Club".split("|");
+const specialRules="An Unholy Union|Ancient Sorcery|Belly Flop|Bestial Charge|Blessings of Chaos|Blood Greed|Blood Rage|Bloodshed & Butchery|Brayhorn|Bull-gors|Champions of Slaughter|Chaos Rewards|Crown of Antlers|Dark Coven|Drunken|'Eadbutt (Giant)|Endless Malice|Ensorcelled Weapons|Father of Beasts|Foe Render|For the Dark Gods!|Future Sight|Gaze of the Gods|Ghostsight|Giant Attacks|Gifts from the Dark Gods|Guardians of the Herdstones|Herdstones|Jump Up & Down|Leader of the Pack (Beastmen)|Leering Spirit|Maddening Aura|Magics of the Dark Gods|Mighty Swing (Giant)|Mixed Unit|Pick Up And...|Primal Fury|The Quickening Storm|Razor Tusks|Roaming Warbands|The Shadow Grows|Slaughterer's Call|The Sons of Ghorros|Soul-eater|Spurting Bile Blood|Stony Stare|Storm Call|Swallow Whole|Thump with Club|Untrusting Allies".split("|");
 const ruleDescriptions={
+"An Unholy Union":"Whilst within 6 inches of a friendly Beastmen Brayherds unit, Warriors of Chaos units (but not characters) may re-roll natural 1s To Hit. Whilst within 6 inches of a Warriors of Chaos unit, Beastmen Brayherds units (but not characters) may re-roll natural 1s To Wound. In addition, units from either army list within 6 inches of a friendly unit from the other list apply -1 to the result of any Flee roll. Characters and units present in both army lists are unaffected.",
 "Ancient Sorcery":"In a Wild Herd army, Beastmen Shamans may know spells from the Lore of Primal Magic in addition to the Lores of Magic they would normally have access to.",
 "Belly Flop":"See the Giant Attacks table.",
 "Bestial Charge":"During a turn in which this model makes a charge move of 3 inches or more, it gains +1 Strength.",
@@ -880,6 +881,7 @@ const ruleDescriptions={
 "Brayhorn":"From the beginning of round 2, if the army's General is on the battlefield during the Command sub-phase, they may take a Leadership test. If passed, re-roll the arrival roll for each friendly Ambushers unit still in reserve that failed to arrive during that turn's Start of Turn sub-phase. Only a Beastlord or Wargor chosen as General can use this rule.",
 "Bull-gors":"Impact Hits caused by this model have AP -1.",
 "Champions of Slaughter":"If the General of a Minotaur Blood Herd becomes Frenzied as a result of Blood Rage, all friendly units within that General's Command range also become Frenzied.",
+"Chaos Rewards":"The Chaos Rewards table and its two Champion profiles are intended for narrative and campaign play, not Matched Play due to their random nature. To create a Champion of Chaos, choose a Champion of Ruin for a Warriors of Chaos army or a Chieftain of Ruin for a Beastmen Brayherds army, then use the Chaos Rewards rules to develop that champion's story.",
 "Crown of Antlers":"Impact Hits caused by this model gain Armour Bane (1) and have AP -1.",
 "Dark Coven":"Within a Wild Herd army, a Bray-Shaman or Great Bray-Shaman may add +1 to its Casting or Dispel roll for each other friendly Wizard within its Command range. If the roll is any natural double, roll immediately on the Miscast table and apply the result to the Shaman and to each friendly Wizard within its Command range.",
 "Drunken":"At the start of each of your turns, roll on the Drunken table for each unit with this rule that is not Frenzied, engaged in combat or fleeing. On a 1, until its next Start of Turn sub-phase it has Random Movement and its Movement becomes D6+2. On 2–5, there is no effect. On a 6, it becomes Frenzied until its next Start of Turn sub-phase; it may regain Frenzy this way even if it lost it earlier.",
@@ -914,6 +916,7 @@ const ruleDescriptions={
 "Stony Stare":"At the start of each Combat phase, enemy models in base contact with this model must take an Initiative test. Each model that fails suffers D3 Strength 2 hits, with no Armour saves permitted; Ward and Regeneration saves may be taken.",
 "Storm Call":"This model can cast a Bound Magic Missile spell with Power Level 1 and Casting Value 7+, even while engaged in combat. The spell targets all units within 6 inches of the model, friend or foe, including the model itself; each suffers D3 Strength 4 hits with AP -1.",
 "Swallow Whole":"During its Command sub-phase, a Ghorgon engaged with one or more Regular or Heavy Infantry units may nominate one such enemy unit. It immediately takes an Initiative test. If failed, one model is removed from play as a casualty; if passed, the attack has no effect. Each enemy model removed this way restores one lost Wound to the Ghorgon.",
+"The Shadow Grows":"For each character in your army with a Mark of Chaos other than the Mark of Chaos Undivided, your army must also include a non-character unit with the same Mark of Chaos, and vice versa. For example, two characters with the Mark of Khorne require two non-character units with the Mark of Khorne.",
 "Thump with Club":"See the Giant Attacks table."
 };
 specialRules.forEach(name=>{
@@ -1095,7 +1098,7 @@ function seedBeastmenArmyLists(){
   composition:[
    {heading:"Characters",allocation:"Up to 50% of your army's points value may be spent on:",entries:[
     "0-1 Beastlord, Great Bray-Shaman or Doombull per 1,000 points",
-    "Wargors, Bray-Shamans, Gorebulls and Centigor Chieftains"
+    "Chieftains of Ruin, Wargors, Bray-Shamans, Gorebulls and Centigor Chieftains"
    ]},
    {heading:"Core",allocation:"At least 25% of your army's points value must be spent on:",entries:[
     "1+ Gor Herd",
@@ -1131,7 +1134,7 @@ function seedBeastmenArmyLists(){
   magicItems:"Models that have the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
   "Beastlord","Great Bray-Shaman","Doombull","Wargor","Bray-Shaman","Gorebull","Ghorros Warhoof","Warhoof","Centigor Chieftain","Centigor Chieftains",
-  "Gor Herd","Ungor Herd","Chaos Warhounds","Razorgor Herd","Tuskgor Chariot","Bestigor Herd","Minotaur Herd",
+  "Chieftain of Ruin","Chieftains of Ruin","Gor Herd","Ungor Herd","Chaos Warhounds","Razorgor Herd","Tuskgor Chariot","Bestigor Herd","Minotaur Herd","Chaos Ogre","Chaos Ogres","Chaos Troll","Chaos Trolls","Chaos Spawn","Gigantic Spawn of Chaos","Badlands Ogre Bulls","Bonegrinder Giant",
   "Harpies","Centigor Herd","Dragon Ogres","Razorgor Chariot","Cockatrice","Cygor","Jabberslythe","Ghorgon",
   "Preyton","Herdstone","Dragon Ogre Shaggoth","Chaos Giant"
  ]);
@@ -1146,7 +1149,7 @@ function seedBeastmenArmyLists(){
    {heading:"Characters",allocation:"Up to 50% of your army's points value may be spent on:",entries:[
     "0-1 Doombull per 1,000 points",
     "0-1 Bray-Shaman per 1,000 points",
-    "Gorebulls, Wargors and Centigor Chieftains"
+    "Chieftains of Ruin, Gorebulls, Wargors and Centigor Chieftains"
    ]},
    {heading:"Core",allocation:"At least 33% of your army's points value must be spent on:",entries:[
     "1 Minotaur Herd per 1,000 points",
@@ -1167,7 +1170,7 @@ function seedBeastmenArmyLists(){
   magicItems:"Models with the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
   "Doombull","Bray-Shaman","Gorebull","Wargor","Warhoof","Ghorros Warhoof","Centigor Chieftain","Centigor Chieftains","Minotaur Herd","Herdstone","Gor Herd","Chaos Ogres","Chaos Ogre","Chaos Trolls","Chaos Troll","Ungor Herd",
-  "Chaos Warhounds","Dragon Ogres","Harpies","Centigor Herd","Razorgor Herd","Ghorgon","Dragon Ogre Shaggoth","Chaos Giant"
+  "Chieftain of Ruin","Chieftains of Ruin","Chaos Warhounds","Dragon Ogres","Harpies","Centigor Herd","Razorgor Herd","Ghorgon","Dragon Ogre Shaggoth","Chaos Giant","Chaos Ogre","Chaos Ogres","Chaos Troll","Chaos Trolls"
  ]);
  makeList({
   id:"beastmen_wild_herd",
@@ -1179,7 +1182,7 @@ function seedBeastmenArmyLists(){
   composition:[
    {heading:"Characters",allocation:"Up to 50% of your army's points value may be spent on:",entries:[
     "0-1 Beastlord or Great Bray-Shaman per 1,000 points",
-    "Wargors, Bray-Shamans and Centigor Chieftains"
+    "Chieftains of Ruin, Wargors, Bray-Shamans and Centigor Chieftains"
    ]},
    {heading:"Core",allocation:"At least 33% of your army's points value must be spent on:",entries:[
     "1+ Primal Warherd",
@@ -1193,7 +1196,7 @@ function seedBeastmenArmyLists(){
     "0-1 Cockatrice or Preyton per 1,000 points",
     "0-1 Herdstone"
    ]},
-   {heading:"Rare",allocation:"Up to 33% of your army's points value may be spent on:",entries:[
+   {heading:"Rare",allocation:"Up to 32% of your army's points value may be spent on:",entries:[
     "Dragon Ogre Shaggoths, Jabberslythes, Cygors and Chaos Giants",
     "Chaos Spawn"
    ]}
@@ -1201,7 +1204,7 @@ function seedBeastmenArmyLists(){
   battleStandardBearer:"A single Wargor may be upgraded to be the Battle Standard Bearer for +25 points. It may purchase a single Magic Banner with no points limit in addition to its usual magic item allowance.",
   magicItems:"Models with the option to purchase magic items may purchase Common or Beastmen Brayherds magic items."
  },[
-  "Beastlord","Great Bray-Shaman","Wargor","Bray-Shaman","Warhoof","Ghorros Warhoof","Centigor Chieftain","Centigor Chieftains","Kralmaw, the Prophet of Ruin",
+  "Beastlord","Great Bray-Shaman","Wargor","Bray-Shaman","Chieftain of Ruin","Chieftains of Ruin","Warhoof","Ghorros Warhoof","Centigor Chieftain","Centigor Chieftains","Kralmaw, the Prophet of Ruin",
   "Primal Warherd","Tuskgor Chariot","Centigor Herd","Gor Herd","Ungor Herd","Chaos Warhounds",
   "Primal Warhounds","Razorgor Herd","Dragon Ogres","Warped Gors","Bestigor Herd","Harpies",
   "Razorgor Chariot","Cockatrice","Preyton","Herdstone","Dragon Ogre Shaggoth","Jabberslythe","Cygor","Chaos Giant"
